@@ -1,0 +1,15 @@
+.worktrees/
+.private-journal/
+.claude/
+.DS_Store
+node_modules/
+inspo
+triage/
+
+# js-superpowers dev env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.upstream
+

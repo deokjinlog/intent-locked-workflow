@@ -1,0 +1,20 @@
+{
+  "name": "js-super",
+  "description": "Personal marketplace for js-super (superpowers 기반 한국형 워크플로우 확장)",
+  "owner": {
+    "name": "이진섭",
+    "email": "dlwlstjq410@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "js-super",
+      "description": "superpowers 베이스 + 한국형 3-MD 워크플로우/변경이력/위험 주석/API 자동테스트",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "이진섭",
+        "email": "dlwlstjq410@gmail.com"
+      }
+    }
+  ]
+}

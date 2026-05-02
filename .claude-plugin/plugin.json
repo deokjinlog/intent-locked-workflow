@@ -1,0 +1,22 @@
+{
+  "name": "js-super",
+  "description": "superpowers 베이스 + 한국형 3-MD 워크플로우(요구사항/개발방향/구현계획서), 변경이력, 위험 주석, API 자동테스트",
+  "version": "1.0.0",
+  "author": {
+    "name": "이진섭",
+    "email": "dlwlstjq410@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "korean",
+    "spec-driven",
+    "workflow",
+    "api-testing"
+  ],
+  "upstream": {
+    "name": "superpowers",
+    "version": "5.0.7",
+    "author": "Jesse Vincent <jesse@fsck.com>"
+  }
+}

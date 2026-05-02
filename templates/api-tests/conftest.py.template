@@ -1,0 +1,58 @@
+"""
+conftest.py — js-superpowers api-tests 공통 fixture.
+
+자동 생성 시 detect_auth.py 결과에 따라 두 블록 중 하나를 선택해 활성화한다.
+사용자 paste 한 SQL 결과는 데이터 fixture 섹션에 자동으로 추가된다.
+"""
+from __future__ import annotations
+
+import os
+from typing import Iterator
+
+import pytest
+import requests
+
+
+BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
+
+
+# === Block A: jwt-login ===
+# (detect_auth가 jwt-login 패턴을 발견했을 때 활성화)
+@pytest.fixture(scope="session")
+def auth_token() -> str:
+    """Login once per session and reuse the token."""
+    creds = {
+        "email": os.environ.get("TEST_USER_EMAIL"),
+        "password": os.environ.get("TEST_USER_PASSWORD"),
+    }
+    if not creds["email"] or not creds["password"]:
+        pytest.skip("TEST_USER_EMAIL / TEST_USER_PASSWORD env vars required")
+    r = requests.post(f"{BASE_URL}/auth/login", json=creds, timeout=10)
+    r.raise_for_status()
+    return r.json()["access_token"]
+
+
+# === Block B: static-env-token ===
+# (detect_auth가 static-env-token일 때 활성화)
+# @pytest.fixture(scope="session")
+# def auth_token() -> str:
+#     token = os.environ.get("API_TOKEN")
+#     if not token:
+#         pytest.skip("API_TOKEN env var required")
+#     return token
+
+
+@pytest.fixture
+def api_client(auth_token: str) -> Iterator[requests.Session]:
+    s = requests.Session()
+    s.headers.update({"Authorization": f"Bearer {auth_token}"})
+    yield s
+    s.close()
+
+
+# === Test data fixtures ===
+# api-auto-testing skill이 사용자가 paste한 SQL 결과를 여기에 채워준다.
+# 예시:
+# @pytest.fixture
+# def test_user() -> dict:
+#     return {"id": 12345, "email": "test@example.com"}
