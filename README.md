@@ -71,7 +71,7 @@ docs/features/2026-05-02-<feature-slug>/
 
 ```
 # Claude Code 안에서
-/plugin marketplace add https://github.com/LonerStayle/js-super.git
+/plugin marketplace add LonerStayle/js-super
 /plugin install js-super@js-super
 ```
 

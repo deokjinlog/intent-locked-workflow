@@ -1,18 +1,22 @@
 {
   "name": "js-super",
-  "description": "superpowers 베이스 + 한국형 3-MD 워크플로우(요구사항/개발방향/구현계획서), 변경이력, 위험 주석, API 자동테스트",
+  "description": "한국형 spec-driven 워크플로우 (요구사항 → 개발방향 → 구현계획서) + 변경이력 + 위험 주석 + API 자동테스트. superpowers 5.0.7 기반.",
   "version": "1.0.0",
   "author": {
     "name": "이진섭",
     "email": "dlwlstjq410@gmail.com"
   },
+  "homepage": "https://github.com/LonerStayle/js-super",
+  "repository": "https://github.com/LonerStayle/js-super",
   "license": "MIT",
   "keywords": [
     "skills",
     "korean",
     "spec-driven",
     "workflow",
-    "api-testing"
+    "api-testing",
+    "claude-code",
+    "claude-code-plugin"
   ],
   "upstream": {
     "name": "superpowers",

@@ -1,16 +1,19 @@
 {
   "name": "js-super",
-  "description": "Personal marketplace for js-super (superpowers 기반 한국형 워크플로우 확장)",
+  "description": "한국형 spec-driven 워크플로우 + 변경이력 + 위험 주석 + API 자동테스트 (superpowers 기반)",
   "owner": {
     "name": "이진섭",
     "email": "dlwlstjq410@gmail.com"
   },
+  "homepage": "https://github.com/LonerStayle/js-super",
   "plugins": [
     {
       "name": "js-super",
-      "description": "superpowers 베이스 + 한국형 3-MD 워크플로우/변경이력/위험 주석/API 자동테스트",
+      "description": "한국형 spec-driven 워크플로우 (요구사항 → 개발방향 → 구현계획서) + 변경이력 + 위험 주석 + API 자동테스트",
       "version": "1.0.0",
       "source": "./",
+      "homepage": "https://github.com/LonerStayle/js-super",
+      "repository": "https://github.com/LonerStayle/js-super",
       "author": {
         "name": "이진섭",
         "email": "dlwlstjq410@gmail.com"
