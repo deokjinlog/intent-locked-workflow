@@ -52,6 +52,21 @@ Adds these fields on top of the common schema:
   ```
 ```
 
+### Trivial Code-Change Entry (fast path)
+
+When `executing-plans` Trivial-Edit Exception applies (≤3 lines + no logic change + 0/6 risk triggers), use this **shorter** form. The `(trivial)` tag goes right after the entry-type tag.
+
+```markdown
+### [YYYY-MM-DD HH:MM] [코드-수정] (trivial)
+- **id**: CH-YYYYMMDD-NNN
+- **이유**: <one-line reason>
+- **무엇이**: <file:line>
+```
+
+No 영향범위, no 위험 카테고리, no before/after code blocks. The `(trivial)` tag makes filtering / spotting these in 변경이력 easy.
+
+If any of the trivial criteria fails, fall back to the full Code-Change Entry above.
+
 ## API-Test Entry (only in <slug>-implementation-plan.md)
 
 ```markdown
@@ -120,8 +135,9 @@ digraph change_history {
 A new entry is correct when ALL hold:
 1. CH-id matches `CH-YYYYMMDD-NNN` and is unique within the feature folder
 2. Entry sits at the end of the `## 변경이력` footer (not inserted into the body)
-3. [코드-수정] entries include both before/after code blocks AND a 위험 카테고리 value
+3. [코드-수정] entries include both before/after code blocks AND a 위험 카테고리 value, **unless tagged `(trivial)`** — trivial entries skip those fields by design
 4. [API테스트] entries include scenario file, pass/fail counts, failure details
+5. `(trivial)` is used ONLY when executing-plans Trivial-Edit Exception criteria are all met (≤3 lines + no logic change + 0/6 risk triggers); otherwise full entry is required
 
 ## Related Skills
 
