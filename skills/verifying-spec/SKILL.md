@@ -69,7 +69,7 @@ For files/functions/endpoints named in the target MD:
 
 1. **File existence** — Read/Glob to confirm the file exists or is explicitly created in a task
 2. **Caller mapping** — Grep the function/symbol name to count usage sites
-3. **Side-effect candidates** — Apply the risk-annotation 6-checklist (complex branching, external system writes, shared state, public signature changes, in-loop queries, recursion) to each touched function
+3. **Side-effect candidates** — Apply the risk-annotation 3-checklist (complex branching, public signature/schema changes, shared state) to each touched function
 4. **Test coverage** — Check whether the touched files have tests (Glob `test_*.py` or `*.test.*` adjacent or under `tests/`)
 
 When grep results span ≥10 files, optionally dispatch ONE read-only Explore subagent for the impact survey only, then synthesize the report yourself.
@@ -91,7 +91,7 @@ Output to the conversation in this exact structure:
 ## C. Code Impact
 - Impacted files: <list> (<count>)
 - Callers: <function> referenced in <count> places (<list>)
-- Risk candidates: <category-counts> (e.g., side-effect: 2, perf: 1)
+- Risk candidates: <category-counts> (e.g., side-effect: 2, breaking: 1)
 - Test coverage: <existing test files / coverage gaps>
 
 ## 권장 (recommendation)
@@ -131,5 +131,5 @@ A verification run is complete when ALL hold:
 
 - `designing-direction` — invokes this on save
 - `writing-plans` — invokes this on save
-- `risk-annotation` — supplies the 6-checklist used in §C
+- `risk-annotation` — supplies the 3-checklist used in §C
 - `change-history` — captures the verification outcome in the next entry's 영향범위 field

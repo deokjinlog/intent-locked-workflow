@@ -21,9 +21,10 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 4. **Self-review (internal)** — FR mapping coverage, alternatives present, risk categorization (no user prompt yet)
 5. **Run verifying-spec FIRST** (with Tolerance for missing skill) — main agent runs A+C verification, produces 4-axis report internally
 6. **Single combined approval gate** — show the full `<slug>-tech-design.md` AND the verify-spec report in one message; ask once "Approve and proceed? — yes / fix / partial"
-7. **Invoke change-history skill** — append first `[개발방향-수정]` entry
-8. **Ask proceed-to-writing-plans gate** — emit "✅ ... Proceed to writing-plans? — yes / no", parse intent in any language
-9. **On approval → auto-invoke writing-plans via Skill tool. On hold → exit with notice telling the user to run /write-plan later**
+7. **Invoke docs-pretty skill** — one-shot format-only pass on the freshly approved doc (Sonnet subagent). Runs ONLY here, BEFORE the first change-history entry. NEVER on later edits.
+8. **Invoke change-history skill** — append first `[개발방향-수정]` entry
+9. **Ask proceed-to-writing-plans gate** — emit "✅ ... Proceed to writing-plans? — yes / no", parse intent in any language
+10. **On approval → auto-invoke writing-plans via Skill tool. On hold → exit with notice telling the user to run /write-plan later**
 
 If you find yourself skipping ahead, stop and create the missing task.
 
@@ -70,6 +71,7 @@ digraph design_flow {
     "Self-review (internal)" [shape=box];
     "Run verifying-spec FIRST\n(요구사항 ↔ 개발방향)" [shape=box];
     "Single combined approval gate\n(doc + verify report)" [shape=diamond];
+    "Invoke docs-pretty\n(one-shot, Sonnet subagent)" [shape=box];
     "Invoke change-history" [shape=box];
     "Ask: proceed to writing-plans?" [shape=diamond];
     "Auto-invoke writing-plans skill" [shape=doublecircle];
@@ -87,7 +89,8 @@ digraph design_flow {
     "Self-review (internal)" -> "Run verifying-spec FIRST\n(요구사항 ↔ 개발방향)";
     "Run verifying-spec FIRST\n(요구사항 ↔ 개발방향)" -> "Single combined approval gate\n(doc + verify report)";
     "Single combined approval gate\n(doc + verify report)" -> "Self-review (internal)" [label="fix / partial"];
-    "Single combined approval gate\n(doc + verify report)" -> "Invoke change-history" [label="approve"];
+    "Single combined approval gate\n(doc + verify report)" -> "Invoke docs-pretty\n(one-shot, Sonnet subagent)" [label="approve"];
+    "Invoke docs-pretty\n(one-shot, Sonnet subagent)" -> "Invoke change-history";
     "Invoke change-history" -> "Ask: proceed to writing-plans?";
     "Ask: proceed to writing-plans?" -> "Auto-invoke writing-plans skill" [label="approve"];
     "Ask: proceed to writing-plans?" -> "Exit: tell user to run /write-plan later" [label="hold"];
@@ -98,9 +101,15 @@ digraph design_flow {
 
 **1. Verify input**
 - Confirm <slug>-requirements.md exists in the same feature folder. If not, HARD-GATE — instruct the user to run `/brainstorm` first.
+- **Detect input mode (PRD vs Socratic)** — read the doc and check:
+  - Has `## 3. 기능 요구사항 (FR)` or `FR-` identifiers → **PRD mode** input
+  - Has `> **Mode:** Socratic` line near the top, OR no FR-N pattern, OR free-form section names → **Socratic mode** input
+- Both inputs are valid. Adapt §2-§3 below accordingly. NEVER reject a Socratic-style input as "missing FRs".
 
 **2. Survey the codebase**
-- For each FR in <slug>-requirements.md, quickly Grep/Read to identify likely impacted code areas (full impact analysis is reserved for verifying-spec).
+- **PRD input** — for each FR-N, Grep/Read to identify likely impacted code areas
+- **Socratic input** — extract the implicit requirements from prose (any sentence describing a behavior the system MUST do is treated as an FR for survey purposes), then Grep/Read those areas
+- (Full impact analysis is reserved for verifying-spec.)
 
 **3. Step-by-step questions** (one at a time, multiple choice when possible)
 - Architecture candidates (2-3 options + recommendation with reasoning)
@@ -126,10 +135,16 @@ digraph design_flow {
 - On `fix` → re-enter the relevant question(s), then re-run from step 4
 - On `partial` → ask which sections to revisit, then re-enter
 
-**7. Invoke change-history**
+**7. Invoke docs-pretty skill** (one-shot initial formatting)
+- Runs ONLY here, on the freshly approved doc, BEFORE the first change-history entry
+- Dispatches a Sonnet subagent for a strict format-only pass (no rewording, no reordering, footer/frontmatter byte-preserved)
+- NEVER fires on subsequent edits or change-propagation cascades
+- See `docs-pretty` skill for full pre-flight + sanity-check protocol
+
+**8. Invoke change-history**
 - Entry: `[개발방향-수정] CH-YYYYMMDD-NNN / 이유: 신규 기술 설계 / 무엇이: <slug>-tech-design.md 전체 / 영향범위: 없음 (최초 생성)`
 
-**8. Ask the proceed-to-writing-plans gate**
+**9. Ask the proceed-to-writing-plans gate**
 - Emit: `✅ <slug>-tech-design.md is finalized. Proceed to the writing-plans (구현계획서, step-by-step plan) stage now? — yes / no`
 - The user may reply in any language; parse intent.
 - On approval → auto-invoke `writing-plans` skill via Skill tool. NEVER cross without approval.
@@ -137,9 +152,9 @@ digraph design_flow {
 
 ## Self-Review
 
-- Every FR in <slug>-requirements.md is mapped to either §2 (impacted components) or §4 (external IF)
+- Every FR (PRD input) OR every behavior-implying sentence (Socratic input) in <slug>-requirements.md is mapped to either §2 (impacted components) or §4 (external IF)
 - Every key decision in §5 has at least one alternative and a reason for the chosen path
-- Risk candidates in §6 are pre-classified using risk-annotation categories (`side-effect | race | breaking | perf`)
+- Risk candidates in §6 are pre-classified using risk-annotation categories (`side-effect | breaking | race`)
 - §7 test strategy is consistent with §3 and §4 (DB changes → migration tests, APIs → integration/contract tests)
 
 ## Design for Isolation and Clarity
@@ -195,7 +210,7 @@ This summarizes the corrected order (matches Process detail steps 5-9 above):
    - One question: "Approve `<slug>-tech-design.md` and proceed? — yes / fix / partial"
    - DO NOT split into "approve doc" → "approve verify report". One gate, one decision.
 
-3. On `yes` → invoke change-history (`[개발방향-수정]` entry) → continue to step 4.
+3. On `yes` → invoke `docs-pretty` (one-shot format pass) → invoke change-history (`[개발방향-수정]` entry) → continue to step 4.
    On `fix` → re-enter the relevant question(s), then re-run from "Self-review (internal)".
    On `partial` → ask which sections to revisit, then re-enter.
 

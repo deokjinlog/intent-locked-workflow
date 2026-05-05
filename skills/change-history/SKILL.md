@@ -75,7 +75,7 @@ If a task has only ONE code edit, you may still use this form (single-item 세�
 ### Legacy single-edit form (when task touches one file/range only)
 
 ```markdown
-- **위험 카테고리**: side-effect | race | breaking | perf
+- **위험 카테고리**: side-effect | breaking | race
 - **변경 전 코드** (file:line)
   ```<lang>
   <verbatim original code>
@@ -88,7 +88,7 @@ If a task has only ONE code edit, you may still use this form (single-item 세�
 
 ### Trivial Code-Change Entry (fast path)
 
-When `executing-plans` Trivial-Edit Exception applies (≤3 lines + no logic change + 0/6 risk triggers), use this **shorter** form. The `(trivial)` tag goes right after the entry-type tag.
+When `executing-plans` Trivial-Edit Exception applies (≤3 lines + no logic change + 0/3 risk triggers), use this **shorter** form. The `(trivial)` tag goes right after the entry-type tag.
 
 ```markdown
 ### [YYYY-MM-DD HH:MM] [코드-수정] (trivial)
@@ -161,7 +161,7 @@ digraph change_history {
 | Thought | Reality |
 |---|---|
 | "Skip 변경이력 just this once" | The audit chain breaks. Don't. |
-| "I don't know which 위험 카테고리 fits" | Run risk-annotation 6-checklist. If still ambiguous, default to side-effect. |
+| "I don't know which 위험 카테고리 fits" | Run risk-annotation 3-checklist. If still ambiguous, default to side-effect. |
 | "변경 전 코드 block is too long" | Spec §4.1 mandates full block. Compression is v0.2 territory. |
 
 ## Acceptance
@@ -171,7 +171,7 @@ A new entry is correct when ALL hold:
 2. Entry sits at the end of the `## 변경이력` footer (not inserted into the body)
 3. [코드-수정] entries include both before/after code blocks AND a 위험 카테고리 value, **unless tagged `(trivial)`** — trivial entries skip those fields by design
 4. [API테스트] entries include scenario file, pass/fail counts, failure details
-5. `(trivial)` is used ONLY when executing-plans Trivial-Edit Exception criteria are all met (≤3 lines + no logic change + 0/6 risk triggers); otherwise full entry is required
+5. `(trivial)` is used ONLY when executing-plans Trivial-Edit Exception criteria are all met (≤3 lines + no logic change + 0/3 risk triggers); otherwise full entry is required
 
 ## Related Skills
 

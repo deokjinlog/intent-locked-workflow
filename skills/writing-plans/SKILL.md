@@ -22,8 +22,9 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 5. **Self-review** — spec coverage / placeholder scan / type consistency / 위험 coverage
 6. **User reviews <slug>-implementation-plan.md** — show the file, get approval (loop until OK)
 7. **Invoke verifying-spec** (with Tolerance for missing skill) — main agent runs A+C verification on the plan
-8. **Invoke change-history skill** — append first `[구현계획서-수정]` entry
-9. **Hand off to /execute-plan** (offer Subagent-Driven vs Inline Execution choice)
+8. **Invoke docs-pretty skill** — one-shot format-only pass on the freshly approved plan (Sonnet subagent). Runs ONLY here, BEFORE the first change-history entry. NEVER on later edits.
+9. **Invoke change-history skill** — append first `[구현계획서-수정]` entry
+10. **Hand off to /execute-plan** — count tasks first, then offer the choice using the Execution Handoff message below. Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
 
 If you find yourself skipping ahead, stop and create the missing task.
 
@@ -39,6 +40,10 @@ If you find yourself skipping ahead, stop and create the missing task.
 ## Schema (<slug>-implementation-plan.md)
 
 ```markdown
+---
+commit_policy: per-task
+---
+
 # 구현계획서: <feature-name>
 
 ## 1. 단계별 작업
@@ -54,6 +59,20 @@ If you find yourself skipping ahead, stop and create the missing task.
 ---
 ## 변경이력
 ```
+
+### Frontmatter — `commit_policy` field
+
+This field tells `/execute-plan` how to commit work between tasks. It is the **single source of truth** for commit policy; do NOT scatter "no commits" or "single commit" instructions in prose.
+
+| Value | Meaning | executing-plans mode |
+|---|---|---|
+| `per-task` (**default**) | One atomic commit per task (code + plan log together) | git-fast (if git repo present) |
+| `single` | All tasks accumulated into ONE commit at the very end of `/execute-plan` | memory-fallback |
+| `none` | No commits during `/execute-plan` (user commits manually after) | memory-fallback |
+
+If the field is omitted, `/execute-plan` assumes `per-task`.
+
+If the user explicitly requests `single` or `none` during planning, set the field accordingly and warn them once: "이 모드에서는 변경이력의 변경 전 코드를 in-memory로 보관해야 해서 토큰 비용이 큽니다. 가능하면 per-task를 권장합니다."
 
 ## Bite-Sized Task Granularity (inherited from upstream)
 
@@ -140,6 +159,7 @@ digraph plan_flow {
     "User reviews <slug>-implementation-plan.md" [shape=diamond];
     "Invoke verifying-spec" [shape=box];
     "Verifier report → user decision" [shape=diamond];
+    "Invoke docs-pretty\n(one-shot, Sonnet subagent)" [shape=box];
     "Invoke change-history" [shape=box];
     "Hand off to /execute-plan" [shape=doublecircle];
 
@@ -149,7 +169,8 @@ digraph plan_flow {
     "Self-review (internal)" -> "Run verifying-spec FIRST";
     "Run verifying-spec FIRST" -> "Single combined approval gate\n(plan + verify report)";
     "Single combined approval gate\n(plan + verify report)" -> "Self-review (internal)" [label="fix / partial"];
-    "Single combined approval gate\n(plan + verify report)" -> "Invoke change-history" [label="approve"];
+    "Single combined approval gate\n(plan + verify report)" -> "Invoke docs-pretty\n(one-shot, Sonnet subagent)" [label="approve"];
+    "Invoke docs-pretty\n(one-shot, Sonnet subagent)" -> "Invoke change-history";
     "Invoke change-history" -> "Hand off to /execute-plan";
 }
 ```
@@ -174,7 +195,7 @@ After tasks are written, fill `## 2. 위험 코드 지점` with concrete entries
 - `src/api/wallet_routes.py:withdraw` — breaking: 응답 스키마에 transaction_id 추가 (mitigation: 클라이언트 호환성 확인)
 ```
 
-Categories MUST come from risk-annotation taxonomy: `side-effect | race | breaking | perf`. Each entry pairs a location with a mitigation strategy.
+Categories MUST come from risk-annotation taxonomy: `side-effect | breaking | race`. Each entry pairs a location with a mitigation strategy.
 
 ## §3 롤백 전략
 
@@ -247,23 +268,25 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
    - One question: "Approve `<slug>-implementation-plan.md` and proceed? — yes / fix / partial"
    - DO NOT split into "approve plan" → "approve verify report". One gate, one decision.
 
-3. On `yes` → invoke change-history (`[구현계획서-수정]` entry) → continue to Execution Handoff below.
+3. On `yes` → invoke `docs-pretty` (one-shot format pass) → invoke change-history (`[구현계획서-수정]` entry) → continue to Execution Handoff below.
    On `fix` → re-decompose specific tasks, then re-run from "Self-review (internal)".
    On `partial` → ask which sections/tasks to revisit, then re-enter.
 
 ## Execution Handoff
 
-After verification passes and the entry is logged, offer execution choice:
+After verification passes and the entry is logged, count plan tasks and offer execution choice:
 
 > "Plan complete and saved to `docs/features/<date>-<slug>/<slug>-implementation-plan.md`. Two execution options:
 >
-> 1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks, fast iteration
-> 2. **Inline Execution** — execute tasks in this session using executing-plans, batch with checkpoints
+> 1. **Inline** (recommended for medium plans, ≤ 12 tasks) — main agent edits directly via `executing-plans`; fast, fewer total tokens; main context accumulates with task count
+> 2. **Subagent** (recommended for large plans, 13+ tasks) — implementer + spec reviewer subagents via `js-super-subagent-driven-development`; preserves main context; adds dispatch cost
 >
-> Which approach?"
+> Plan has <N> tasks. Which approach?"
 
-If Subagent-Driven chosen → REQUIRED SUB-SKILL: `subagent-driven-development`
 If Inline chosen → REQUIRED SUB-SKILL: `executing-plans`
+If Subagent chosen → REQUIRED SUB-SKILL: `js-super-subagent-driven-development`
+
+The upstream `subagent-driven-development` is NOT offered in this handoff. Invoke it only when the user explicitly requests the upstream original.
 
 ## Related Skills
 
