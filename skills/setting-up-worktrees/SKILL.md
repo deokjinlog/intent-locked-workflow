@@ -144,48 +144,30 @@ for BR in "${BRANCHES[@]}"; do
 done
 ```
 
-**Step 5.5 — Symlink Claude Code memory folder (no user prompt)**
+**Step 5.5 — Symlink Claude Code memory folder (delegate to script)**
 
-Claude Code encodes the working directory into the memory path by replacing **every character outside `[A-Za-z0-9-]`** with `-` — that includes `/`, `.`, `_`, every Korean codepoint, every space, every emoji. Verified empirically against existing `~/.claude/projects/` entries: e.g. `/Users/x/.../GNG-237-다수질문쿼리오류` → `-Users-x-...-GNG-237---------` (8 Korean chars + 1 trailing `/` = 9 dashes). Without a symlink, a worktree session sees zero memory and the user starts cold despite years of context in the main repo.
+<HARD-GATE>
+You MUST execute the bundled script `scripts/setup-memory-symlinks.sh` via the Bash tool with the exact command shown below. **Do NOT reproduce the encoding logic inline. Do NOT compute the encoded path mentally — the encoding rule is non-obvious (every codepoint outside `[A-Za-z0-9-]` becomes `-`, including dots and Korean) and prior versions of this skill failed because the agent simulated the rule in its head and produced wrong folder names (`.worktrees-` preserved, Korean preserved). The only correct path is to invoke the script.**
+</HARD-GATE>
 
-⚠️ Naive rules (`sed 's|/|-|g'`, `sed 's|[/_]|-|g'`) are **INSUFFICIENT** — they miss `.` (e.g. `.worktrees`) and non-ASCII (Korean ticket names). The only correct rule is the negated character class below.
+Why a script and not inline shell: when the encoding logic was written as inline `sed` in this SKILL, observed agent behavior was to mentally infer the result rather than run the bash, producing folders that Claude Code never reads. Externalizing to a `.sh` file removes that escape hatch — the agent cannot rewrite the script's logic, only invoke it.
+
+Run exactly this (substitute `<repo-root>` with `$ROOT` from Step 0 and `<branchN>` with each entry of `BRANCHES`):
 
 ```bash
-encode_claude_path() {
-    # Claude Code's actual rule: replace EVERY non-[A-Za-z0-9-] codepoint with '-'
-    # Covers: / . _ Korean chars spaces emoji etc.
-    echo "$1" | sed 's|[^A-Za-z0-9-]|-|g'
-}
-
-MAIN_ENC=$(encode_claude_path "$ROOT")
-MAIN_MEMORY="$HOME/.claude/projects/${MAIN_ENC}/memory"
-
-for BR in "${BRANCHES[@]}"; do
-    WT_PATH="$ROOT/.worktrees/$BR"
-    [ -d "$WT_PATH" ] || continue   # was skipped earlier
-
-    # Skip if main has no memory yet (first-ever use, nothing to share)
-    if [ ! -d "$MAIN_MEMORY" ]; then
-        echo "ℹ️  $BR — 메인 레포에 Claude 메모리 폴더 없음 (아직 메모리 0건). 심링크 생략."
-        continue
-    fi
-
-    WT_ENC=$(encode_claude_path "$WT_PATH")
-    WT_PROJECT_DIR="$HOME/.claude/projects/${WT_ENC}"
-    WT_MEMORY="${WT_PROJECT_DIR}/memory"
-
-    # If WT memory already exists (file, dir, or symlink), DON'T clobber.
-    # User may have already started a session in this worktree path before — manual migration required.
-    if [ -e "$WT_MEMORY" ] || [ -L "$WT_MEMORY" ]; then
-        echo "⏭️  $BR — 워크트리 메모리 폴더가 이미 존재 ($WT_MEMORY). 자동 심링크 생략 — 필요 시 사용자가 수동 마이그레이션."
-        continue
-    fi
-
-    mkdir -p "$WT_PROJECT_DIR"
-    ln -s "$MAIN_MEMORY" "$WT_MEMORY"
-    echo "🔗 $BR ← Claude 메모리 폴더 심링크 ($MAIN_MEMORY)"
-done
+bash "$(claude-plugin-root)/skills/setting-up-worktrees/scripts/setup-memory-symlinks.sh" \
+    "<repo-root>" "<branch1>" "<branch2>" ...
 ```
+
+If `$(claude-plugin-root)` is not available in your shell, use the absolute path that this SKILL.md lives in — i.e. resolve `dirname` of this skill's directory and append `scripts/setup-memory-symlinks.sh`. The script:
+
+- encodes paths with the verified-correct rule (`sed 's|[^A-Za-z0-9-]|-|g'`)
+- skips when main repo has no memory dir yet
+- skips (no clobber) when a worktree's memory dir already exists
+- creates `~/.claude/projects/<encoded-wt-path>/` and symlinks `memory` → main repo's memory dir
+- prints one status line per branch (`🔗 <BR> ← ...`, `⏭️  <BR> — ...`, or `ℹ️ <BR> ...`)
+
+Pass the script's stdout through to the user as part of the Step 6 summary.
 
 Behavior summary:
 - Main memory dir missing → skip with notice (first-run user, nothing to share yet).
@@ -223,6 +205,8 @@ Claude 메모리 폴더: 메인 → 워크트리 심링크 (n개)
 | Use `git checkout -b` first then `worktree add` | Prefer `worktree add -b <branch> <path>` (atomic). |
 | Copy `.env.example` (template, already in git) | Excluded from glob. |
 | `sed 's\|/\|-\|g'` or `sed 's\|[/_]\|-\|g'` for Claude memory path encoding | INCOMPLETE — Claude Code converts EVERY non-`[A-Za-z0-9-]` codepoint (incl. `.`, `_`, Korean, spaces, emoji). Only `sed 's\|[^A-Za-z0-9-]\|-\|g'` matches the real encoding. Verified against `~/.claude/projects/` directory listings. |
+| Reproducing the encoding logic inline in this SKILL instead of invoking `scripts/setup-memory-symlinks.sh` | Forbidden — observed failure mode: agent infers the result mentally and produces wrong folder names (Korean preserved, etc.). Always shell out to the script. |
+| Pre-computing the encoded folder name yourself and `ln -s`-ing directly | Forbidden for the same reason — let the script handle it. |
 | Clobber worktree's existing memory dir with a symlink | Forbidden. If `$WT_MEMORY` already exists, skip and tell user to migrate manually. |
 | Skip the symlink because "user didn't ask for it" | Always attempt. The whole point is zero-friction worktree start. Only skip when main memory missing or WT memory already there. |
 
