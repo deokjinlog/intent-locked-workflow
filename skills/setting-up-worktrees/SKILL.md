@@ -30,7 +30,7 @@ NEVER ask the user which env files to copy. ALWAYS auto-glob `.env*` in the proj
 | Worktree root | `<project-root>/.worktrees/` (override only if user explicitly asks) |
 | Branch creation | If branch missing → `-b <name>` from current HEAD. Existing local → use as-is. Remote-only → `-B <name> origin/<name>` |
 | Env files copied | **Auto-glob `.env*` (excludes `.env.example`, `.env.sample`)**. ALL matches copied to every worktree. |
-| Claude memory folder | **Symlink** main repo's `~/.claude/projects/<encoded-main>/memory` → `~/.claude/projects/<encoded-wt>/memory`. Skip if main has no memory yet, or if worktree's memory dir already exists (don't clobber). |
+| Claude memory folder | **Symlink handled by `worktree-memory-symlink` PostToolUse hook** — fires automatically on `git worktree add`. Skips if main has no memory yet or if worktree's memory dir already exists. The skill body does NOT perform this step. |
 | `.worktrees/` in `.gitignore` | Auto-add if missing |
 
 ## Process
@@ -46,7 +46,7 @@ digraph wt_flow {
     "git worktree add <path> <branch>" [shape=box];
     "git worktree add -b <branch> <path>" [shape=box];
     "Copy ALL detected env files" [shape=box];
-    "Symlink Claude memory folder\n(if main has memory + WT has none)" [shape=box];
+    "Symlink Claude memory folder\n(automatic via PostToolUse hook)" [shape=box];
     "Report summary" [shape=doublecircle];
 
     "Verify git repo" -> "Parse branch list";
@@ -58,9 +58,9 @@ digraph wt_flow {
     "Branch exists?" -> "git worktree add -b <branch> <path>" [label="new"];
     "git worktree add <path> <branch>" -> "Copy ALL detected env files";
     "git worktree add -b <branch> <path>" -> "Copy ALL detected env files";
-    "Copy ALL detected env files" -> "Symlink Claude memory folder\n(if main has memory + WT has none)";
-    "Symlink Claude memory folder\n(if main has memory + WT has none)" -> "For each branch" [label="next"];
-    "Symlink Claude memory folder\n(if main has memory + WT has none)" -> "Report summary" [label="done"];
+    "Copy ALL detected env files" -> "Symlink Claude memory folder\n(automatic via PostToolUse hook)";
+    "Symlink Claude memory folder\n(automatic via PostToolUse hook)" -> "For each branch" [label="next"];
+    "Symlink Claude memory folder\n(automatic via PostToolUse hook)" -> "Report summary" [label="done"];
 }
 ```
 
@@ -144,30 +144,9 @@ for BR in "${BRANCHES[@]}"; do
 done
 ```
 
-**Step 5.5 — Symlink Claude Code memory folder (delegate to script)**
+**Step 5.5 — Memory symlink (handled automatically by hook)**
 
-<HARD-GATE>
-You MUST execute the bundled script `scripts/setup-memory-symlinks.sh` via the Bash tool with the exact command shown below. **Do NOT reproduce the encoding logic inline. Do NOT compute the encoded path mentally — the encoding rule is non-obvious (every codepoint outside `[A-Za-z0-9-]` becomes `-`, including dots and Korean) and prior versions of this skill failed because the agent simulated the rule in its head and produced wrong folder names (`.worktrees-` preserved, Korean preserved). The only correct path is to invoke the script.**
-</HARD-GATE>
-
-Why a script and not inline shell: when the encoding logic was written as inline `sed` in this SKILL, observed agent behavior was to mentally infer the result rather than run the bash, producing folders that Claude Code never reads. Externalizing to a `.sh` file removes that escape hatch — the agent cannot rewrite the script's logic, only invoke it.
-
-Run exactly this (substitute `<repo-root>` with `$ROOT` from Step 0 and `<branchN>` with each entry of `BRANCHES`):
-
-```bash
-bash "$(claude-plugin-root)/skills/setting-up-worktrees/scripts/setup-memory-symlinks.sh" \
-    "<repo-root>" "<branch1>" "<branch2>" ...
-```
-
-If `$(claude-plugin-root)` is not available in your shell, use the absolute path that this SKILL.md lives in — i.e. resolve `dirname` of this skill's directory and append `scripts/setup-memory-symlinks.sh`. The script:
-
-- encodes paths with the verified-correct rule (`sed 's|[^A-Za-z0-9-]|-|g'`)
-- skips when main repo has no memory dir yet
-- skips (no clobber) when a worktree's memory dir already exists
-- creates `~/.claude/projects/<encoded-wt-path>/` and symlinks `memory` → main repo's memory dir
-- prints one status line per branch (`🔗 <BR> ← ...`, `⏭️  <BR> — ...`, or `ℹ️ <BR> ...`)
-
-Pass the script's stdout through to the user as part of the Step 6 summary.
+Memory-folder symlinking is performed by the `worktree-memory-symlink` PostToolUse hook (see `hooks/hooks.json` + `hooks/worktree-memory-symlink`). It fires automatically whenever any `git worktree add ...` command runs through the Bash tool, parses the worktree path from the command, and invokes `scripts/setup-memory-symlinks.sh`. **Do nothing here.** No mkdir, no ln, no sed — the hook owns this concern entirely. The script's output (e.g. `🔗 <branch> ← Claude 메모리 폴더 심링크 ...`) appears as hook stderr in your tool output and should be forwarded to the user as part of the Step 6 summary if visible.
 
 Behavior summary:
 - Main memory dir missing → skip with notice (first-run user, nothing to share yet).
@@ -204,9 +183,7 @@ Claude 메모리 폴더: 메인 → 워크트리 심링크 (n개)
 | Skip `.gitignore` update | Always add `.worktrees/` (idempotent check). |
 | Use `git checkout -b` first then `worktree add` | Prefer `worktree add -b <branch> <path>` (atomic). |
 | Copy `.env.example` (template, already in git) | Excluded from glob. |
-| `sed 's\|/\|-\|g'` or `sed 's\|[/_]\|-\|g'` for Claude memory path encoding | INCOMPLETE — Claude Code converts EVERY non-`[A-Za-z0-9-]` codepoint (incl. `.`, `_`, Korean, spaces, emoji). Only `sed 's\|[^A-Za-z0-9-]\|-\|g'` matches the real encoding. Verified against `~/.claude/projects/` directory listings. |
-| Reproducing the encoding logic inline in this SKILL instead of invoking `scripts/setup-memory-symlinks.sh` | Forbidden — observed failure mode: agent infers the result mentally and produces wrong folder names (Korean preserved, etc.). Always shell out to the script. |
-| Pre-computing the encoded folder name yourself and `ln -s`-ing directly | Forbidden for the same reason — let the script handle it. |
+| Performing the memory symlink yourself in this skill | Forbidden — handled by `worktree-memory-symlink` PostToolUse hook. The agent must not run any path-mutating shell command (directory creation, symlink, or string substitution) against the Claude memory location. Past versions failed because agents mentally simulated the encoding rule and produced folder names Claude Code never reads. |
 | Clobber worktree's existing memory dir with a symlink | Forbidden. If `$WT_MEMORY` already exists, skip and tell user to migrate manually. |
 | Skip the symlink because "user didn't ask for it" | Always attempt. The whole point is zero-friction worktree start. Only skip when main memory missing or WT memory already there. |
 
@@ -237,9 +214,9 @@ After running this skill:
 2. Every `.env*` file from the project root (except `.env.example`/`.env.sample`/`.env.template`) is copied into each worktree
 3. `.worktrees/` is in `.gitignore`
 4. `git worktree list` shows all created worktrees
-5. For each worktree, `~/.claude/projects/<encoded-wt-path>/memory` is a symlink pointing to the main repo's memory dir — UNLESS main has no memory yet (first run) or the worktree's memory dir already existed (don't clobber). Encoding rule: replace EVERY non-`[A-Za-z0-9-]` codepoint with `-` (covers `/`, `.`, `_`, Korean, spaces, emoji — anything not ASCII alnum or hyphen).
-6. User got a summary report listing each worktree's path + per-file copy status + memory symlink status
-7. The user was NOT asked which env files to copy, NOR about the memory symlink
+5. The `worktree-memory-symlink` PostToolUse hook fired for every `git worktree add` invocation issued by this skill. (The skill itself did NOT mkdir / ln any memory paths.)
+6. User got a summary report listing each worktree's path + per-file copy status + memory symlink status (the latter coming from the hook's stderr output).
+7. The user was NOT asked which env files to copy, NOR about the memory symlink.
 
 ## Related Skills
 

@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# PostToolUse hook for js-super: when the main agent runs `git worktree add`
+# via the Bash tool, set up Claude Code memory-folder symlinks for the new
+# worktree(s) by invoking setup-memory-symlinks.sh.
+#
+# This hook exists because the equivalent inline shell snippet in
+# setting-up-worktrees/SKILL.md was repeatedly NOT executed by the main
+# agent (which mentally simulated the encoding instead, producing wrong
+# folder names — see git history v1.1.2 through v1.1.4). A real hook firing
+# from the harness cannot be bypassed by the LLM.
+#
+# Failure policy: NEVER block the user. On any error, log to stderr and
+# exit 0.
+
+set -uo pipefail
+
+# Discover plugin root from this script's location.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SYMLINK_SCRIPT="${PLUGIN_ROOT}/skills/setting-up-worktrees/scripts/setup-memory-symlinks.sh"
+
+# Read the entire JSON event from stdin.
+INPUT="$(cat)"
+
+# Extract fields. Prefer jq; fall back to python3 if unavailable.
+extract() {
+    local field="$1"
+    if command -v jq >/dev/null 2>&1; then
+        printf '%s' "$INPUT" | jq -r "$field // empty" 2>/dev/null
+    else
+        printf '%s' "$INPUT" | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    path = '$field'.lstrip('.').split('.')
+    cur = d
+    for p in path:
+        cur = cur.get(p, '') if isinstance(cur, dict) else ''
+    print(cur if cur else '')
+except Exception:
+    pass
+" 2>/dev/null
+    fi
+}
+
+TOOL_NAME="$(extract '.tool_name')"
+[ "$TOOL_NAME" = "Bash" ] || exit 0
+
+COMMAND="$(extract '.tool_input.command')"
+[ -n "$COMMAND" ] || exit 0
+
+# Fast pattern check — must START with `git worktree add ` (with trailing space).
+case "$COMMAND" in
+    "git worktree add "*) ;;
+    *) exit 0 ;;
+esac
+
+# We're committed; resolve repo root from cwd.
+CWD="$(extract '.cwd')"
+[ -n "$CWD" ] || CWD="$PWD"
+
+ROOT="$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$ROOT" ]; then
+    echo "[worktree-memory-symlink] could not resolve repo root from cwd=$CWD" >&2
+    exit 0
+fi
+
+# Parse worktree path out of the command. The first positional argument that
+# is now a real directory wins. Skip flags and their values.
+parse_worktree_path() {
+    local cmd="$1"
+    # Strip leading `git worktree add `
+    cmd="${cmd#git worktree add }"
+
+    # Tokenize naively on whitespace (worktree paths are normally simple).
+    local -a toks
+    read -r -a toks <<< "$cmd"
+
+    local i=0
+    while [ "$i" -lt "${#toks[@]}" ]; do
+        local t="${toks[$i]}"
+        case "$t" in
+            # Flags that take a value
+            -b|-B|--reason)
+                i=$((i + 2))
+                ;;
+            # Boolean flags
+            --detach|--guess-remote|--no-guess-remote|--track|--no-track|--lock|--force|-f|--quiet|-q|--checkout|--no-checkout)
+                i=$((i + 1))
+                ;;
+            # First non-flag positional → the path
+            *)
+                # Resolve relative to ROOT
+                local abs
+                if [ "${t:0:1}" = "/" ]; then
+                    abs="$t"
+                else
+                    abs="$ROOT/$t"
+                fi
+                if [ -d "$abs" ]; then
+                    printf '%s' "$abs"
+                    return 0
+                fi
+                # Fall through: not a real dir, give up
+                return 1
+                ;;
+        esac
+    done
+    return 1
+}
+
+WT_ABS="$(parse_worktree_path "$COMMAND" || true)"
+if [ -z "$WT_ABS" ]; then
+    echo "[worktree-memory-symlink] could not resolve worktree path from: $COMMAND" >&2
+    exit 0
+fi
+
+# Sanity: only act on worktrees under <root>/.worktrees/. Other paths are
+# user-defined and out of our scope.
+case "$WT_ABS" in
+    "$ROOT/.worktrees/"*)
+        BR="${WT_ABS#$ROOT/.worktrees/}"
+        # Strip any trailing slash
+        BR="${BR%/}"
+        ;;
+    *)
+        # Not under .worktrees/ — silently ignore.
+        exit 0
+        ;;
+esac
+
+# Invoke the existing helper. Errors from it are logged but do not block.
+if [ -x "$SYMLINK_SCRIPT" ]; then
+    bash "$SYMLINK_SCRIPT" "$ROOT" "$BR" 2>&1 | sed 's/^/[worktree-memory-symlink] /' >&2
+else
+    echo "[worktree-memory-symlink] script not executable: $SYMLINK_SCRIPT" >&2
+fi
+
+exit 0
