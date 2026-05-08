@@ -5,6 +5,7 @@
 node_modules/
 inspo
 triage/
+HANDOFF.md
 
 # js-superpowers dev env
 .venv/

@@ -1,11 +1,11 @@
 ---
 name: setting-up-worktrees
-description: Use when the user asks to create one or more git worktrees ("워크트리 만들어줘", "<티켓명> 워크트리"). Default location is <project-root>/.worktrees/<branch-name>; creates the branch from current HEAD if it doesn't exist, then auto-copies ALL existing .env* files (.env, .env.local, .env.production, etc.) so the user can immediately build/run a server in each worktree. NEVER asks the user which env files to copy — always auto-glob.
+description: Use when the user asks to create one or more git worktrees ("워크트리 만들어줘", "<티켓명> 워크트리"). Default location is <project-root>/.worktrees/<branch-name>; creates the branch from current HEAD if it doesn't exist, then auto-copies ALL existing .env* files (.env, .env.local, .env.production, etc.) AND symlinks the main repo's Claude Code memory folder so the worktree shares user/feedback/project memory from the start. NEVER asks the user which env files to copy — always auto-glob.
 ---
 
 # Setting Up Worktrees (Quick Batch Creation)
 
-User-personal workflow shortcut for spinning up multiple parallel work streams. Each worktree gets its own branch and an automatic copy of every `.env*` file present in the project root, so the user can build/run servers concurrently without env-loading fights.
+User-personal workflow shortcut for spinning up multiple parallel work streams. Each worktree gets its own branch, an automatic copy of every `.env*` file in the project root (so the user can build/run servers concurrently without env-loading fights), AND a symlink to the main repo's Claude Code memory folder (so user/feedback/project memory is immediately available in the worktree's first session).
 
 <HARD-GATE>
 This skill MUST be invoked from a git repository. If the current working directory is not inside a git repo (`git rev-parse --is-inside-work-tree` returns false), abort and tell the user to run `git init` first or switch to the target project.
@@ -30,6 +30,7 @@ NEVER ask the user which env files to copy. ALWAYS auto-glob `.env*` in the proj
 | Worktree root | `<project-root>/.worktrees/` (override only if user explicitly asks) |
 | Branch creation | If branch missing → `-b <name>` from current HEAD. Existing local → use as-is. Remote-only → `-B <name> origin/<name>` |
 | Env files copied | **Auto-glob `.env*` (excludes `.env.example`, `.env.sample`)**. ALL matches copied to every worktree. |
+| Claude memory folder | **Symlink** main repo's `~/.claude/projects/<encoded-main>/memory` → `~/.claude/projects/<encoded-wt>/memory`. Skip if main has no memory yet, or if worktree's memory dir already exists (don't clobber). |
 | `.worktrees/` in `.gitignore` | Auto-add if missing |
 
 ## Process
@@ -45,6 +46,7 @@ digraph wt_flow {
     "git worktree add <path> <branch>" [shape=box];
     "git worktree add -b <branch> <path>" [shape=box];
     "Copy ALL detected env files" [shape=box];
+    "Symlink Claude memory folder\n(if main has memory + WT has none)" [shape=box];
     "Report summary" [shape=doublecircle];
 
     "Verify git repo" -> "Parse branch list";
@@ -56,8 +58,9 @@ digraph wt_flow {
     "Branch exists?" -> "git worktree add -b <branch> <path>" [label="new"];
     "git worktree add <path> <branch>" -> "Copy ALL detected env files";
     "git worktree add -b <branch> <path>" -> "Copy ALL detected env files";
-    "Copy ALL detected env files" -> "For each branch" [label="next"];
-    "Copy ALL detected env files" -> "Report summary" [label="done"];
+    "Copy ALL detected env files" -> "Symlink Claude memory folder\n(if main has memory + WT has none)";
+    "Symlink Claude memory folder\n(if main has memory + WT has none)" -> "For each branch" [label="next"];
+    "Symlink Claude memory folder\n(if main has memory + WT has none)" -> "Report summary" [label="done"];
 }
 ```
 
@@ -141,6 +144,53 @@ for BR in "${BRANCHES[@]}"; do
 done
 ```
 
+**Step 5.5 — Symlink Claude Code memory folder (no user prompt)**
+
+Claude Code encodes the working directory into the memory path: each absolute path's `/` AND `_` characters become `-`. Without a symlink, a worktree session sees zero memory and the user starts cold despite years of context in the main repo. Note: simple `sed 's|/|-|g'` is INSUFFICIENT — `_` must also be converted (e.g. `jinsup_space` → `jinsup-space`).
+
+```bash
+encode_claude_path() {
+    # Replace BOTH / and _ with - (Claude Code's actual encoding rule)
+    echo "$1" | sed 's|[/_]|-|g'
+}
+
+MAIN_ENC=$(encode_claude_path "$ROOT")
+MAIN_MEMORY="$HOME/.claude/projects/${MAIN_ENC}/memory"
+
+for BR in "${BRANCHES[@]}"; do
+    WT_PATH="$ROOT/.worktrees/$BR"
+    [ -d "$WT_PATH" ] || continue   # was skipped earlier
+
+    # Skip if main has no memory yet (first-ever use, nothing to share)
+    if [ ! -d "$MAIN_MEMORY" ]; then
+        echo "ℹ️  $BR — 메인 레포에 Claude 메모리 폴더 없음 (아직 메모리 0건). 심링크 생략."
+        continue
+    fi
+
+    WT_ENC=$(encode_claude_path "$WT_PATH")
+    WT_PROJECT_DIR="$HOME/.claude/projects/${WT_ENC}"
+    WT_MEMORY="${WT_PROJECT_DIR}/memory"
+
+    # If WT memory already exists (file, dir, or symlink), DON'T clobber.
+    # User may have already started a session in this worktree path before — manual migration required.
+    if [ -e "$WT_MEMORY" ] || [ -L "$WT_MEMORY" ]; then
+        echo "⏭️  $BR — 워크트리 메모리 폴더가 이미 존재 ($WT_MEMORY). 자동 심링크 생략 — 필요 시 사용자가 수동 마이그레이션."
+        continue
+    fi
+
+    mkdir -p "$WT_PROJECT_DIR"
+    ln -s "$MAIN_MEMORY" "$WT_MEMORY"
+    echo "🔗 $BR ← Claude 메모리 폴더 심링크 ($MAIN_MEMORY)"
+done
+```
+
+Behavior summary:
+- Main memory dir missing → skip with notice (first-run user, nothing to share yet).
+- Worktree memory dir already exists → skip without clobbering (user already ran a session in that path).
+- Otherwise → symlink. New memories saved in either side are visible from both.
+
+⚠️ Cleanup note: when the user later removes a worktree, `git worktree remove` will not touch the symlink (lives outside the worktree dir) — no risk to main memory. But `rm -rf <worktree-path>` is also safe because the memory symlink is OUTSIDE the worktree directory (`~/.claude/projects/...`), not inside it. The only thing to watch is users manually `rm -rf $HOME/.claude/projects/<wt-encoded>/memory` — that would delete the LINK, not the target, so still safe; whereas `rm -rf $HOME/.claude/projects/<wt-encoded>/memory/` (with trailing slash on some shells) could traverse into the linked main memory. Add a tiny note in the report so the user knows.
+
 **Step 6 — Report summary**
 
 Print a Korean-friendly summary listing each worktree path + the env files copied:
@@ -148,13 +198,15 @@ Print a Korean-friendly summary listing each worktree path + the env files copie
 ```
 ✅ 워크트리 생성 완료 (n개)
 감지된 .env* 파일: .env, .env.local, .env.production (3개)
+Claude 메모리 폴더: 메인 → 워크트리 심링크 (n개)
 
-- feature-a   → .worktrees/feature-a   (.env ✓ .env.local ✓ .env.production ✓)
-- feature-b   → .worktrees/feature-b   (.env ✓ .env.local ✓ .env.production ✓)
-- feature-c   → .worktrees/feature-c   (.env ✓ .env.local ✓ .env.production ✓)
+- feature-a   → .worktrees/feature-a   (.env ✓ .env.local ✓ .env.production ✓ | 🔗 memory)
+- feature-b   → .worktrees/feature-b   (.env ✓ .env.local ✓ .env.production ✓ | 🔗 memory)
+- feature-c   → .worktrees/feature-c   (.env ✓ .env.local ✓ .env.production ✓ | 🔗 memory)
 
 각 워크트리에서 바로 빌드·서버 실행 가능합니다.
-정리: `git worktree remove <path>`
+워크트리 첫 세션부터 메인 레포의 Claude 메모리(user/feedback/project) 즉시 활용됩니다.
+정리: `git worktree remove <path>` — 메모리 심링크는 워크트리 디렉터리 밖이라 메인 메모리에 영향 없음.
 ```
 
 ## Anti-Patterns
@@ -167,6 +219,9 @@ Print a Korean-friendly summary listing each worktree path + the env files copie
 | Skip `.gitignore` update | Always add `.worktrees/` (idempotent check). |
 | Use `git checkout -b` first then `worktree add` | Prefer `worktree add -b <branch> <path>` (atomic). |
 | Copy `.env.example` (template, already in git) | Excluded from glob. |
+| `sed 's\|/\|-\|g'` for Claude memory path encoding | INCOMPLETE — Claude Code also converts `_` → `-`. Use `sed 's\|[/_]\|-\|g'`. |
+| Clobber worktree's existing memory dir with a symlink | Forbidden. If `$WT_MEMORY` already exists, skip and tell user to migrate manually. |
+| Skip the symlink because "user didn't ask for it" | Always attempt. The whole point is zero-friction worktree start. Only skip when main memory missing or WT memory already there. |
 
 ## Red Flags
 
@@ -195,8 +250,9 @@ After running this skill:
 2. Every `.env*` file from the project root (except `.env.example`/`.env.sample`/`.env.template`) is copied into each worktree
 3. `.worktrees/` is in `.gitignore`
 4. `git worktree list` shows all created worktrees
-5. User got a summary report listing each worktree's path + per-file copy status
-6. The user was NOT asked which env files to copy
+5. For each worktree, `~/.claude/projects/<encoded-wt-path>/memory` is a symlink pointing to the main repo's memory dir — UNLESS main has no memory yet (first run) or the worktree's memory dir already existed (don't clobber). Encoding rule: replace BOTH `/` and `_` with `-`.
+6. User got a summary report listing each worktree's path + per-file copy status + memory symlink status
+7. The user was NOT asked which env files to copy, NOR about the memory symlink
 
 ## Related Skills
 
