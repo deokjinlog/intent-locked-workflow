@@ -1409,3 +1409,20 @@ Expected: ..., v1.1.6, v1.1.7
   - `skills/executing-plans/SKILL.md:69-83` — Phase 2 (per-task batched log) → Phase 2 (code-only commit + accumulator) + Phase 3 (consolidator 4단계) — single source of truth 명시
 - **연관 commits**: (이번 commit SHA)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 19:30] [코드-수정] (task: Task 8 — F1~F5 fixtures + tests/README)
+- **id**: CH-20260509-011
+- **이유**: 회귀 + 자동화 — F1 골든 비교 (AC-1, AC-4) / F2 [검증] entry (AC-3) / F3 mode schema 분기 (AC-4) / F4 interrupt recovery (R2) / F5 cleanup (R4)
+- **무엇이**: `skills/js-super-subagent-driven-development/tests/{F1..F5,README}.md` (12 신규), `scripts/tests/test_changelog_buffer.py` (1 fixture test 추가)
+- **영향범위**: 회귀 인프라. F1/F4는 pytest 자동, 나머지는 dogfood I1~I4 에서 수동 비교.
+- **위험 카테고리**: none (테스트 fixtures — production 영향 없음)
+- **세부 변경 (13건)**:
+  - `tests/F1-basic-batch/manifests/task-{01,02}.md` + `expected-entry.md` (3 파일)
+  - `tests/F2-zero-code-task/manifests/task-01.md` + `expected-entry.md` (2 파일)
+  - `tests/F3-mode-schema-divergence/{per-task,single-mode}-expected.md` (2 파일)
+  - `tests/F4-interrupt-recovery/manifests/task-{01,02}.md` + `expected-detection.md` (3 파일)
+  - `tests/F5-cleanup/{before,after}-state.md` (2 파일)
+  - `tests/README.md` — AC 매핑 표
+  - `scripts/tests/test_changelog_buffer.py:88-96` — F1 fixture pytest (assertion: out.strip() == expected.strip())
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회

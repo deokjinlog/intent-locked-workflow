@@ -1,0 +1,11 @@
+### [2026-05-09 18:00] [코드-수정] (batch: tasks 1..2)
+- **id**: CH-FIXTURE-100
+- **이유**: 서브에이전트 모드 task batch 종합 (end-of-run consolidation)
+- **무엇이**: src/init.py, src/validator.py
+- **영향범위**: 누적 (task별 세부 참조)
+- **위험 카테고리**: side-effect
+- **task별 세부 (2건)**:
+  - Task 1: `src/init.py:1-12` — Create module entrypoint (`none`) — commits: `aaa1111`
+  - Task 2: `src/validator.py:5-30` — Add input validator (`side-effect`) — commits: `bbb2222`
+- **연관 commits**: aaa1111, bbb2222
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회

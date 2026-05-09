@@ -83,3 +83,14 @@ def test_consolidate_two_tasks_into_single_entry(tmp_path: Path):
     assert "side-effect" in out
     assert "**변경 전/후 코드**: 생략" in out
     assert "aaa1" in out and "bbb2" in out
+
+
+def test_F1_basic_batch_fixture():
+    fixtures = Path("skills/js-super-subagent-driven-development/tests/F1-basic-batch")
+    out = consolidate_to_entry(
+        manifests_dir=fixtures / "manifests",
+        ch_id="CH-FIXTURE-100",
+        timestamp="2026-05-09 18:00",
+    )
+    expected = (fixtures / "expected-entry.md").read_text()
+    assert out.strip() == expected.strip()
