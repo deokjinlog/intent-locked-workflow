@@ -129,8 +129,32 @@ digraph design_flow {
 
 **6. Single combined user-approval gate** (RAW review)
 - Present BOTH the full RAW (un-prettified) `<slug>-tech-design.md` AND the verifying-spec report in one message
-- Ask once: "Approve `<slug>-tech-design.md` and proceed? — yes / fix / partial"
 - DO NOT split into "approve doc" and "approve verify report" — that's two gates for one decision
+
+**Gate #11 — doc + verify 결합 승인**
+
+**Tool form (preferred)**
+
+Call `AskUserQuestion`:
+
+```json
+{
+  "question": "Approve <slug>-tech-design.md (and verify-spec report) and proceed?",
+  "context": "doc + 4축 보고서 한 메시지로 노출됨",
+  "choices": [
+    {"value": "yes", "label": "Yes — approve, log change-history, ask next stage"},
+    {"value": "fix", "label": "Fix — needs revision"},
+    {"value": "partial", "label": "Partial — revise specific sections"}
+  ]
+}
+```
+
+**Prose fallback**
+
+When `AskUserQuestion` is unavailable, ask once:
+
+> Approve `<slug>-tech-design.md` and proceed? — `yes` / `fix` / `partial`
+
 - On `yes` → continue to step 7 (docs-pretty)
 - On `fix` → re-enter the relevant question(s), then re-run from step 4 (Self-review → re-verify → re-show RAW)
 - On `partial` → ask which sections to revisit, then re-enter
@@ -145,7 +169,29 @@ digraph design_flow {
 - Entry: `[개발방향-수정] CH-YYYYMMDD-NNN / 이유: 신규 기술 설계 / 무엇이: <slug>-tech-design.md 전체 / 영향범위: 없음 (최초 생성)`
 
 **9. Ask the proceed-to-writing-plans gate**
-- Emit: `✅ <slug>-tech-design.md is finalized. Proceed to the writing-plans (구현계획서, step-by-step plan) stage now? — yes / no`
+
+**Gate #12 — proceed-to-writing-plans**
+
+**Tool form (preferred)**
+
+Call `AskUserQuestion`:
+
+```json
+{
+  "question": "✅ <slug>-tech-design.md is finalized. Proceed to writing-plans (구현계획서, step-by-step plan)?",
+  "choices": [
+    {"value": "yes", "label": "Yes — auto-invoke /write-plan"},
+    {"value": "no", "label": "No — exit, run /write-plan later"}
+  ]
+}
+```
+
+**Prose fallback**
+
+```
+✅ <slug>-tech-design.md is finalized. Proceed to the writing-plans (구현계획서, step-by-step plan) stage now? — yes / no
+```
+
 - The user may reply in any language; parse intent.
 - On approval → auto-invoke `writing-plans` skill via Skill tool. NEVER cross without approval.
 - On hold → emit `ℹ️ OK. Run /write-plan later when ready.` and stop.
@@ -207,18 +253,19 @@ This summarizes the corrected order (matches Process detail steps 5-9 above):
 2. **Single combined approval gate** — present in ONE message:
    - The full RAW `<slug>-tech-design.md` content (or summary if very long)
    - The verify-spec 4-axis report
-   - One question: "Approve `<slug>-tech-design.md` and proceed? — yes / fix / partial"
    - DO NOT split into "approve doc" → "approve verify report". One gate, one decision.
    - User reviews RAW markdown (no docs-pretty yet). docs-pretty fires AFTER approval.
+
+   **Gate #11 — doc + verify 결합 승인** — see Tool form + Prose fallback above.
 
 3. On `yes` → invoke change-history (`[개발방향-수정]` entry) → continue to step 4.
    On `fix` → re-enter the relevant question(s), then re-run from "Self-review (internal)" — re-show RAW; docs-pretty stays gated until final approval.
    On `partial` → ask which sections to revisit, then re-enter.
 
 4. **Proceed-to-writing-plans gate** (separate, after change-history is logged):
-   ```
-   ✅ <slug>-tech-design.md is finalized. Proceed to the writing-plans (구현계획서, step-by-step plan) stage now? — yes / no
-   ```
+
+   **Gate #12 — proceed-to-writing-plans** — see Tool form + Prose fallback above.
+
    Parse intent in any language.
    - Approval → invoke the Skill tool with `writing-plans`. NEVER cross the gate without explicit approval.
    - Hold → emit `ℹ️ OK. Run /write-plan later when ready.` and stop.
