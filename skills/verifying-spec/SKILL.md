@@ -30,7 +30,7 @@ digraph verify_flow {
     "C. Code impact analysis" [shape=box];
     "Compose 4-axis report" [shape=box];
     "Present to user" [shape=diamond];
-    "User decision:\nproceed / fix / partial" [shape=diamond];
+    "User decision:\nproceed / fix" [shape=diamond];
     "Re-enter prior skill\n(designing-direction or writing-plans)" [shape=box];
     "Proceed" [shape=doublecircle];
 
@@ -39,9 +39,9 @@ digraph verify_flow {
     "A. Consistency check" -> "Compose 4-axis report";
     "C. Code impact analysis" -> "Compose 4-axis report";
     "Compose 4-axis report" -> "Present to user";
-    "Present to user" -> "User decision:\nproceed / fix / partial";
-    "User decision:\nproceed / fix / partial" -> "Re-enter prior skill\n(designing-direction or writing-plans)" [label="fix"];
-    "User decision:\nproceed / fix / partial" -> "Proceed" [label="proceed/partial"];
+    "Present to user" -> "User decision:\nproceed / fix";
+    "User decision:\nproceed / fix" -> "Re-enter prior skill\n(designing-direction or writing-plans)" [label="fix"];
+    "User decision:\nproceed / fix" -> "Proceed" [label="proceed"];
 }
 ```
 
@@ -98,10 +98,10 @@ Output to the conversation in this exact structure:
 - <gap or conflict> → suggest <action>
 - <risk candidate> → suggest <mitigation or §6 augmentation>
 
-진행 / 수정 / 부분 수정 중 선택해주세요.
+진행 / 수정 중 선택해주세요.
 ```
 
-The `진행 / 수정 / 부분 수정` line is in Korean because the user chooses verbally.
+The `진행 / 수정` line is in Korean because the user chooses verbally.
 
 ## Anti-Patterns
 
@@ -125,7 +125,7 @@ The `진행 / 수정 / 부분 수정` line is in Korean because the user chooses
 A verification run is complete when ALL hold:
 1. Report includes all 4 axes (consistency-gaps, consistency-conflicts, impact-files+callers+risks, test-coverage)
 2. Counts are concrete (not "some" or "a few")
-3. The closing prompt offers `진행 / 수정 / 부분 수정` choices to the user
+3. The closing prompt offers `진행 / 수정` choices to the user
 
 ## Related Skills
 

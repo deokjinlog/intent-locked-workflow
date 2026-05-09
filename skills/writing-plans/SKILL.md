@@ -202,7 +202,7 @@ digraph plan_flow {
     "Run verifying-spec FIRST" -> "Invoke code-pretty\n(pre-review, Sonnet subagent)";
     "Invoke code-pretty\n(pre-review, Sonnet subagent)" -> "Invoke docs-pretty\n(pre-review, Sonnet subagent)";
     "Invoke docs-pretty\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report + code-pretty diff)";
-    "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Self-review (internal)" [label="fix / partial — re-verify + re-prettify"];
+    "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Self-review (internal)" [label="fix — re-verify + re-prettify"];
     "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Invoke change-history" [label="approve"];
     "Invoke change-history" -> "Hand off to /execute-plan";
 }
@@ -319,21 +319,19 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
        "context": "plan + 4축 보고서 한 메시지로 노출됨",
        "choices": [
          {"value": "yes", "label": "Yes — approve, log change-history, ask execution mode"},
-         {"value": "fix", "label": "Fix — needs revision"},
-         {"value": "partial", "label": "Partial — revise specific sections"}
+         {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 task/section 수정할지 묻기)"}
        ]
      }
      ```
 
      **Prose fallback**
 
-     > Approve `<slug>-implementation-plan.md` and proceed? — `yes` / `fix` / `partial`
+     > Approve `<slug>-implementation-plan.md` and proceed? — `yes` / `fix`
    - DO NOT split into "approve plan" → "approve verify report". One gate, one decision.
-   - On `fix` → loop back to step 1 (re-verify → re-code-pretty → re-docs-pretty → re-show)
+   - On `fix` → 메인이 "어느 task/section 수정?" follow-up → 해당 task 재분해 후 step 1 (verifying-spec) 부터 재실행 (code-pretty + docs-pretty per-draft-state 자동 재발화).
 
 5. On `yes` → invoke change-history (`[구현계획서-수정]` entry) → continue to Execution Handoff below.
-   On `fix` → re-decompose specific tasks, then re-run from step 1 (verifying-spec) — code-pretty + docs-pretty re-fire on next loop (per-draft-state).
-   On `partial` → ask which sections/tasks to revisit, then re-enter.
+   On `fix` → 메인이 "어느 task/section 수정?" follow-up → 해당 task 재분해 후 step 1 (verifying-spec) 부터 재실행.
 
 ## Execution Handoff
 

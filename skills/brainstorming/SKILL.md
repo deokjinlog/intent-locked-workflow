@@ -15,7 +15,7 @@ Two modes are offered at the start, both producing the same file path (`<slug>-r
 <HARD-GATE>
 This skill is for PRD only — NOT writing <slug>-tech-design.md, NOT touching code, NOT writing implementation plans. brainstorming = PRD only.
 
-After <slug>-requirements.md is approved AND change-history is logged, you MUST ask the user explicitly whether to proceed to the technical-design stage. The user can reply in any language; parse intent (approve / hold / unclear). On approval, AUTO-invoke the `designing-direction` skill via the Skill tool — the user does NOT need to manually type `/design`. On hold, exit cleanly and tell the user to run `/design` later. NEVER cross the gate without explicit user approval.
+After <slug>-requirements.md is approved AND change-history is logged, **automatically invoke** the `designing-direction` skill via the Skill tool (v1.1.9+ — the separate "proceed?" gate has been removed). Output a one-line interrupt-notice `ℹ️ Auto-proceeding to /design. Type "stop" to abort.` so the user can pause if needed. If they explicitly type "stop"/"멈춰"/"잠깐", exit cleanly with `ℹ️ OK. Run /design later when ready.`. The original combined approval gate (#8) already captured the user's intent; a separate proceed gate just adds friction.
 </HARD-GATE>
 
 ## Checklist
@@ -32,8 +32,8 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 6. **User reviews <slug>-requirements.md** — show the RAW (un-prettified) file, get approval (loop until OK; on changes → revise → re-show raw)
 7. **Invoke docs-pretty skill** — format-only pass (Sonnet subagent) on the APPROVED draft, AFTER user approval and BEFORE change-history. Single shot per feature (final-1회). Stops once first change-history entry is logged.
 8. **Invoke change-history skill** — append first `[요구사항-수정]` entry
-9. **Ask user for approval to proceed** — emit a short prompt asking yes/no whether to enter designing-direction
-10. **On approval intent → auto-invoke designing-direction via Skill tool. On hold → exit with a one-line notice telling the user to run /design later**
+9. **Auto-proceed to designing-direction (v1.1.9+ — gate removed)** — change-history 직후 자동 invoke. 사용자 인터럽트 기회만 한 줄 notice 로 노출.
+10. **(v1.1.9+) Auto-invoke designing-direction via Skill tool, with a one-line interrupt-notice. On user "stop"/"멈춰"/"잠깐" → exit with notice telling the user to run /design later.**
 
 If you find yourself skipping ahead, stop and create the missing task.
 
@@ -94,7 +94,7 @@ digraph brainstorm_flow {
     "User reviews <slug>-requirements.md" [shape=diamond];
     "Invoke docs-pretty\n(post-approval, Sonnet subagent, 1회)" [shape=box];
     "Invoke change-history\n(first entry: 요구사항-수정/생성)" [shape=box];
-    "Ask: proceed to designing-direction?" [shape=diamond];
+    "Auto-invoke /design (no gate, v1.1.9+)" [shape=box];
     "Auto-invoke designing-direction skill" [shape=doublecircle];
     "Exit: tell user to run /design later" [shape=oval];
 
@@ -123,9 +123,8 @@ digraph brainstorm_flow {
     "User reviews <slug>-requirements.md\n(raw markdown)" -> "Self-review (mode-specific)" [label="changes — re-show raw"];
     "User reviews <slug>-requirements.md\n(raw markdown)" -> "Invoke docs-pretty\n(post-approval, Sonnet subagent, 1회)" [label="approve"];
     "Invoke docs-pretty\n(post-approval, Sonnet subagent, 1회)" -> "Invoke change-history\n(first entry: 요구사항-수정/생성)";
-    "Invoke change-history\n(first entry: 요구사항-수정/생성)" -> "Ask: proceed to designing-direction?";
-    "Ask: proceed to designing-direction?" -> "Auto-invoke designing-direction skill" [label="approve"];
-    "Ask: proceed to designing-direction?" -> "Exit: tell user to run /design later" [label="hold"];
+    "Invoke change-history\n(first entry: 요구사항-수정/생성)" -> "Auto-invoke /design (no gate, v1.1.9+)";
+    "Auto-invoke /design (no gate, v1.1.9+)" -> "Auto-invoke designing-direction skill";
 }
 ```
 
@@ -195,8 +194,7 @@ Call `AskUserQuestion`:
   "context": "RAW 산출물 검토 — 승인 시 docs-pretty + change-history 진행",
   "choices": [
     {"value": "yes", "label": "Yes — approve, proceed to docs-pretty + change-history"},
-    {"value": "fix", "label": "Fix — needs revision"},
-    {"value": "partial", "label": "Partial — revise specific sections"}
+    {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 부분 수정할지 묻기)"}
   ]
 }
 ```
@@ -205,7 +203,7 @@ Call `AskUserQuestion`:
 
 When `AskUserQuestion` is unavailable, ask in prose:
 
-> Approve `<slug>-requirements.md`? — `yes` / `fix` / `partial`
+> Approve `<slug>-requirements.md`? — `yes` / `fix`
 
 **8. Invoke change-history skill** (first entry: initial creation)
 - Tag: `[요구사항-수정]` (use the entry type even on first creation)
@@ -213,41 +211,13 @@ When `AskUserQuestion` is unavailable, ask in prose:
 - 무엇이: <slug>-requirements.md 전체 (PRD: FR-1..N / Socratic: free-form sections)
 - 영향범위: 없음 (최초 생성)
 
-**9. Ask the user for approval to proceed (REQUIRED gate)**
+**9. Auto-proceed to designing-direction (v1.1.9+ — no gate)**
 
-Output a short approval prompt using the Gate Question pattern below.
+After change-history entry is logged, **automatically invoke** the `designing-direction` skill (or `js-super:designing-direction` depending on harness namespace). NO user gate here.
 
-**Gate #9 — proceed-to-designing-direction**
+Rationale: gate #8 (RAW 산출물 승인) already captured the user's intent to move forward. A separate "proceed to /design?" gate just adds friction — if the user wanted to stop, they'd have answered `fix` at gate #8 or exited. Output a one-line notice `ℹ️ Auto-proceeding to /design (v1.1.9 — separate gate removed). Type "stop" to abort.` so the user has a chance to interrupt mid-transition if they really want to pause.
 
-**Tool form (preferred)**
-
-Call `AskUserQuestion`:
-
-```json
-{
-  "question": "✅ <slug>-requirements.md is finalized. Proceed to designing-direction (technical design)?",
-  "choices": [
-    {"value": "yes", "label": "Yes — auto-invoke /design"},
-    {"value": "no", "label": "No — exit, run /design later"}
-  ]
-}
-```
-
-**Prose fallback**
-
-```
-✅ <slug>-requirements.md is finalized. Proceed to the designing-direction (technical design) stage now? — yes / no
-```
-
-The user may reply in any language (Korean, English, or mixed). Parse intent, do not enumerate accepted reply tokens.
-
-Then wait for the user's reply.
-
-**10. Branch on the user's reply**
-
-- **Approval intent** → invoke the Skill tool with `designing-direction` (or `js-super:designing-direction` depending on the harness namespace). Pass control to that skill — it reads <slug>-requirements.md from the same feature folder and starts the technical-design dialogue.
-- **Hold / decline intent** → emit a one-line notice such as `ℹ️ OK. Run /design later when ready.` and stop. Do NOT auto-invoke.
-- **Ambiguous reply** → ask once more with a clearer prompt; do not guess.
+If the user explicitly types "stop"/"멈춰"/"잠깐" after the notice, exit cleanly with `ℹ️ OK. Run /design later when ready.` Otherwise auto-invoke.
 
 ## Mode Selection
 
@@ -431,7 +401,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 
 ## Asking the User a Gate Question (v1.1.8+)
 
-For any HARD-GATE asking enum/binary response (yes/no, yes/fix/partial, Inline/Subagent, Merge/PR/Cleanup), use the `AskUserQuestion` tool with this schema:
+For any HARD-GATE asking enum/binary response (yes/no, yes/fix, Inline/Subagent, Merge/PR/Cleanup), use the `AskUserQuestion` tool with this schema:
 
 ```json
 {
@@ -439,18 +409,21 @@ For any HARD-GATE asking enum/binary response (yes/no, yes/fix/partial, Inline/S
   "context": "<optional 1-line context — what was just shown>",
   "choices": [
     {"value": "yes", "label": "Yes — approve and proceed"},
-    {"value": "fix", "label": "Fix — needs revision"},
-    {"value": "partial", "label": "Partial — revise specific sections"}
+    {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 부분 수정할지 묻기)"}
   ]
 }
 ```
+
+### Why no `partial` choice (v1.1.9+)
+
+Earlier drafts had a separate `partial` choice ("revise specific sections"). In practice it was indistinguishable from `fix` — both led to a follow-up "어디 고칠까요?" question and partial-scope revision. Schema simplified to 2 choices: `yes` or `fix`. The "어느 섹션?" follow-up is implicit in `fix`.
 
 ### Harness fallback
 
 When `AskUserQuestion` is unavailable (e.g. codex/cursor/gemini harness), fall back to a prose form:
 
 ```markdown
-**Approve and proceed?** — `yes` / `fix` / `partial`
+**Approve and proceed?** — `yes` / `fix`
 ```
 
 ### Rule
