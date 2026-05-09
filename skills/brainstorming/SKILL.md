@@ -209,7 +209,26 @@ Then wait for the user's reply.
 
 ## Mode Selection
 
-After the slug is set (step 2), ask the user to pick a mode. Default phrasing:
+After the slug is set (step 2), ask the user to pick a mode. Use the standard Gate Question pattern (see "Asking the User a Gate Question" section).
+
+### Tool form (preferred)
+
+Call `AskUserQuestion` with:
+
+```json
+{
+  "question": "이 피처는 어떤 모드로 진행할까요?",
+  "context": "잘 모르겠으면 PRD",
+  "choices": [
+    {"value": "PRD", "label": "PRD (기본) — 구조화 6-섹션, 외부 사용자향/제품 기능에 적합"},
+    {"value": "Socratic", "label": "Socratic — 자유 탐색, 내부 도구/탐색/실험에 적합"}
+  ]
+}
+```
+
+### Prose fallback
+
+When `AskUserQuestion` is unavailable:
 
 ```
 이 피처는 어떤 모드로 진행할까요?
