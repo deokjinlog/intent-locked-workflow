@@ -190,11 +190,11 @@ Call `AskUserQuestion`:
 
 ```json
 {
-  "question": "Approve <slug>-requirements.md?",
+  "question": "<slug>-requirements.md 승인?",
   "context": "RAW 산출물 검토 — 승인 시 docs-pretty + change-history 진행",
   "choices": [
-    {"value": "yes", "label": "Yes — approve, proceed to docs-pretty + change-history"},
-    {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 부분 수정할지 묻기)"}
+    {"value": "yes", "label": "예 — 승인하고 docs-pretty + change-history 진행"},
+    {"value": "fix", "label": "수정 필요 — 메인이 follow-up 으로 어느 부분 수정할지 묻기"}
   ]
 }
 ```
@@ -232,8 +232,8 @@ Call `AskUserQuestion` with:
   "question": "이 피처는 어떤 모드로 진행할까요?",
   "context": "잘 모르겠으면 PRD",
   "choices": [
-    {"value": "PRD", "label": "PRD (기본) — 구조화 6-섹션, 외부 사용자향/제품 기능에 적합"},
-    {"value": "Socratic", "label": "Socratic — 자유 탐색, 내부 도구/탐색/실험에 적합"}
+    {"value": "PRD", "label": "PRD (기본) — 구조화 6-섹션, 외부 사용자향/제품 기능"},
+    {"value": "Socratic", "label": "소크라테스식 — 자유 탐색, 내부 도구/탐색/실험"}
   ]
 }
 ```
@@ -408,8 +408,8 @@ For any HARD-GATE asking enum/binary response (yes/no, yes/fix, Inline/Subagent,
   "question": "<short question, e.g. 'Approve <slug>-tech-design.md and proceed?'>",
   "context": "<optional 1-line context — what was just shown>",
   "choices": [
-    {"value": "yes", "label": "Yes — approve and proceed"},
-    {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 부분 수정할지 묻기)"}
+    {"value": "yes", "label": "예 — 승인하고 다음 단계 진행"},
+    {"value": "fix", "label": "수정 필요 — 메인이 follow-up 으로 어느 부분 수정할지 묻기"}
   ]
 }
 ```

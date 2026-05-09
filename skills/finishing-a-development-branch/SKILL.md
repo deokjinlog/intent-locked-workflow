@@ -58,13 +58,13 @@ Call `AskUserQuestion`:
 
 ```json
 {
-  "question": "Implementation complete. What would you like to do?",
-  "context": "Tests passed. Choose how to integrate this branch.",
+  "question": "구현 완료. 다음 단계는?",
+  "context": "테스트 통과. 브랜치 통합 방식 선택.",
   "choices": [
-    {"value": "merge", "label": "Merge back to <base-branch> locally"},
-    {"value": "pr", "label": "Push and create a Pull Request"},
-    {"value": "keep", "label": "Keep the branch as-is (handle later)"},
-    {"value": "discard", "label": "Discard this work"}
+    {"value": "merge", "label": "<base-branch> 로 로컬 머지"},
+    {"value": "pr", "label": "푸시 + PR 생성"},
+    {"value": "keep", "label": "브랜치 그대로 두기 (나중에 직접 처리)"},
+    {"value": "discard", "label": "이번 작업 폐기"}
   ]
 }
 ```

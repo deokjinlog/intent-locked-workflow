@@ -138,11 +138,11 @@ Call `AskUserQuestion`:
 
 ```json
 {
-  "question": "Approve <slug>-tech-design.md (and verify-spec report) and proceed?",
+  "question": "<slug>-tech-design.md (+ verify-spec 보고서) 승인하고 진행?",
   "context": "doc + 4축 보고서 한 메시지로 노출됨",
   "choices": [
-    {"value": "yes", "label": "Yes — approve, log change-history, ask next stage"},
-    {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 부분 수정할지 묻기)"}
+    {"value": "yes", "label": "예 — 승인하고 change-history + 다음 단계 진행"},
+    {"value": "fix", "label": "수정 필요 — 메인이 follow-up 으로 어느 부분 수정할지 묻기"}
   ]
 }
 ```

@@ -315,11 +315,11 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
 
      ```json
      {
-       "question": "Approve <slug>-implementation-plan.md (and verify-spec report) and proceed?",
+       "question": "<slug>-implementation-plan.md (+ verify-spec 보고서) 승인하고 진행?",
        "context": "plan + 4축 보고서 한 메시지로 노출됨",
        "choices": [
-         {"value": "yes", "label": "Yes — approve, log change-history, ask execution mode"},
-         {"value": "fix", "label": "Fix — needs revision (메인이 follow-up으로 어느 task/section 수정할지 묻기)"}
+         {"value": "yes", "label": "예 — 승인하고 change-history + 실행 모드 선택"},
+         {"value": "fix", "label": "수정 필요 — 메인이 follow-up 으로 어느 task/섹션 수정할지 묻기"}
        ]
      }
      ```
@@ -345,11 +345,11 @@ Call `AskUserQuestion`:
 
 ```json
 {
-  "question": "Plan has <N> tasks. Which execution approach?",
+  "question": "Plan에 <N>개 task. 어느 실행 방식?",
   "context": "Inline = ≤12 tasks recommended; Subagent = 13+ tasks recommended",
   "choices": [
-    {"value": "Inline", "label": "Inline — main agent edits directly via executing-plans"},
-    {"value": "Subagent", "label": "Subagent — implementer + spec reviewer via js-super-subagent-driven-development"}
+    {"value": "Inline", "label": "인라인 — 메인 에이전트가 executing-plans 로 직접 실행 (≤12 task 권장)"},
+    {"value": "Subagent", "label": "서브에이전트 — implementer + spec reviewer 디스패치 (13+ task 권장)"}
   ]
 }
 ```
