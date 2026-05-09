@@ -1346,3 +1346,15 @@ Expected: ..., v1.1.6, v1.1.7
   - `scripts/tests/test_changelog_buffer.py:6-10,30-49` — import 확장 + `_write` helper + 3 테스트 추가 (sort / stale present / stale absent)
 - **연관 commits**: (이번 commit SHA)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 18:45] [코드-수정] (task: Task 3 — consolidate_to_entry)
+- **id**: CH-20260509-006
+- **이유**: end-of-run consolidator 핵심 helper — manifest list → slim batch entry markdown 생성
+- **무엇이**: `scripts/changelog_buffer.py` (확장), `scripts/tests/test_changelog_buffer.py` (확장)
+- **영향범위**: end-of-run flow의 단일 source of truth. Task 6 §2-3 + Task 7 Phase 3 + Task 8 F1 fixture가 호출.
+- **위험 카테고리**: none (helper 함수, side-effect 없음 — 입력 manifest는 실제 task의 결과 / 출력은 plan footer에 append 될 markdown 문자열)
+- **세부 변경 (2건)**:
+  - `scripts/changelog_buffer.py:46-85` — `consolidate_to_entry(manifests_dir, ch_id, timestamp)`. AC-4 충족: 코드 블록 생략 + 연관 commits SHA 참조 + task별 세부 list
+  - `scripts/tests/test_changelog_buffer.py:59-85` — 2-task 시나리오 골든 비교 (assertion 6개 — tag/CH/files/risks/생략 라인/SHAs)
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
