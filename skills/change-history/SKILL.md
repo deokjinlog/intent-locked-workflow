@@ -22,13 +22,15 @@ NEVER skip this. The history is the only audit trail outside git.
 | <slug>-requirements.md edited | <slug>-requirements.md `## 변경이력` |
 | <slug>-tech-design.md edited | <slug>-tech-design.md `## 변경이력` |
 | <slug>-implementation-plan.md edited | <slug>-implementation-plan.md `## 변경이력` |
-| Code edited via /execute-plan | <slug>-implementation-plan.md `## 변경이력` (with [코드-수정] tag, before/after code blocks) |
+| Code edited via /execute-plan | <slug>-implementation-plan.md `## 변경이력` (with [코드-수정] tag) |
+| Verification-only task (no code change) | <slug>-implementation-plan.md `## 변경이력` (with `[검증]` tag) |
+| Release / version bump / git tag | <slug>-implementation-plan.md `## 변경이력` (with `[릴리즈]` tag) |
 | API test executed via /api-test | <slug>-implementation-plan.md `## 변경이력` (with [API테스트] tag) |
 
 ## Common Entry Schema (all 3 MDs)
 
 ```markdown
-### [YYYY-MM-DD HH:MM] [요구사항-수정 | 개발방향-수정 | 구현계획서-수정 | 코드-수정 | API테스트]
+### [YYYY-MM-DD HH:MM] [요구사항-수정 | 개발방향-수정 | 구현계획서-수정 | 코드-수정 | 검증 | 릴리즈 | API테스트]
 - **id**: CH-YYYYMMDD-NNN
 - **이유**: <why the change>
 - **무엇이**: <which section/field/file>
@@ -101,6 +103,54 @@ No 영향범위, no 위험 카테고리, no before/after code blocks. The `(triv
 
 If any of the trivial criteria fails, fall back to the full Code-Change Entry above.
 
+## Verification Entry — `[검증]` (v1.1.7+)
+
+For tasks that did NOT change code (static grep, fixture run, release sanity, git tag-only). Use this instead of `[코드-수정]` when 변경 전/후 코드 blocks would be empty.
+
+```markdown
+### [YYYY-MM-DD HH:MM] [검증] (task: Task N — <task name>)
+- **id**: CH-YYYYMMDD-NNN
+- **이유**: <검증 목적 — e.g., 정적 grep 통과 / 릴리즈 전 sanity>
+- **무엇이**: <검증한 항목들 — e.g., AC-1 grep / G1 fixture run>
+- **결과**: PASS | FAIL | PARTIAL — <상세>
+- **연관 commit**: <SHA, 해당 시>
+- **연관 항목**: CH-... (omit if none)
+```
+
+No 위험 카테고리, no 변경 전/후 code (the task didn't change code).
+
+## Release Entry — `[릴리즈]` (v1.1.7+)
+
+For version bumps, manifest sync, git tag operations.
+
+```markdown
+### [YYYY-MM-DD HH:MM] [릴리즈]
+- **id**: CH-YYYYMMDD-NNN
+- **이유**: <버전 bump 이유>
+- **무엇이**: vX.Y.Z 태그 + N개 manifest 동기화
+- **연관 commit**: <SHA>, <tag SHA>
+```
+
+## End-of-Run Consolidated Batch Entry (v1.1.7+, git-fast mode only)
+
+When `executing-plans` or `js-super-subagent-driven-development` finishes ALL tasks under `commit_policy: per-task` (git-fast mode), the main agent appends ONE consolidated entry covering every task's code edits — instead of N per-task entries. Code blocks are omitted because `git show <commit-SHA>` is the audit trail; the entry references SHAs only.
+
+```markdown
+### [YYYY-MM-DD HH:MM] [코드-수정] (batch: tasks N..M)
+- **id**: CH-YYYYMMDD-NNN
+- **이유**: <feature-level 종합 요약>
+- **무엇이**: <comma-separated file list (전체 task 합쳐서)>
+- **영향범위**: <combined>
+- **위험 카테고리**: <union of all task hits — e.g., "side-effect, breaking" or "none">
+- **task별 세부 (M건)**:
+  - Task N: `<file:lines>` — <요약> (`<risk-or-none>`) — commits: `<SHA1>`, `<SHA2>`
+  - Task N+1: ...
+- **연관 commits**: <전체 SHA 리스트, 또는 BASE_SHA..HEAD>
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+```
+
+`commit_policy: single` / `none` (memory-fallback) modes keep the legacy fat schema (변경 전/후 코드 blocks preserved) — git can't audit those modes, so the entry must.
+
 ## API-Test Entry (only in <slug>-implementation-plan.md)
 
 ```markdown
@@ -153,8 +203,8 @@ digraph change_history {
 |---|---|
 | "This change is too small to log" | Even tiny edits decay context over time. Log everything. |
 | "I'll invent a CH-id manually" | Duplicates and gaps will appear. Always use the helper script. |
-| "git log already has the diff" | git log lacks intent, scope, risk category. Full schema in <slug>-implementation-plan.md. |
-| "Batch entries at end of session" | Context evaporates. Append immediately after each edit. |
+| "git log already has the diff (per-task mode)" | git log lacks intent, scope, risk category. Use slim entry + commit SHA in per-task mode. |
+| "Batch entries at end of session" | Applies to manual editing only. Subagent / `/execute-plan` runs MUST batch (end-of-run consolidator) — see "End-of-Run Consolidated Batch Entry" section. |
 
 ## Red Flags (STOP if you think these)
 
@@ -169,9 +219,11 @@ digraph change_history {
 A new entry is correct when ALL hold:
 1. CH-id matches `CH-YYYYMMDD-NNN` and is unique within the feature folder
 2. Entry sits at the end of the `## 변경이력` footer (not inserted into the body)
-3. [코드-수정] entries include both before/after code blocks AND a 위험 카테고리 value, **unless tagged `(trivial)`** — trivial entries skip those fields by design
-4. [API테스트] entries include scenario file, pass/fail counts, failure details
-5. `(trivial)` is used ONLY when executing-plans Trivial-Edit Exception criteria are all met (≤3 lines + no logic change + 0/3 risk triggers); otherwise full entry is required
+3. [코드-수정] entries: in `commit_policy: per-task` mode use slim batch form (코드 블록 생략 + commit SHA 참조 + 위험 카테고리); in `single` / `none` mode keep before/after code blocks AND a 위험 카테고리 value. `(trivial)` and `(batch: tasks N..M)` are recognised tag suffixes.
+4. `[검증]` entries include 결과 (PASS/FAIL/PARTIAL); they have NO 위험 카테고리 / 코드 블록 by design.
+5. `[릴리즈]` entries reference at minimum a 연관 commit (the bump commit) and the tag SHA when applicable.
+6. [API테스트] entries include scenario file, pass/fail counts, failure details
+7. `(trivial)` is used ONLY when executing-plans Trivial-Edit Exception criteria are all met (≤3 lines + no logic change + 0/3 risk triggers); otherwise full entry is required
 
 ## Related Skills
 

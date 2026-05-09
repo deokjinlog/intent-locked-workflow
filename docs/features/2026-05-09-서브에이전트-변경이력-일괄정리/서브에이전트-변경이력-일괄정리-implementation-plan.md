@@ -1358,3 +1358,17 @@ Expected: ..., v1.1.6, v1.1.7
   - `scripts/tests/test_changelog_buffer.py:59-85` — 2-task 시나리오 골든 비교 (assertion 6개 — tag/CH/files/risks/생략 라인/SHAs)
 - **연관 commits**: (이번 commit SHA)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 18:55] [코드-수정] (task: Task 4 — change-history schema 확장)
+- **id**: CH-20260509-007
+- **이유**: schema에 [검증]/[릴리즈] entry types + git-fast slim batch 명시 (AC-3, AC-4, R3 mitigation: 기존 5종 BC 유지하며 추가만)
+- **무엇이**: `skills/change-history/SKILL.md`
+- **영향범위**: 모든 spec-driven 흐름의 entry 형식. 후속 Task 6 §2-3 / Task 7 Phase 3가 batch entry 형식을 직접 참조. 기존 entry parser/grep 영향 없음 (BC 유지).
+- **위험 카테고리**: breaking (R3 mitigation: 기존 5종 entry type 그대로 + 신규 2종(검증/릴리즈) + slim batch 추가) — 외부 grep/parser 깨질 가능성 낮음
+- **세부 변경 (4건)**:
+  - `skills/change-history/SKILL.md:18-37` — When-to-Use 표 신규 2행 + Common Schema에 검증/릴리즈 type 추가
+  - `skills/change-history/SKILL.md:106-145` — 신규 섹션: Verification Entry / Release Entry / End-of-Run Consolidated Batch Entry
+  - `skills/change-history/SKILL.md:204-207` — Anti-Patterns 표 행 4 (Batch entries) inversion + git log 행 정밀화
+  - `skills/change-history/SKILL.md:213-219` — Acceptance §3 분기 + §4-5 신규 type 규칙 + §6-7 재번호
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
