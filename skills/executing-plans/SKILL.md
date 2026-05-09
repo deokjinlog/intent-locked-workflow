@@ -252,9 +252,7 @@ Ask the user rather than guessing.
 ## Step 3: Complete Development
 
 After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use `finishing-a-development-branch`
-- Follow that skill to verify tests, present options, execute the user's choice
+- **Final step**: invoke `finishing-a-development-branch` — 테스트 자동 검증 + 종료 메시지 (v1.1.14 슬림화). AskUserQuestion 게이트 X, 사용자가 직접 git/gh 명령 실행.
 
 ## Remember
 - Review plan critically before starting
