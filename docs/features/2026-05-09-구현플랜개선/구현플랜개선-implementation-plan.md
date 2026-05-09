@@ -1320,3 +1320,19 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: skills/designing-direction/SKILL.md 위 6개 영역의 v1.1.5 wording (commit d706002 참조)
 - **변경 후 코드**: post-approval / RAW review / final-1회 일관 갱신 (commits cc32758 main + eec0756 cleanup 참조). Spec reviewer ✅.
 - **연관 항목**: CH-20260509-010 (Task 4 brainstorming), Task 6에서 writing-plans 동기화 예정
+
+### [2026-05-09 16:50] [코드-수정] (task: Task 6 — skills/writing-plans/SKILL.md 대규모 갱신)
+- **id**: CH-20260509-012
+- **이유**: writing-plans에 신규 step (code-pretty 호출) 도입 + Before/After 코드블록 컨벤션 신규 섹션 추가 + per-draft-state pretty timing. 이번 Task가 plan §1의 1차 진앙지 — 신고 1+2+3 모두 영향.
+- **무엇이**: skills/writing-plans/SKILL.md (Checklist 7-11 / Process Flow / Code Block Convention 신규 섹션 / After Save 5단계 / cleanup line 314-316 numbering)
+- **영향범위**: writing-plans caller가 code-pretty 호출 + 사용자에 prettified plan + diff 노출하도록 변경. 모든 R3 동기화 완료 (Tasks 3/4/5/6 모두 v1.1.6 정책 일관). Tech-design D2/D3 컨벤션이 현실에 반영됨.
+- **위험 카테고리**: 없음 (3-checklist 0 — markdown body update + 신규 섹션 삽입, 신규 인터페이스(code-pretty caller)는 Task 1에서 이미 도입)
+- **세부 변경 (5건 + cleanup 1건)**:
+  - `skills/writing-plans/SKILL.md:24-28` — Checklist 7-10 → 7-11 (code-pretty step 7 신규, docs-pretty 8, user reviews 9, change-history 10, hand off 11) (`없음`)
+  - `skills/writing-plans/SKILL.md:184-208` — Process Flow code-pretty 노드 추가 + 4 edges 갱신 (verify-spec → code-pretty → docs-pretty → gate, gate label "+ code-pretty diff", fix label "re-verify + re-prettify") (`없음`)
+  - `skills/writing-plans/SKILL.md:152-180` — 신규 섹션 "Code Block Convention (Before/After labels)" 삽입 (5 numbered rules + 2 bullets + Anti-pattern) (`없음`)
+  - `skills/writing-plans/SKILL.md:288-312` — After Save 5단계 (1 verifying-spec / 2 code-pretty Tolerance / 3 docs-pretty / 4 approval gate "PRETTIFIED" + diff summary / On fix loop) (`없음`)
+  - `skills/writing-plans/SKILL.md:314-316` — orphaned numbering "3." → "5." cleanup + fix-loop wording 정합 (`없음`)
+- **변경 전 코드**: skills/writing-plans/SKILL.md 위 영역의 v1.1.5 wording (commit e6ca307 참조)
+- **변경 후 코드**: code-pretty caller wiring + Before/After convention + per-draft-state pretty (commits 6a29175 main + 7d70f0a cleanup 참조). Spec reviewer ✅ — 16 grep matches code-pretty.
+- **연관 항목**: CH-20260509-007 (Task 1 code-pretty SKILL), CH-20260509-008 (Task 2 fixtures), CH-20260509-009/010/011 (Tasks 3/4/5 동기화 chain)
