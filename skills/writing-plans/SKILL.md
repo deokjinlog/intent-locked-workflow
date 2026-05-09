@@ -21,10 +21,11 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 4. **Fill 위험 코드 지점 (§2)** — every risk category from <slug>-tech-design.md §6 mapped to a concrete location + mitigation
 5. **Self-review** — spec coverage / placeholder scan / type consistency / 위험 coverage
 6. **Invoke verifying-spec** (with Tolerance for missing skill) — main agent runs A+C verification on the plan
-7. **Invoke docs-pretty skill** — pre-review format pass on the draft (Sonnet subagent). Runs BEFORE showing the plan to the user. Re-fires after each revision iteration. Stops once first change-history entry is logged.
-8. **User reviews <slug>-implementation-plan.md** — show the prettified plan + verifying-spec report; get approval (loop until OK; on changes → revise → back to step 6)
-9. **Invoke change-history skill** — append first `[구현계획서-수정]` entry
-10. **Hand off to /execute-plan** — count tasks first, then offer the choice using the Execution Handoff message below. Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
+7. **Invoke code-pretty skill** — pre-review code-block prettify on the draft (Sonnet subagent). Runs AFTER verifying-spec passes and BEFORE docs-pretty. Targets only `**수정 후**`-labeled code blocks. Stops once first change-history entry is logged.
+8. **Invoke docs-pretty skill** — pre-review format pass on the draft (Sonnet subagent). Runs immediately after code-pretty and BEFORE showing the plan to the user. Re-fires together with code-pretty after each revision iteration (per-draft-state).
+9. **User reviews <slug>-implementation-plan.md** — show the prettified plan + verifying-spec report + code-pretty diff summary; get approval (loop until OK; on changes → revise → back to step 6 verifying-spec)
+10. **Invoke change-history skill** — append first `[구현계획서-수정]` entry
+11. **Hand off to /execute-plan** — count tasks first, then offer the choice using the Execution Handoff message below. Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
 
 If you find yourself skipping ahead, stop and create the missing task.
 
@@ -148,6 +149,36 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+## Code Block Convention (Before/After labels) — required for tasks that modify existing code
+
+When a task changes existing code (Modify), use the **Before/After label pair**:
+
+````markdown
+**원본** (`<file>:<line-range>`):
+```<lang>
+<original code, byte-equal to current source>
+```
+
+**수정 후**:
+```<lang>
+<new code>
+```
+````
+
+Rules:
+
+1. The "원본" label MUST start with exactly `**원본**` (markdown bold). The optional `(file:line)` annotation is strongly recommended for navigation.
+2. The "수정 후" label MUST start with exactly `**수정 후**` (markdown bold).
+3. For tasks that CREATE a new file, the "원본" block is OMITTED — only "수정 후" block is shown (with `(new file: <path>)` annotation).
+4. Both blocks MUST use the same fenced-code language identifier.
+5. The `code-pretty` skill targets ONLY "수정 후" blocks. "원본" blocks are byte-immutable.
+
+This convention is required so that:
+- Reviewers can compare before/after at a glance.
+- The `code-pretty` skill can identify which blocks to prettify (수정 후) and which to leave untouched (원본).
+
+Anti-pattern: showing only the modified code without the original. Reviewers cannot tell what changed.
+
 ## Process Flow
 
 ```dot
@@ -159,6 +190,7 @@ digraph plan_flow {
     "User reviews <slug>-implementation-plan.md" [shape=diamond];
     "Invoke verifying-spec" [shape=box];
     "Verifier report → user decision" [shape=diamond];
+    "Invoke code-pretty\n(pre-review, Sonnet subagent)" [shape=box];
     "Invoke docs-pretty\n(pre-review, Sonnet subagent)" [shape=box];
     "Invoke change-history" [shape=box];
     "Hand off to /execute-plan" [shape=doublecircle];
@@ -167,10 +199,11 @@ digraph plan_flow {
     "File structure outline" -> "Decompose into bite-sized tasks";
     "Decompose into bite-sized tasks" -> "Self-review (internal)";
     "Self-review (internal)" -> "Run verifying-spec FIRST";
-    "Run verifying-spec FIRST" -> "Invoke docs-pretty\n(pre-review, Sonnet subagent)";
-    "Invoke docs-pretty\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report)";
-    "Single combined approval gate\n(plan + verify report)" -> "Self-review (internal)" [label="fix / partial — re-prettify on next loop"];
-    "Single combined approval gate\n(plan + verify report)" -> "Invoke change-history" [label="approve"];
+    "Run verifying-spec FIRST" -> "Invoke code-pretty\n(pre-review, Sonnet subagent)";
+    "Invoke code-pretty\n(pre-review, Sonnet subagent)" -> "Invoke docs-pretty\n(pre-review, Sonnet subagent)";
+    "Invoke docs-pretty\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report + code-pretty diff)";
+    "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Self-review (internal)" [label="fix / partial — re-verify + re-prettify"];
+    "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Invoke change-history" [label="approve"];
     "Invoke change-history" -> "Hand off to /execute-plan";
 }
 ```
@@ -262,11 +295,21 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
    - Procedure: consistency (FR + key decisions covered as tasks) + code impact (files/functions referenced exist or are explicitly created)
    - **Tolerance**: if verifying-spec skill is not installed, skip and emit the notice ("ℹ️ verify-gate 미설치, Phase 2 이후 활성화 — 검증 없이 진행")
 
-2. **Single combined approval gate** — present in ONE message:
-   - The full `<slug>-implementation-plan.md` (or summary if very long, with link)
+2. **Run code-pretty** (after verifying-spec passes, before docs-pretty):
+   - Target: `<slug>-implementation-plan.md` (only `**수정 후**`-labeled blocks)
+   - Output: diff summary text (preserved for the approval gate)
+   - **Tolerance**: if code-pretty skill is not installed, skip and emit "ℹ️ code-pretty 미설치 — code blocks shown as-is"
+
+3. **Run docs-pretty** (immediately after code-pretty):
+   - Standard format-only pass (Sonnet subagent)
+
+4. **Single combined approval gate** — present in ONE message:
+   - The full PRETTIFIED `<slug>-implementation-plan.md` (or summary if very long, with link)
    - The verify-spec 4-axis report
+   - The code-pretty diff summary
    - One question: "Approve `<slug>-implementation-plan.md` and proceed? — yes / fix / partial"
    - DO NOT split into "approve plan" → "approve verify report". One gate, one decision.
+   - On `fix` → loop back to step 1 (re-verify → re-code-pretty → re-docs-pretty → re-show)
 
 3. On `yes` → invoke change-history (`[구현계획서-수정]` entry) → continue to Execution Handoff below.
    On `fix` → re-decompose specific tasks, then re-run from "Self-review (internal)" — docs-pretty fires again before the next user gate.
