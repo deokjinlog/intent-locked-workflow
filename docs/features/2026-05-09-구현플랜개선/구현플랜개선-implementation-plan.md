@@ -1365,3 +1365,23 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: 6개 파일 `"version": "1.1.5"`
 - **변경 후 코드**: 6개 파일 `"version": "1.1.6"` (commit 9890bb1 참조). bump-version.sh가 audit 출력으로 다른 파일들의 v1.1.x 언급을 안내했으나 SKILL.md/README/HANDOFF는 의도적 in-text 언급이라 미변경.
 - **연관 항목**: CH-20260509-012 (Task 6 writing-plans, v1.1.6 정책의 1차 진앙지)
+
+### [2026-05-09 16:57] [코드-수정] (task: Task 10 — 통합 dogfood 검증 + v1.1.6 tag)
+- **id**: CH-20260509-017
+- **이유**: v1.1.6 릴리즈 검증 — 자동화 가능한 정적 검증 통과 + tag 박기. I1~I8 interactive flows는 사용자 새 세션 검증 deferred.
+- **무엇이**: git tag v1.1.6, 정적 검증 결과 (G2 ✓ / AC-1 ✓ / AC-2 ✓ / AC-3 ✓ / AC-8 ✓)
+- **영향범위**: v1.1.6 릴리즈 후보 확정 (push는 사용자 수동). interactive AC (AC-4/5/6/7) 는 fixture 실행 + 수동 dogfood 단계로 미뤄짐.
+- **위험 카테고리**: 없음
+- **세부 변경 (검증 결과 요약)**:
+  - **G2** ✓ — `skills/og-{brainstorming,writing-plans,executing-plans}/SKILL.md` code-pretty 매치 0건 (영향 없음)
+  - **AC-8** ✓ — `skills/code-pretty/{SKILL.md, tests/, scripts/}` 모두 존재
+  - **AC-3** ✓ — `skills/writing-plans/SKILL.md` code-pretty 17번 참조 (Checklist 7 + Process Flow + After Save 등)
+  - **AC-1** ✓ — `skills/{brainstorming,designing-direction}/SKILL.md` "post-approval" wording 정착 + `docs-pretty/SKILL.md`에 doc-type 분기 정책 명시
+  - **AC-2** ✓ — `skills/writing-plans/SKILL.md` "Code Block Convention (Before/After labels)" 섹션 존재 + 원본/수정 후 9번 참조
+  - **AC-4/5/6/7** — fixture 기반 검증 (`skills/code-pretty/tests/F1~F5`) 또는 수동 dogfood 시점에서 검증 필요. Static check 가능 영역 외.
+  - **I1~I8** — interactive end-to-end (사용자가 새 세션에서 `/brainstorm` `/design` `/write-plan` 실행) — 사용자 검증 단계로 이관.
+  - **G1** — change-history entry 있는 plan에 code-pretty 미발화 — pre-flight check 코드 자체에 박혀 있음 (skills/code-pretty/SKILL.md Process Step 1).
+  - **Tag**: `v1.1.6` 로컬 박힘. push는 사용자 수동.
+- **변경 전 코드**: (검증 task — 코드 변경 없음)
+- **변경 후 코드**: (검증 task — 코드 변경 없음, git tag v1.1.6만 추가)
+- **연관 항목**: CH-20260509-007/008/009/010/011/012/013/015/016 (Tasks 1~9 모두), CH-20260509-006 (impl plan)
