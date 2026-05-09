@@ -1334,3 +1334,15 @@ Expected: ..., v1.1.6, v1.1.7
   - `scripts/tests/test_changelog_buffer.py:1-23` (신규) — TDD failing test → PASS
 - **연관 commits**: (이번 commit SHA, 후속 commit에서 채워짐)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 18:35] [코드-수정] (task: Task 2 — list + stale detection)
+- **id**: CH-20260509-005
+- **이유**: interrupt recovery 인프라 — buffer 파일 정렬 + 잔존 detection
+- **무엇이**: `scripts/changelog_buffer.py` (확장), `scripts/tests/test_changelog_buffer.py` (확장)
+- **영향범위**: helper 모듈만. 후속 Task 6 §3 (stale recovery) + Task 8 F4 fixture 가 사용.
+- **위험 카테고리**: side-effect (R2 mitigation: detect_stale_buffer 가 잔존 buffer 자동 검출 — manifest 누락 방지)
+- **세부 변경 (2건)**:
+  - `scripts/changelog_buffer.py:30-45` — `list_buffer_files` (task id 정렬) + `detect_stale_buffer` (slug 디렉토리 잔존 시 Path 반환)
+  - `scripts/tests/test_changelog_buffer.py:6-10,30-49` — import 확장 + `_write` helper + 3 테스트 추가 (sort / stale present / stale absent)
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
