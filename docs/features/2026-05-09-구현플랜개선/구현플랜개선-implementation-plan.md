@@ -1235,3 +1235,25 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **무엇이**: 구현플랜개선-implementation-plan.md 전체 (Tasks 1~10 + §2 위험 코드 지점 R1~R7 매핑 + §3 롤백 전략)
 - **영향범위**: 없음 (최초 생성). 실행 시 영향: skills/code-pretty/ (신규), skills/docs-pretty/SKILL.md, skills/brainstorming/SKILL.md, skills/designing-direction/SKILL.md, skills/writing-plans/SKILL.md, README.md, 3 manifest, PRD cascade
 - **연관 항목**: CH-20260509-001 (요구사항), CH-20260509-002 (개발방향)
+
+### [2026-05-09 16:32] [코드-수정] (task: Task 1 — skills/code-pretty/SKILL.md 신규 작성)
+- **id**: CH-20260509-007
+- **이유**: code-pretty 스킬 본문 신규 도입 — 구현계획서의 `**수정 후**` 코드블록만 prettify 하는 sibling-of-docs-pretty 패턴
+- **무엇이**: skills/code-pretty/SKILL.md (234 lines), skills/code-pretty/{tests,scripts}/ 빈 디렉토리
+- **영향범위**: 없음 (신규 스킬, 기존 caller 없음). Task 6에서 writing-plans/SKILL.md가 이를 호출 추가 예정.
+- **위험 카테고리**: 없음 (3-checklist 0 트리거 — pure markdown, 신규 인터페이스라 breaking 없음)
+- **세부 변경 (1건)**:
+  - `skills/code-pretty/SKILL.md` — 신규 파일 234 lines (frontmatter + HARD-GATE + Process + Subagent Prompt Template + Process Flow + Anti-Patterns + Red Flags + Acceptance + Related Skills) (`없음`)
+- **변경 전 코드**: (없음, 신규 파일)
+- **변경 후 코드** (요약 — 전체 234 lines는 commit 325d26d 참조):
+  ```markdown
+  ---
+  name: code-pretty
+  description: Use AFTER verifying-spec passes and BEFORE docs-pretty during the initial-creation iteration loop of <slug>-implementation-plan.md ONLY. ... (전체 description은 SKILL.md 참조)
+  ---
+
+  # Code Pretty (Pre-Review Code Block Formatting)
+  ...
+  ```
+  Spec reviewer ✅ — 11개 섹션 모두 plan과 byte-faithful 매핑 검증 완료.
+- **연관 항목**: CH-20260509-006 (plan)
