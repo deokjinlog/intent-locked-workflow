@@ -1445,3 +1445,11 @@ Expected: ..., v1.1.6, v1.1.7
 - **이유**: v1.1.7 — subagent + 인라인 batch consolidator + [검증]/[릴리즈] entry types + buffer 인터럽트 복구
 - **무엇이**: v1.1.7 태그 (Task 11에서 박힘) + 6개 manifest 동기화 (package.json, .claude-plugin/{plugin,marketplace}.json, .codex-plugin/plugin.json, .cursor-plugin/plugin.json, gemini-extension.json)
 - **연관 commit**: (이번 commit SHA — bump-version.sh 자동 동기화), tag SHA는 Task 11 step 5 에서 박힐 예정
+
+### [2026-05-09 20:00] [검증] (task: Task 11 — 정적 G1~G3 + 회귀 pytest)
+- **id**: CH-20260509-014
+- **이유**: v1.1.7 릴리즈 sanity — 신규 schema/section 모두 본문에 박혔는지 grep 통과 + 회귀 pytest 통과 확인 + git tag v1.1.7 박기
+- **무엇이**: G1 (implementer-prompt Manifest section, 3 매치) / G2 (change-history 신규 entry type, 4 매치) / G3 (.gitignore buffer path, 1 매치) / pytest 6/6 PASS
+- **결과**: PASS — 모든 grep ≥1 매치 + 6/6 pytest 통과. 신규 entry type [검증] 자체가 이 entry로 dogfood됨.
+- **연관 commit**: (이번 commit SHA — git tag v1.1.7 도 박힘)
+- **연관 항목**: CH-20260509-013 (릴리즈 entry, manifest bump)
