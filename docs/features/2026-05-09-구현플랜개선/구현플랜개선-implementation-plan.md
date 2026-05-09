@@ -1288,3 +1288,18 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: skills/docs-pretty/SKILL.md (line 3 single-policy description, line 12-24 single-policy HARD-GATE, line 28-33 4-row table — 전체 이전 내용은 commit a00c01f 시점 참조)
 - **변경 후 코드**: 위 3개 섹션 doc-type별 분기 정책 반영 (전체는 commit 96533bf 참조). Spec reviewer ✅ — 3 섹션 plan과 byte-faithful, 다른 섹션은 변경 없음 검증.
 - **연관 항목**: CH-20260509-008 (Task 2 fixtures), Task 4/5/6 실행 시 caller 동기화 예정
+
+### [2026-05-09 16:42] [코드-수정] (task: Task 4 — skills/brainstorming/SKILL.md Process 갱신)
+- **id**: CH-20260509-010
+- **이유**: brainstorming(요구사항)에서 docs-pretty 호출이 사용자 *리뷰 직전*에서 사용자 *승인 후* (final-1회)로 이동
+- **무엇이**: skills/brainstorming/SKILL.md (Checklist 6/7 swap + Process Flow node label + 4 edges + step 7 detail body)
+- **영향범위**: brainstorming caller가 사용 시 raw 마크다운 검토하도록 변경. docs-pretty SKILL.md(Task 3 완료) 와 정합. designing-direction(Task 5)/writing-plans(Task 6) 미완료 시점 일시 비대칭 — R3 plan §2에서 사전 식별.
+- **위험 카테고리**: 없음 (3-checklist 0 — markdown body update, 동기화 위험은 R3로 사전 명시 + 동일 PR-스타일 commit chain)
+- **세부 변경 (4건)**:
+  - `skills/brainstorming/SKILL.md:32-33` — Checklist 6/7 순서 swap (RAW review → post-approval docs-pretty) (`없음`)
+  - `skills/brainstorming/SKILL.md:95` — Process Flow node label `pre-review, Sonnet subagent` → `post-approval, Sonnet subagent, 1회` (`없음`)
+  - `skills/brainstorming/SKILL.md:122-125` — Process Flow 4 edges (RAW review → re-show raw / approve → docs-pretty → change-history) (`없음`)
+  - `skills/brainstorming/SKILL.md:174-179` — 상세 step 6 → step 7 body 갱신 (post-approval, final-1회 wording) (`없음`)
+- **변경 전 코드**: skills/brainstorming/SKILL.md 위 4개 영역의 v1.1.5 시점 wording (commit 188952c 참조)
+- **변경 후 코드**: post-approval / final-1회 / RAW review 라벨로 일관 갱신 (commit d91ce95 참조). Spec reviewer ✅ — 4 edits all byte-faithful, scoped (10 ins / 10 del).
+- **연관 항목**: CH-20260509-009 (Task 3 docs-pretty SKILL.md), Task 5/6에서 designing-direction/writing-plans 동기화 예정
