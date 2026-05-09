@@ -116,6 +116,8 @@ Every implementation plan MUST start with:
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
+**Model**: haiku
+
 - [ ] **Step 1: Write the failing test**
 
 ```python
@@ -148,6 +150,24 @@ git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
 ````
+
+## Task Model Hint (v1.1.14+)
+
+Each task block MAY include `**Model**: haiku | sonnet | opus` to tell `js-super-subagent-driven-development` which model to dispatch the implementer with. Spec-reviewer is always sonnet (NOT controlled by this field).
+
+Evaluation rule:
+
+| 신호 | 모델 |
+|---|---|
+| 1-2 파일 + mechanical implementation + 명확 spec | haiku |
+| 다중 파일 통합 / 디버깅 / 패턴 매칭 | sonnet |
+| Korean prose 조작 (skill 본문 / MD 편집) | sonnet (Haiku rephrasing 위험) |
+| 설계 / 광범위 코드베이스 이해 | opus |
+| 누락 / 모호 | sonnet (보수 디폴트) |
+
+Backward compat: If the field is omitted, `js-super-subagent-driven-development` defaults to `sonnet`. Existing plans (v1.1.13 and earlier) work as-is.
+
+Anti-pattern: setting `Model: haiku` for a task that touches Korean prose in skill bodies. Haiku has a known rephrasing risk on Korean text — see `skills/docs-pretty/SKILL.md:50` for the same constraint.
 
 ## Code Block Convention (Before/After labels) — required for tasks that modify existing code
 
