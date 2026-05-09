@@ -51,15 +51,25 @@ Do NOT use Opus (overkill) or Haiku (rephrasing risk on Korean prose). Sonnet is
 
 ## Process
 
-### Step 1 — Pre-flight check
+### Step 1 — Pre-flight check (v1.1.14+ deterministic)
 
-Before dispatching, the main agent MUST verify:
+Before dispatching, run the deterministic helper:
 
-1. The target file exists (Read or Glob)
-2. The file's `## 변경이력` footer has ZERO entries (Grep for `### \[` under `## 변경이력` heading; expect 0 matches)
-3. The file is one of the three feature MDs (`-requirements.md` / `-tech-design.md` / `-implementation-plan.md`)
+```bash
+source .venv/bin/activate && python -c "
+import sys
+from pathlib import Path
+from scripts.preflight import docs_pretty_check
+result = docs_pretty_check(Path('<TARGET>'))
+print(f'ok={result.ok} reason={result.reason}')
+sys.exit(0 if result.ok else 1)
+"
+```
 
-If ANY check fails → DO NOT dispatch. Tell the user why and exit.
+- exit code 0 → 검증 통과, Step 2 dispatch 진행
+- exit code 1 → reason 한 줄 노출 후 즉시 종료. **메인은 검증 retry 또는 LLM 재추론 X**
+
+이 단계는 v1.1.14 에서 LLM 추론 → 코드로 이관. 동일 검사 (file 존재 / 변경이력 footer 비어있음 / filename 패턴) 가 deterministic 으로 처리되어 응답 속도 + 토큰 비용 모두 0 수준. 자세한 룰은 `scripts/preflight.py:docs_pretty_check`.
 
 ### Step 2 — Dispatch the Sonnet subagent
 

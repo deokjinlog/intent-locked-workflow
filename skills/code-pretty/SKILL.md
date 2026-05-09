@@ -41,17 +41,27 @@ Do NOT use Opus (overkill) or Haiku (rephrasing risk).
 
 ## Process
 
-### Step 1 — Pre-flight check
+### Step 1 — Pre-flight check (v1.1.14+ deterministic)
 
-Before dispatching, the main agent MUST verify:
+Before dispatching, run the deterministic helper:
 
-1. The target file exists (Read or Glob)
-2. The file's `## 변경이력` footer has ZERO entries (Grep for `### \[` under `## 변경이력`; expect 0 matches)
-3. The file is `<slug>-implementation-plan.md` (NOT requirements.md, NOT tech-design.md)
-4. verifying-spec has just passed for this draft (caller responsibility)
-5. The file contains at least one `**수정 후**` label preceding a code block
+```bash
+source .venv/bin/activate && python -c "
+import sys
+from pathlib import Path
+from scripts.preflight import code_pretty_check
+result = code_pretty_check(Path('<TARGET>'))
+print(f'ok={result.ok} reason={result.reason}')
+sys.exit(0 if result.ok else 1)
+"
+```
 
-If ANY check fails → DO NOT dispatch. Tell the caller why and exit.
+- exit code 0 → 검증 통과, Step 2 dispatch 진행
+- exit code 1 → reason 노출 후 즉시 종료
+
+**Caller 책임 (helper 가 검증 X)**: verifying-spec 가 직전에 통과했는지 — 이건 writing-plans 흐름의 책임이고 helper 가 검사할 수 없음. 호출자가 보장.
+
+helper 의 검사: file 존재 / 변경이력 footer 비어있음 / filename `*-implementation-plan.md` / 최소 1개 `**수정 후**` 블록 존재. 자세히는 `scripts/preflight.py:code_pretty_check`.
 
 ### Step 2 — Dispatch the Sonnet subagent
 
