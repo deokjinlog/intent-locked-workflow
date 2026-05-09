@@ -1274,3 +1274,17 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: (없음, 신규 파일 6개)
 - **변경 후 코드** (요약 — 전체는 commit f107993 참조): 각 fixture는 plan Task 2 Step 1-6 "수정 후" 블록 byte-faithful (spaced-backtick → real-backtick 변환 적용). README.md 표는 5행 (F1~F5) + AC 매핑.
 - **연관 항목**: CH-20260509-007 (Task 1 code-pretty/SKILL.md)
+
+### [2026-05-09 16:38] [코드-수정] (task: Task 3 — skills/docs-pretty/SKILL.md 트리거 시점 갱신)
+- **id**: CH-20260509-009
+- **이유**: docs-pretty 트리거 시점이 doc-type별로 분기 — requirements/tech-design는 사용자 승인 후, implementation-plan은 verifying-spec+code-pretty 직후
+- **무엇이**: skills/docs-pretty/SKILL.md (frontmatter description, HARD-GATE body, "When to Use" 표 — 3개 섹션)
+- **영향범위**: docs-pretty의 caller 3개 (brainstorming/designing-direction/writing-plans) — Tasks 4/5/6에서 caller 본문도 동기화 예정. R4 위험 (caller 늦게 업데이트 시 conflict)는 실행 순서로 회피 (docs-pretty 먼저, callers 나중).
+- **위험 카테고리**: 없음 (3-checklist 0 트리거 — 코드 로직 변경 없음, 시점 차이는 plan §2에서 R4로 사전 식별 + 실행 순서로 mitigation)
+- **세부 변경 (3건)**:
+  - `skills/docs-pretty/SKILL.md:3` — frontmatter description 갱신 (single-shot → branched per-doc-type) (`없음`)
+  - `skills/docs-pretty/SKILL.md:12-28` — HARD-GATE body 분기 정책 + v1.1.6 anti-trigger bullet 추가 (`없음`)
+  - `skills/docs-pretty/SKILL.md:32-38` — "When to Use" 표 5행으로 확장 (post-approval 트리거 + post-approval non-code revision row 추가) (`없음`)
+- **변경 전 코드**: skills/docs-pretty/SKILL.md (line 3 single-policy description, line 12-24 single-policy HARD-GATE, line 28-33 4-row table — 전체 이전 내용은 commit a00c01f 시점 참조)
+- **변경 후 코드**: 위 3개 섹션 doc-type별 분기 정책 반영 (전체는 commit 96533bf 참조). Spec reviewer ✅ — 3 섹션 plan과 byte-faithful, 다른 섹션은 변경 없음 검증.
+- **연관 항목**: CH-20260509-008 (Task 2 fixtures), Task 4/5/6 실행 시 caller 동기화 예정
