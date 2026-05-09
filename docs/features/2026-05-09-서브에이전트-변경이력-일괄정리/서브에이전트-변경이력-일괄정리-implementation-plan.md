@@ -1398,3 +1398,14 @@ Expected: ..., v1.1.6, v1.1.7
   - `skills/.../SKILL.md:282-285` — Red Flags 표 행 2 ("후처리 끝에" → "RISK 주석은 task별 즉시, batch 대상은 footer 만")
 - **연관 commits**: (이번 commit SHA)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 19:20] [코드-수정] (task: Task 7 — executing-plans Phase 3 inline batch)
+- **id**: CH-20260509-010
+- **이유**: 인라인 모드도 batch 적용 (D5 결정) — 서브에이전트와 패턴 통일. Phase 2 per-task append → Phase 3 end-of-run consolidator
+- **무엇이**: `skills/executing-plans/SKILL.md`
+- **영향범위**: 인라인 모드 모든 실행. 서브에이전트 모드와 동일한 footer entry 형식 (batch entry + 검증 entry). buffer 파일은 서브에이전트 전용 (R6 mitigation: 신규 plan 부터 적용).
+- **위험 카테고리**: breaking (R6 mitigation: 인라인 모드도 신규 plan 부터 — v1.1.6 plan dogfood 와 호환 유지)
+- **세부 변경 (1건)**:
+  - `skills/executing-plans/SKILL.md:69-83` — Phase 2 (per-task batched log) → Phase 2 (code-only commit + accumulator) + Phase 3 (consolidator 4단계) — single source of truth 명시
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회

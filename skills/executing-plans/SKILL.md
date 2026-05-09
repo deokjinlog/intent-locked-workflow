@@ -68,11 +68,19 @@ The chosen mode applies to the whole `/execute-plan` run. Do not switch mid-run.
 
 **Phase 2 — Once per task, AFTER all task edits + tests pass (commit happens LAST):**
 
-The order matters: extract diff first (while plan.md is still clean), then edit plan.md, then commit code + plan together as ONE atomic task commit. This guarantees `git diff HEAD -- <code_files>` returns ONLY this task's code changes, never polluted by previous tasks' log appends.
+Per task: code-only commit (plan.md untouched). Footer entry is deferred to end-of-run consolidator (v1.1.7+). This batches N tasks into a single consolidated [코드-수정] entry, drastically reducing footer noise + Read/Edit cost.
 
-3. **Extract before/after from working tree**: `git diff HEAD -- <code files only, NOT plan.md>` — parse hunks to fill 변경 전 / 변경 후 code blocks per file:line. (Working tree vs last commit's HEAD — captures THIS task's code edits since the last task commit.)
-4. **Batched log**: Read <slug>-implementation-plan.md ONCE. Build ONE consolidated [코드-수정] entry covering ALL code edits made in this task. Edit ONCE to append. (Schema: id / 이유 / 무엇이 / 영향범위 / 위험 카테고리 / 세부 변경 list / 변경 전 코드 / 변경 후 코드 — see change-history skill for batched format.)
-5. **Commit (scoped, code + plan together)**: `git add <explicit list of code files touched in this task> <slug>-implementation-plan.md` then `git commit -m "<task summary>"`. NEVER use `git add -A` or `git add .` — they sweep in unrelated untracked files (`.DS_Store`, build artifacts, temp logs). The code-file list MUST come from the in-memory `(file:line, ...)` tuples tracked during Phase 1; the plan file is added explicitly because it was just edited in step 4.
+3. **Capture diff for accumulator** (NOT for footer): `git diff HEAD -- <code files only>` — parse hunks. Append `(task_id, file:line_range, summary, risk_categories, planned_commit_msg)` to in-memory accumulator. Do NOT touch <slug>-implementation-plan.md here.
+4. **Commit (scoped, code only)**: `git add <explicit list of code files touched in this task>` then `git commit -m "<task summary>"`. NEVER use `git add -A` or `git add .`. The code-file list MUST come from the in-memory `(file:line, ...)` tuples tracked during Phase 1. plan.md is NOT included in this commit — it gets its own single `[log] all tasks` commit at end-of-run.
+
+**Phase 3 — End-of-Run Consolidator (v1.1.7+, runs ONCE after final task):**
+
+5. **Render "구현 요약" message** to the user: planned tasks vs actual commits (incl. follow-ups), RISK triggers by category, 누락/초과 list, code-zero-change tasks (→ separate `[검증]` entry).
+6. **Build consolidated batch entry**: from in-memory accumulator → ONE `[코드-수정] (batch: tasks N..M)` entry per change-history slim schema (코드 블록 생략, 연관 commit SHA 참조). For any code-zero-change task, build a separate `[검증]` entry.
+7. **Single footer append + log commit**: Read <slug>-implementation-plan.md once → Edit (append batch entry + 검증 entries) → `git add <slug>-implementation-plan.md` → `git commit -m "[log] all tasks: <one-line summary>"`.
+8. **Cleanup**: nothing for inline mode (no buffer dir). Subagent path cleans `.js-super/changelog-buffer/<slug>/` separately — see `js-super-subagent-driven-development` skill §2-4.
+
+This Phase 3 ordering is the **single source of truth for inline mode**. Subagent mode uses the same Phase 3 logic but reads manifests from the buffer directory instead of in-memory accumulator (per `js-super-subagent-driven-development` §2).
 
 ### memory-fallback mode
 
