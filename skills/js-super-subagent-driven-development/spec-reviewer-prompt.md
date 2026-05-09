@@ -1,11 +1,12 @@
-# Spec Compliance Reviewer Prompt Template (js-super variant)
+# Spec Compliance Reviewer Prompt Template
 
 Use this template when dispatching a spec compliance reviewer subagent under `js-super-subagent-driven-development`.
 
-**Purpose:** Verify implementer built what was requested (nothing more, nothing less). Same role as upstream — the only difference is no quality reviewer follows; main agent post-processes governance instead.
+**Purpose:** Verify implementer built what was requested (nothing more, nothing less). No quality reviewer follows — main agent post-processes governance (RISK / 변경이력) instead.
 
 ```
 Task tool (general-purpose):
+  model: "sonnet"   # default — line-by-line code-vs-spec comparison. Drop to "haiku" for trivial mechanical tasks. See SKILL.md "Model Selection".
   description: "Review spec compliance for Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.

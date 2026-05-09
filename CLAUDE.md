@@ -104,3 +104,22 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 - One problem per PR
 - Test on at least one harness and report results in the environment table
 - Describe the problem you solved, not just what you changed
+
+---
+
+# js-super 내부 skill 주의사항
+
+> 위 섹션은 upstream Superpowers 기여 룰. 아래는 js-super 포크 내부 skill 설계 관련 메모.
+
+## docs-pretty ↔ change-history 결합
+
+`docs-pretty` skill은 "doc이 still 초안 단계인지" 판정하는 신호로 **`## 변경이력` footer가 비어 있는지 여부**를 직접 사용한다 (`skills/docs-pretty/SKILL.md` line 27/60/167/197). 즉:
+
+- footer entry 0건 → 초안 → docs-pretty 발동
+- footer entry 1건 이상 → live doc → docs-pretty skip
+
+이 결합 때문에 `change-history` skill의 "doc 최초 생성 시 자동으로 boilerplate entry를 logging하는 룰"을 제거하려면 **반드시 docs-pretty의 발동/중단 신호도 동시에 교체**해야 한다 (예: frontmatter `status` 플래그 / 첫 git commit 존재 여부 / 자동 발동 자체 폐지). 한쪽만 건드리면 다음 회귀가 발생한다:
+
+- footer가 영구적으로 빈 채로 남음 → 이후 사용자가 부분 수정을 요청할 때마다 docs-pretty가 재발동 (의도와 반대)
+
+요약: 이 두 skill의 룰 변경은 atomic하게 묶어 처리할 것.

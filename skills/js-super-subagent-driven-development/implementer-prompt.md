@@ -1,11 +1,10 @@
-# Implementer Subagent Prompt Template (js-super variant)
+# Implementer Subagent Prompt Template
 
-Use this template when dispatching an implementer subagent under `js-super-subagent-driven-development`.
-
-**Difference from upstream:** explicitly tells the subagent that RISK annotation + 변경이력 are post-processed by the main agent — the subagent should NOT touch them.
+Use this template when dispatching an implementer subagent under `js-super-subagent-driven-development`. The prompt explicitly tells the subagent that RISK annotation + 변경이력 are post-processed by the main agent — the subagent should NOT touch them.
 
 ```
 Task tool (general-purpose):
+  model: "sonnet"   # default — override to "haiku" for trivial mechanical tasks, or "opus" for design-heavy tasks. See SKILL.md "Model Selection".
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
