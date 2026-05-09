@@ -1372,3 +1372,14 @@ Expected: ..., v1.1.6, v1.1.7
   - `skills/change-history/SKILL.md:213-219` — Acceptance §3 분기 + §4-5 신규 type 규칙 + §6-7 재번호
 - **연관 commits**: (이번 commit SHA)
 - **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회
+
+### [2026-05-09 19:00] [코드-수정] (task: Task 5 — implementer-prompt Changes Manifest)
+- **id**: CH-20260509-008
+- **이유**: implementer → main 구조화 인터페이스 (AC-5) — Report Format 직후 Changes Manifest section + buffer 파일 기록 step 추가
+- **무엇이**: `skills/js-super-subagent-driven-development/implementer-prompt.md`
+- **영향범위**: 서브에이전트 모드 모든 task의 implementer 보고. Task 6 §1-4-(d)가 이 manifest를 read/validate/accumulate.
+- **위험 카테고리**: side-effect (R1 mitigation: 디렉토리 생성 실패 시 BLOCKED 보고 정책 명시)
+- **세부 변경 (1건)**:
+  - `skills/js-super-subagent-driven-development/implementer-prompt.md:139-188` — 신규 "## Changes Manifest (REQUIRED on DONE / DONE_WITH_CONCERNS)" 섹션 — Path / Python write 예제 / Field rules (risk_hints 추측 / line_range / BLOCKED 정책) / Why 설명
+- **연관 commits**: (이번 commit SHA)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회

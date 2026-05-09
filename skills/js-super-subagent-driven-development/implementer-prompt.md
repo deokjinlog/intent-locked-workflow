@@ -135,4 +135,51 @@ Task tool (general-purpose):
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
+
+    ## Changes Manifest (REQUIRED on DONE / DONE_WITH_CONCERNS) — v1.1.7+
+
+    Before reporting back, write the manifest file. The main agent reads it
+    at end-of-run to consolidate ALL tasks into a single 변경이력 entry — your
+    per-task append step is gone (the controller no longer touches the footer
+    until everything is finished).
+
+    Path: `.js-super/changelog-buffer/<slug>/task-NN.md`
+    (replace `<slug>` with the feature folder slug from the plan path; NN is your
+    zero-padded task id, e.g. `task-05.md`).
+
+    Use Python to write it (atomic + YAML-safe):
+
+    ```bash
+    python -c "
+    from pathlib import Path
+    from scripts.changelog_buffer import write_manifest
+    write_manifest(Path('.js-super/changelog-buffer/<slug>/task-NN.md'), {
+        'task_id': N,
+        'task_name': '<task title>',
+        'status': 'DONE',
+        'base_sha': '<BASE_SHA from controller>',
+        'commits': [
+            {'sha': '<SHA1>', 'message': '<msg1>'},
+            {'sha': '<SHA2>', 'message': '<msg2>'},
+        ],
+        'files_changed': [
+            {'path': 'src/foo.py', 'line_range': '42-58',
+             'summary': 'Add X validation', 'risk_hints': ['side-effect']},
+        ],
+        'concerns': [],
+    })
+    "
+    ```
+
+    Field rules:
+    - `risk_hints` is your **best guess** only (taxonomy: side-effect | breaking | race | empty list).
+      The main agent re-runs the official 3-checklist and overrides if needed.
+    - `files_changed[].line_range` is the post-edit range, e.g. `"42-58"`.
+    - If the directory creation fails (permission, disk full), report status BLOCKED.
+      Do NOT silently skip the manifest — the controller depends on it.
+
+    Why YAML manifest + buffer file (not just a return-value report):
+    - The buffer file survives if the main session is interrupted mid-run.
+    - The next session reads the buffer and resumes consolidation instead of losing
+      the per-task summary.
 ```
