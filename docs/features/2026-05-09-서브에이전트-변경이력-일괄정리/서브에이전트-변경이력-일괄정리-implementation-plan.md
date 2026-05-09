@@ -1321,3 +1321,16 @@ Expected: ..., v1.1.6, v1.1.7
 - **무엇이**: 서브에이전트-변경이력-일괄정리-implementation-plan.md 전체 (Header / §1 Tasks 1~11 / §2 R1~R7 위험 코드 지점 / §3 롤백 전략)
 - **영향범위**: 없음 (최초 생성). 다음 단계에서 /execute-plan 진입 시 11 task 실행 트리거. AC-1~5 + D1~D6 + R1~R7 + F1~F5 모두 task 매핑 완료 (verifying-spec gap=0 / conflict=0). Test 자동화: F1/F4 pytest, 나머지는 수동 비교 또는 dogfood.
 - **연관 항목**: CH-20260509-001 (requirements), CH-20260509-002 (tech-design)
+
+### [2026-05-09 18:25] [코드-수정] (task: Task 1 — .gitignore + helper skeleton)
+- **id**: CH-20260509-004
+- **이유**: v1.1.7 buffer 인프라 부트스트랩 — `.js-super/` ignore + write_manifest/read_manifest YAML helper
+- **무엇이**: `.gitignore`, `scripts/changelog_buffer.py` (신규), `scripts/tests/test_changelog_buffer.py` (신규)
+- **영향범위**: scripts/ 신규 모듈. 후속 Task 2/3/8 helper 확장 + Task 5 implementer-prompt 가 호출.
+- **위험 카테고리**: side-effect (R1: mkdir 실패 케이스 — write_manifest의 `parents=True, exist_ok=True` 로 mitigation)
+- **세부 변경 (3건)**:
+  - `.gitignore:17-19` — `.js-super/` ignore 항목 추가 (R4 mitigation)
+  - `scripts/changelog_buffer.py:1-27` (신규) — `write_manifest` + `read_manifest` YAML frontmatter 형식
+  - `scripts/tests/test_changelog_buffer.py:1-23` (신규) — TDD failing test → PASS
+- **연관 commits**: (이번 commit SHA, 후속 commit에서 채워짐)
+- **변경 전/후 코드**: 생략 — `git show <SHA>` 로 조회

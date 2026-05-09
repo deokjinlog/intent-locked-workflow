@@ -14,3 +14,6 @@ __pycache__/
 .pytest_cache/
 *.upstream
 
+# v1.1.7 — subagent changelog buffer (interrupt recovery)
+.js-super/
+
