@@ -37,7 +37,13 @@ Task tool (general-purpose):
 
     ## Your Job
 
-    Read the implementation code and verify:
+    Read the implementation code and verify.
+
+    **Note (v1.1.14+):** Implementer no longer commits. The code is in the
+    **working tree**, not yet in any git commit. Use the Read tool against
+    the file paths in the implementer's manifest. `git diff HEAD -- <file>`
+    also works (compares working tree to last commit). Avoid `git show <SHA>`
+    — there is no SHA yet for this task's work.
 
     **Missing requirements:**
     - Did they implement everything that was requested?
