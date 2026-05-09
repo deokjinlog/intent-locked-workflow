@@ -4,7 +4,7 @@ Use this template when dispatching an implementer subagent under `js-super-subag
 
 ```
 Task tool (general-purpose):
-  model: "sonnet"   # default — override to "haiku" for trivial mechanical tasks, or "opus" for design-heavy tasks. See SKILL.md "Model Selection".
+  model: "{{MODEL}}"   # Main injects per-task value from plan's `**Model**:` field; defaults to "sonnet" if missing. See SKILL.md "Model Selection" + writing-plans "Task Model Hint".
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
@@ -51,10 +51,18 @@ Task tool (general-purpose):
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work (multi-commit OK — main captures BASE_SHA before dispatch)
+    3. Verify implementation works (run tests in working tree, no commit)
+    4. **DO NOT git commit** — main agent commits at wave end in plan order
     5. Self-review (see below)
     6. Report back
+
+    ## Why no commit (v1.1.14+)
+
+    In wave-parallel mode, multiple implementers may run concurrently.
+    To keep wave commits in plan order (and avoid race), the main agent stages +
+    commits each task's working-tree changes at wave finalization. Your job is
+    to leave the working tree in the right state with manifest written; main
+    handles git from there.
 
     Work from: [directory]
 
@@ -118,6 +126,7 @@ Task tool (general-purpose):
     **Governance hands-off:**
     - Did I avoid adding RISK comments? (main does this)
     - Did I leave 변경이력 footer untouched? (main does this)
+    - **Did I avoid `git commit`?** (main does this at wave end)
 
     If you find issues during self-review, fix them now before reporting.
 
