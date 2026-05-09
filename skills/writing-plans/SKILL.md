@@ -307,7 +307,27 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
    - The full PRETTIFIED `<slug>-implementation-plan.md` (or summary if very long, with link)
    - The verify-spec 4-axis report
    - The code-pretty diff summary
-   - One question: "Approve `<slug>-implementation-plan.md` and proceed? — yes / fix / partial"
+   - **Gate #13 — plan + verify 결합 승인**
+
+     **Tool form (preferred)**
+
+     Call `AskUserQuestion`:
+
+     ```json
+     {
+       "question": "Approve <slug>-implementation-plan.md (and verify-spec report) and proceed?",
+       "context": "plan + 4축 보고서 한 메시지로 노출됨",
+       "choices": [
+         {"value": "yes", "label": "Yes — approve, log change-history, ask execution mode"},
+         {"value": "fix", "label": "Fix — needs revision"},
+         {"value": "partial", "label": "Partial — revise specific sections"}
+       ]
+     }
+     ```
+
+     **Prose fallback**
+
+     > Approve `<slug>-implementation-plan.md` and proceed? — `yes` / `fix` / `partial`
    - DO NOT split into "approve plan" → "approve verify report". One gate, one decision.
    - On `fix` → loop back to step 1 (re-verify → re-code-pretty → re-docs-pretty → re-show)
 
@@ -318,6 +338,25 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
 ## Execution Handoff
 
 After verification passes and the entry is logged, count plan tasks and offer execution choice:
+
+**Gate #14 — 실행 모드 선택**
+
+**Tool form (preferred)**
+
+Call `AskUserQuestion`:
+
+```json
+{
+  "question": "Plan has <N> tasks. Which execution approach?",
+  "context": "Inline = ≤12 tasks recommended; Subagent = 13+ tasks recommended",
+  "choices": [
+    {"value": "Inline", "label": "Inline — main agent edits directly via executing-plans"},
+    {"value": "Subagent", "label": "Subagent — implementer + spec reviewer via js-super-subagent-driven-development"}
+  ]
+}
+```
+
+**Prose fallback**
 
 > "Plan complete and saved to `docs/features/<date>-<slug>/<slug>-implementation-plan.md`. Two execution options:
 >
