@@ -1336,3 +1336,8 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: skills/writing-plans/SKILL.md 위 영역의 v1.1.5 wording (commit e6ca307 참조)
 - **변경 후 코드**: code-pretty caller wiring + Before/After convention + per-draft-state pretty (commits 6a29175 main + 7d70f0a cleanup 참조). Spec reviewer ✅ — 16 grep matches code-pretty.
 - **연관 항목**: CH-20260509-007 (Task 1 code-pretty SKILL), CH-20260509-008 (Task 2 fixtures), CH-20260509-009/010/011 (Tasks 3/4/5 동기화 chain)
+
+### [2026-05-09 16:52] [코드-수정] (trivial) (task: Task 7 — README line 22 wording)
+- **id**: CH-20260509-013
+- **이유**: README v1.1.6 docs-pretty + code-pretty 새 정책 1줄 wording 갱신
+- **무엇이**: README.md:22 (single line)
