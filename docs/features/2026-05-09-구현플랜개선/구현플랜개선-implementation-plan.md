@@ -1257,3 +1257,20 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
   ```
   Spec reviewer ✅ — 11개 섹션 모두 plan과 byte-faithful 매핑 검증 완료.
 - **연관 항목**: CH-20260509-006 (plan)
+
+### [2026-05-09 16:35] [코드-수정] (task: Task 2 — code-pretty fixture 5종 + tests/README)
+- **id**: CH-20260509-008
+- **이유**: code-pretty 스킬 dogfood 검증 자료 도입 — F1~F5 + README (AC-2/4/6/7 + R7 매핑)
+- **무엇이**: skills/code-pretty/tests/{fixture-01-basic-pair.md, fixture-02-new-file.md, fixture-03-forbidden-ops.md, fixture-04-1pct-suspicion.md, fixture-05-already-clean.md, README.md}
+- **영향범위**: 없음 (test fixtures, internal use only)
+- **위험 카테고리**: 없음 (3-checklist 0 트리거 — 데이터 파일, 로직 없음)
+- **세부 변경 (6건)**:
+  - `skills/code-pretty/tests/fixture-01-basic-pair.md` — F1 원본/수정 후 페어 (`없음`)
+  - `skills/code-pretty/tests/fixture-02-new-file.md` — F2 신규 파일 (원본 생략) (`없음`)
+  - `skills/code-pretty/tests/fixture-03-forbidden-ops.md` — F3 금지 작업 baits (`없음`)
+  - `skills/code-pretty/tests/fixture-04-1pct-suspicion.md` — F4 1% 의심 룰 (`없음`)
+  - `skills/code-pretty/tests/fixture-05-already-clean.md` — F5 이미 이쁜 코드 (`없음`)
+  - `skills/code-pretty/tests/README.md` — fixture 인덱스 + AC 매핑 표 (`없음`)
+- **변경 전 코드**: (없음, 신규 파일 6개)
+- **변경 후 코드** (요약 — 전체는 commit f107993 참조): 각 fixture는 plan Task 2 Step 1-6 "수정 후" 블록 byte-faithful (spaced-backtick → real-backtick 변환 적용). README.md 표는 5행 (F1~F5) + AC 매핑.
+- **연관 항목**: CH-20260509-007 (Task 1 code-pretty/SKILL.md)
