@@ -1341,3 +1341,16 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **id**: CH-20260509-013
 - **이유**: README v1.1.6 docs-pretty + code-pretty 새 정책 1줄 wording 갱신
 - **무엇이**: README.md:22 (single line)
+
+### [2026-05-09 16:54] [코드-수정] (task: Task 8 — PRD R7 cascade)
+- **id**: CH-20260509-015
+- **이유**: 사용자 추가 우려 R7 ("이미 이쁜 코드 강제 변경") 을 PRD §우려·해결에 cascade — tech-design D6/R7/F5에 이미 반영, 이제 PRD에도 명시
+- **무엇이**: docs/features/2026-05-09-구현플랜개선/구현플랜개선-requirements.md (§우려·해결 5번째 행 + 변경이력 [요구사항-수정] CH-20260509-014 entry)
+- **영향범위**: PRD에 명시되지 않았던 우려가 cascade되어 4개 산출물 (PRD/tech-design/impl-plan/실 SKILL 본문) 모두 정합. 이후 사용자가 PRD 읽을 때 R7 우려도 함께 보임.
+- **위험 카테고리**: 없음 (3-checklist 0 — markdown row addition + change-history append)
+- **세부 변경 (1건 + 변경이력 1건)**:
+  - `구현플랜개선-requirements.md` §우려·해결 표 — 5번째 행 추가 (`없음`)
+  - `구현플랜개선-requirements.md` 변경이력 — CH-20260509-014 entry append (`없음`)
+- **변경 전 코드**: §우려·해결 4행 표
+- **변경 후 코드**: §우려·해결 5행 표 + 새 [요구사항-수정] entry CH-20260509-014 (commit 27a6818 참조). Spec reviewer ✅ — 5행 byte-faithful, 변경이력 schema 준수.
+- **연관 항목**: CH-20260509-014 (PRD entry), CH-20260509-002 (개발방향, R7 D6 정의처)
