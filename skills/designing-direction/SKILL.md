@@ -212,7 +212,7 @@ This summarizes the corrected order (matches Process detail steps 5-9 above):
    - User reviews RAW markdown (no docs-pretty yet). docs-pretty fires AFTER approval.
 
 3. On `yes` → invoke change-history (`[개발방향-수정]` entry) → continue to step 4.
-   On `fix` → re-enter the relevant question(s), then re-run from "Self-review (internal)" — docs-pretty fires again before the next user gate.
+   On `fix` → re-enter the relevant question(s), then re-run from "Self-review (internal)" — re-show RAW; docs-pretty stays gated until final approval.
    On `partial` → ask which sections to revisit, then re-enter.
 
 4. **Proceed-to-writing-plans gate** (separate, after change-history is logged):
