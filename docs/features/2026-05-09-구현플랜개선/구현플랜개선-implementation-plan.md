@@ -1303,3 +1303,20 @@ tech-design §6 R1~R7을 구체적 위치로 매핑:
 - **변경 전 코드**: skills/brainstorming/SKILL.md 위 4개 영역의 v1.1.5 시점 wording (commit 188952c 참조)
 - **변경 후 코드**: post-approval / final-1회 / RAW review 라벨로 일관 갱신 (commit d91ce95 참조). Spec reviewer ✅ — 4 edits all byte-faithful, scoped (10 ins / 10 del).
 - **연관 항목**: CH-20260509-009 (Task 3 docs-pretty SKILL.md), Task 5/6에서 designing-direction/writing-plans 동기화 예정
+
+### [2026-05-09 16:45] [코드-수정] (task: Task 5 — skills/designing-direction/SKILL.md Process 갱신)
+- **id**: CH-20260509-011
+- **이유**: designing-direction(개발방향)에서도 brainstorming과 동일 패턴 — RAW 검토 → 승인 후 docs-pretty 1회. 추가로 Task 5 범위 밖 stale wording 1건 (line 215) 정합성 정돈.
+- **무엇이**: skills/designing-direction/SKILL.md (Checklist 6/7/8 swap + Process Flow node labels + edges + step 6+7 detail body + After Save + cleanup line 215)
+- **영향범위**: designing-direction caller가 RAW 검토하도록 변경. brainstorming(Task 4 완료) + docs-pretty SKILL.md(Task 3 완료) 와 정합. writing-plans(Task 6) 미완료 시점 일시 비대칭.
+- **위험 카테고리**: 없음 (3-checklist 0 — markdown body update)
+- **세부 변경 (5건 + cleanup 1건)**:
+  - `skills/designing-direction/SKILL.md:23-25` — Checklist 6/7/8 swap (`없음`)
+  - `skills/designing-direction/SKILL.md:73-74` — Process Flow node labels reorder (`없음`)
+  - `skills/designing-direction/SKILL.md:90-93` — Process Flow edges 갱신 (`없음`)
+  - `skills/designing-direction/SKILL.md:130-142` — 상세 step 6/7 body 갱신 (`없음`)
+  - `skills/designing-direction/SKILL.md:208-212` — After Save section RAW 한정 + 새 bullet (`없음`)
+  - `skills/designing-direction/SKILL.md:215` — fix-loop wording cleanup (post-approval 정합) (`없음`)
+- **변경 전 코드**: skills/designing-direction/SKILL.md 위 6개 영역의 v1.1.5 wording (commit d706002 참조)
+- **변경 후 코드**: post-approval / RAW review / final-1회 일관 갱신 (commits cc32758 main + eec0756 cleanup 참조). Spec reviewer ✅.
+- **연관 항목**: CH-20260509-010 (Task 4 brainstorming), Task 6에서 writing-plans 동기화 예정
