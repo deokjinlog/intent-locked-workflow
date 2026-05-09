@@ -41,11 +41,25 @@ This skill picks ONE mode at task start based on git availability + plan policy:
 <HARD-GATE>
 At task start (ONCE per `/execute-plan` run), run the mode check:
 
-1. **Read plan frontmatter** for the `commit_policy` field (see writing-plans schema):
-   - Field absent OR `per-task` → candidate mode = git-fast
+1. **Run mode-check helper (v1.1.14+ deterministic)**:
+
+```bash
+source .venv/bin/activate && python -c "
+import sys
+from pathlib import Path
+from scripts.preflight import execute_plan_mode_check
+result = execute_plan_mode_check(Path('<PLAN_PATH>'))
+print(f'ok={result.ok} reason={result.reason}')
+sys.exit(0 if result.ok else 1)
+"
+```
+
+이 helper 가 plan frontmatter 의 `commit_policy` 를 deterministic 으로 읽어 반환. exit code 0 시 reason 에 `commit_policy=per-task` 형식. 메인은 reason 의 policy 값으로 모드 분기:
+   - `per-task` → candidate mode = git-fast
    - `single` → candidate mode = memory-fallback (all tasks → one commit at end)
    - `none` → candidate mode = memory-fallback (no commits during run)
-   - Any other value → STOP, ask user to clarify
+
+기존 LLM 산문 추론 단계 제거 (v1.1.14). frontmatter 파싱 결과를 그대로 신뢰. 자세한 룰은 `scripts/preflight.py:execute_plan_mode_check`.
 
 2. **Check git availability**: `git rev-parse --git-dir` (Bash). If git unavailable, force mode = memory-fallback regardless of frontmatter.
 
