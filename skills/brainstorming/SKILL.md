@@ -22,6 +22,7 @@ After <slug>-requirements.md is approved AND change-history is logged, **automat
 
 You MUST create a TaskCreate task for each of these items and complete them in order:
 
+0. **Entry Router (v1.1.15+, FR-3)** — 사용자 입력에 명시적 small 신호 감지 시 즉시 og-brainstorming auto-invoke + notice 한 줄. 그 외 → AskUserQuestion 게이트 (og- / js-super 양자택일). 자세한 룰은 "Entry Router" 섹션 참조.
 1. **Explore project context** — files, docs, recent commits
 2. **Confirm feature name + slug** — one question, then create `docs/features/YYYY-MM-DD-<slug>/`
 3. **Mode selection gate** — ask user PRD (default) or Socratic. Parse intent (any language). On ambiguous reply, default to PRD with a one-line note. See "Mode Selection" below.
@@ -35,6 +36,8 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 9. **Auto-proceed to designing-direction (v1.1.9+ — gate removed)** — Right after the change-history entry is logged, auto-invoke `designing-direction` via the Skill tool with a one-line interrupt-notice. On user "stop"/"멈춰"/"잠깐" → exit cleanly with notice telling the user to run /design later.
 
 If you find yourself skipping ahead, stop and create the missing task.
+
+**Before invoking the next skill via Skill tool, mark ALL checklist TaskCreate items as completed (in_progress → completed). The Skill tool transition does NOT auto-complete prior tasks. (v1.1.15+, FR-2)**
 
 ## Anti-Pattern: "This is too simple to need a PRD"
 
@@ -72,6 +75,9 @@ Save path: `docs/features/YYYY-MM-DD-<slug>/<slug>-requirements.md`
 
 ```dot
 digraph brainstorm_flow {
+    "Step 0 Router (FR-3)\n명시적 small 신호?" [shape=diamond];
+    "Auto-invoke og-brainstorming\n+ notice" [shape=box];
+    "AskUserQuestion 게이트\n(og / js-super)" [shape=diamond];
     "Explore project context" [shape=box];
     "Confirm feature name + slug" [shape=box];
     "Mode gate: PRD (default) / Socratic" [shape=diamond];
@@ -97,6 +103,10 @@ digraph brainstorm_flow {
     "Auto-invoke designing-direction skill" [shape=doublecircle];
     "Exit: tell user to run /design later" [shape=oval];
 
+    "Step 0 Router (FR-3)\n명시적 small 신호?" -> "Auto-invoke og-brainstorming\n+ notice" [label="small"];
+    "Step 0 Router (FR-3)\n명시적 small 신호?" -> "AskUserQuestion 게이트\n(og / js-super)" [label="그 외"];
+    "AskUserQuestion 게이트\n(og / js-super)" -> "Auto-invoke og-brainstorming\n+ notice" [label="og"];
+    "AskUserQuestion 게이트\n(og / js-super)" -> "Explore project context" [label="js-super"];
     "Explore project context" -> "Confirm feature name + slug";
     "Confirm feature name + slug" -> "Mode gate: PRD (default) / Socratic";
 
@@ -217,6 +227,54 @@ After change-history entry is logged, **automatically invoke** the `designing-di
 Rationale: gate #8 (RAW 산출물 승인) already captured the user's intent to move forward. A separate "proceed to /design?" gate just adds friction — if the user wanted to stop, they'd have answered `no` at gate #8 or exited. Output a one-line notice `ℹ️ Auto-proceeding to /design (v1.1.9 — separate gate removed). Type "stop" to abort.` so the user has a chance to interrupt mid-transition if they really want to pause.
 
 If the user explicitly types "stop"/"멈춰"/"잠깐" after the notice, exit cleanly with `ℹ️ OK. Run /design later when ready.` Otherwise auto-invoke.
+
+## Entry Router (v1.1.15+, FR-3)
+
+js-super:brainstorming 진입 시 1순위 발화. `/brainstorm` slash command 진입 / 자연어 진입 ("…를 만들어 / 브레인스토밍 시작해") 모두 동일 path.
+
+### 라우팅 룰
+
+**1. 명시적 small 신호 감지 → og-brainstorming auto-invoke + notice 한 줄**
+
+다음 중 하나라도 사용자 입력에 명시되면 small 판정:
+
+- **small 키워드**: `간단`, `잠깐`, `한 줄`, `단순`, `og로`, `og-`, `가볍게`
+- **단일 파일/단일 함수 변경 명시**: 예 — "`README.md` 한 줄 수정", "`utils.py:foo` 만 수정"
+- **메타 워크플로우 / 순수 config 변경 명시**: 예 — "`.gitignore` 추가", "tsconfig 옵션 한 개 추가"
+
+→ 즉시 `og-brainstorming` skill 을 Skill tool 로 invoke. 직전에 한 줄 notice 노출:
+
+```
+ℹ️ Auto-routing to og-brainstorming ('<감지된 키워드 / 신호>'). Switch back? "js-super" 라고 답하세요.
+```
+
+사용자가 "js-super" 라고 응답하면 라우터 무시하고 본 skill 의 Checklist 1번 (Explore) 으로 진입.
+
+**2. 그 외 모두 → AskUserQuestion 게이트**
+
+명시적 small 신호 부재 (= 의도파악력 약한 케이스 포함). AI 가 "이건 분명 large 다" 판정할 필요 X. AskUserQuestion 호출:
+
+```json
+{
+  "question": "이 피처는 og-brainstorming(가벼운 단발) 또는 js-super:brainstorming(3-MD 풀 트랙) 중 어느 모드로 진행할까요?",
+  "header": "진입 모드",
+  "multiSelect": false,
+  "options": [
+    {"label": "og-brainstorming", "description": "가벼운 단발 / upstream superpowers 원본 / 자유 탐색"},
+    {"label": "js-super:brainstorming", "description": "3-MD 풀 트랙 / PRD + tech-design + plan / 변경이력 + 위험 주석"}
+  ]
+}
+```
+
+사용자 선택 → og 면 og-brainstorming Skill invoke / js-super 면 본 skill Checklist 1번 진입.
+
+### 의도파악력 약해도 됨
+
+AI 가 small/large 분명 판정할 필요 없음. 명시적 small 신호 catch 만 정확하면 나머지는 게이트로 사용자 결정. false positive 안 발생.
+
+### og-brainstorming 본문 unchanged
+
+라우터는 본 skill 진입에만 박힘. og-brainstorming SKILL.md 는 영향 X.
 
 ## Mode Selection
 
