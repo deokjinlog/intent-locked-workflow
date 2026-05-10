@@ -51,9 +51,9 @@ Do NOT use Opus (overkill) or Haiku (rephrasing risk on Korean prose). Sonnet is
 
 ## Process
 
-### Step 1 — Pre-flight check (v1.1.14+ deterministic)
+### Step 1 — Pre-flight check (v1.1.15+ user-gate)
 
-Before dispatching, run the deterministic helper:
+Before dispatching, run the deterministic helper. **stderr 도 capture** — 실패 시 사용자에게 그대로 노출:
 
 ```bash
 source .venv/bin/activate && python -c "
@@ -61,15 +61,26 @@ import sys
 from pathlib import Path
 from scripts.preflight import docs_pretty_check
 result = docs_pretty_check(Path('<TARGET>'))
-print(f'ok={result.ok} reason={result.reason}')
+print(f'ok={result.ok} reason={result.reason} | {result.human_reason}')
 sys.exit(0 if result.ok else 1)
-"
+" 2>&1
 ```
 
-- exit code 0 → 검증 통과, Step 2 dispatch 진행
-- exit code 1 → reason 한 줄 노출 후 즉시 종료. **메인은 검증 retry 또는 LLM 재추론 X**
+**exit code 분기 (v1.1.15 user-gate)**:
 
-이 단계는 v1.1.14 에서 LLM 추론 → 코드로 이관. 동일 검사 (file 존재 / 변경이력 footer 비어있음 / filename 패턴) 가 deterministic 으로 처리되어 응답 속도 + 토큰 비용 모두 0 수준. 자세한 룰은 `scripts/preflight.py:docs_pretty_check`.
+- **exit 0** → 검증 통과, Step 2 dispatch 진행.
+- **exit 1** (helper semantic fail, ok=False) → `human_reason` 한 줄 노출 후 `AskUserQuestion` 게이트:
+  - choices:
+    - `"수정 후 재시도"` → 사용자가 doc 수정 후 메인이 helper 재호출.
+    - `"강제 진행 (위험)"` → preflight 무시하고 Step 2 진입. 메인이 `⚠️ preflight 우회. <reason> 무시하고 진행.` 한 줄 안내.
+    - `"스킵 (이번만)"` → docs-pretty 단계 스킵, caller 에게 abnormal return (caller 가 change-history 직행 결정).
+- **exit ≠ 0,1** (invocation 실패: 127 / 2 / etc., harness 환경 이슈) → stderr 전문 노출 + `AskUserQuestion` 게이트:
+  - 메시지: `"preflight helper invocation 실패 (exit <code>): <stderr 전문>. 어떻게 할까요?"`
+  - choices:
+    - `"직접 디버깅"` → 사용자가 환경 점검 (venv / python 경로 / `scripts/preflight.py` 존재) 후 알려주면 메인이 재호출.
+    - `"skill 단계 스킵"` → preflight 우회하고 Step 2 진입 (위와 동일).
+
+자세한 룰은 `scripts/preflight.py:docs_pretty_check`. helper 검사: file 존재 / 변경이력 footer 비어있음 / filename 패턴.
 
 ### Step 2 — Dispatch the Sonnet subagent
 
