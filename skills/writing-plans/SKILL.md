@@ -86,6 +86,30 @@ Each step is one action (2-5 minutes):
 - "Run the tests and make sure they pass" — step
 - "Commit" — step (skip if git is not initialized)
 
+## Same-file mechanical 묶음 룰 (v2.0.1+)
+
+둘 이상의 logical change 가 다음 **세 조건 모두** 만족하면 1 task 의 multi-step 으로 묶는다:
+
+1. **같은 파일** — Files 목록 동일 (Modify 대상 path 동일)
+2. **테스트 경계 없음** — 한 통합 test 또는 UI preview 로 같이 검증 가능
+3. **mechanical** — 다음 패턴에 해당. 알고리즘 변경 X.
+   - modifier / annotation 추가 (예: `Modifier.padding(...)`)
+   - handler 등록 (예: `BackHandler { ... }`, click listener)
+   - container 옵션 (예: `Scaffold(contentWindowInsets = ...)`)
+   - placeholder text / static UI element 추가
+   - import / using 추가
+
+세 조건 중 하나라도 어기면 분리. 묶을 때 task 안 step 구조:
+
+- step 1: 통합 test 작성 (한 번)
+- step 2~N: 각 변경의 byte-copy Edit (`**원본**` / `**수정 후**` 페어)
+- step N+1: test 실행 → pass 확인
+- step N+2: self-review
+
+(애매하면 분리 — false negative 회복 비용 < false positive)
+
+**multi-step task 의 byte-copy 정합성 (v2.0.0 D3 가정)**: 각 step 의 `**원본**` 블록은 직전 step 적용 후 파일 상태 기준이지만, mechanical 변경은 대부분 file 의 다른 위치 (independent insertions) 라 자연 byte-equal. 가정 깨지면 implementer Stage 1 BLOCKED → Stage 2 reorder dispatch 가 처리.
+
 ## Plan Document Header (REQUIRED)
 
 Every implementation plan MUST start with:
@@ -189,7 +213,7 @@ When a task changes existing code (Modify), use the **Before/After label pair**:
 
 Rules:
 
-1. The "원본" label MUST start with exactly `**원본**` (markdown bold). The optional `(file:line)` annotation is strongly recommended for navigation.
+1. The "원본" label MUST start with exactly `**원본**` (markdown bold). The `(file:line-range)` annotation is **REQUIRED for Modify tasks** (v2.0.1+) so that `plan_byte_check` helper can verify the block byte-equal against the actual file at that range. Without a line range, the helper falls back to whole-file compare which fails for partial-file edits.
 2. The "수정 후" label MUST start with exactly `**수정 후**` (markdown bold).
 3. For tasks that CREATE a new file, the "원본" block is OMITTED — only "수정 후" block is shown (with `(new file: <path>)` annotation).
 4. Both blocks MUST use the same fenced-code language identifier.
@@ -287,6 +311,7 @@ After writing the complete plan, look at it with fresh eyes:
 2. **Placeholder scan**: Search for any of the patterns from "No Placeholders" above. Fix them.
 3. **Type consistency**: Function names, signatures, and property names must match across tasks (e.g., `clearLayers()` in Task 3 vs `clearFullLayers()` in Task 7 is a bug).
 4. **위험 코드 지점 coverage**: Every category in <slug>-tech-design.md §6 has at least one corresponding entry in §2.
+5. **same-file 묶음 룰 위반 검사**: task 들 중 같은 파일만 만지는 chain 이 2건 이상 있는지 확인. 있으면 D1 의 3 조건 (같은 파일 / test 경계 X / mechanical) 재검토 → 묶을지 결정. (v2.0.1+)
 
 If you find issues, fix them inline. If you find a spec requirement with no task, add the task.
 
