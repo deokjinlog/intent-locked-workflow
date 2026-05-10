@@ -54,10 +54,18 @@ sys.exit(0 if result.ok else 1)
 "
 ```
 
-이 helper 가 plan frontmatter 의 `commit_policy` 를 deterministic 으로 읽어 반환. exit code 0 시 reason 에 `commit_policy=per-task` 형식. 메인은 reason 의 policy 값으로 모드 분기:
-   - `per-task` → candidate mode = git-fast
-   - `single` → candidate mode = memory-fallback (all tasks → one commit at end)
-   - `none` → candidate mode = memory-fallback (no commits during run)
+이 helper 가 plan frontmatter 의 `commit_policy` 를 deterministic 으로 읽어 반환.
+
+**exit code 분기 (v1.1.15 user-gate)**:
+
+- **exit 0** → reason 에 `commit_policy=per-task` 형식. 메인은 policy 값으로 모드 분기:
+  - `per-task` → candidate mode = git-fast
+  - `single` → candidate mode = memory-fallback (all tasks → one commit at end)
+  - `none` → candidate mode = memory-fallback (no commits during run)
+- **exit 1** (semantic fail — plan not found) → `human_reason` 노출 후 `AskUserQuestion` 게이트:
+  - `"수정 후 재시도"` (사용자가 plan 경로 확인) / `"강제 진행 (위험)"` (사용자가 입력한 plan 경로 직접 사용 — 메인이 추가 안내) / `"스킵 (이번만)"` (executing-plans 종료).
+- **exit ≠ 0,1** (invocation 실패) → stderr 노출 + `AskUserQuestion` 게이트:
+  - `"직접 디버깅"` / `"skill 단계 스킵"`.
 
 기존 LLM 산문 추론 단계 제거 (v1.1.14). frontmatter 파싱 결과를 그대로 신뢰. 자세한 룰은 `scripts/preflight.py:execute_plan_mode_check`.
 
