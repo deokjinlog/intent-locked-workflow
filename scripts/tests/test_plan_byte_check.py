@@ -114,3 +114,21 @@ line2
     mismatches = verify_plan_block_byte_equal(plan, tmp_path)
     assert len(mismatches) == 1
     assert "out of bounds" in mismatches[0].reason.lower() or "range" in mismatches[0].reason.lower()
+
+
+def test_byte_equal_missing_line_range_for_modify(tmp_path):
+    """v2.0.1+: Modify task 블록에 line range 누락 시 명시적 에러 (whole-file fall-through 폐지)."""
+    _write(tmp_path / "src.py", "line1\nline2\nline3\n")
+    plan_text = (
+        "# Plan\n"
+        "### Task 1\n"
+        "BLOCK_MARKER (`src.py`):\n"
+        "```\n"
+        "line1\n"
+        "```\n"
+    ).replace("BLOCK_MARKER", "**" + "원본" + "**")
+    plan = _write(tmp_path / "plan.md", plan_text)
+    mismatches = verify_plan_block_byte_equal(plan, tmp_path)
+    assert len(mismatches) == 1
+    reason = mismatches[0].reason.lower()
+    assert "line range" in reason and "missing" in reason

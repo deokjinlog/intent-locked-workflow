@@ -90,7 +90,15 @@ def verify_plan_block_byte_equal(
                 continue
             actual = "".join(file_lines[start - 1:end])
         else:
-            actual = file_text
+            mismatches.append(Mismatch(
+                plan_path=plan_path,
+                block_index=idx,
+                file_path=file_path,
+                expected=expected,
+                actual=file_text,
+                reason=f"line range missing — Modify task **원본** block at {rel_path} requires `(file:line-range)` annotation (v2.0.1+)",
+            ))
+            continue
 
         if actual.endswith("\n"):
             actual_no_trail = actual[:-1]
