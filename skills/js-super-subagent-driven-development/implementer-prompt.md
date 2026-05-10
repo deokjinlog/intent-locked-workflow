@@ -4,7 +4,7 @@ Use this template when dispatching an implementer subagent under `js-super-subag
 
 ```
 Task tool (general-purpose):
-  model: "{{MODEL}}"   # Main injects per-task value from plan's `**Model**:` field; defaults to "sonnet" if missing. See SKILL.md "Model Selection" + writing-plans "Task Model Hint".
+  model: "haiku"   # v2.0.0+ HAIKU FIXED — byte-copy mode does not need LLM transcription. plan's `**Model**:` hint is ignored under subagent-driven-development. (See CLAUDE.md "implementer-prompt + reorder-prompt + plan_byte_check" section.)
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
@@ -46,11 +46,34 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## STRICT BYTE-COPY (v2.0.0+)
+
+    When the task has `**원본**` / `**수정 후**` code blocks, your Edit tool
+    invocation MUST satisfy:
+
+    - `old_string` argument == byte-identical content of the `**원본**` block
+    - `new_string` argument == byte-identical content of the `**수정 후**` block
+
+    DO NOT:
+    - Paraphrase, reformat, "improve" the code
+    - Normalize whitespace, indentation, or line endings
+    - Add comments, type hints, docstrings not in the plan
+    - Reorder imports, sort dictionary keys, or apply autofix
+
+    For Create tasks (only `**수정 후**` block, no `**원본**`), Write tool's
+    `content` argument == byte-identical content of the `**수정 후**` block.
+
+    If Edit fails with "old_string not found":
+    - DO NOT retry with paraphrased input
+    - DO NOT search the file and approximate the location
+    - Immediately report `Status: BLOCKED — 원본 mismatch at <file>` and stop.
+      The main agent will dispatch a Reorder subagent (sonnet) to reconcile.
+
     ## Your Job
 
     Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
+    1. Implement exactly what the task specifies — byte-copy the blocks
+    2. Write tests (following TDD if task says to) — same byte-copy rule
     3. Verify implementation works (run tests in working tree, no commit)
     4. **DO NOT git commit** — main agent commits at wave end in plan order
     5. Self-review (see below)
@@ -140,9 +163,15 @@ Task tool (general-purpose):
     - Self-review findings (if any)
     - Any issues or concerns
 
-    Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
-    Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
-    information that wasn't provided. Never silently produce work you're unsure about.
+    Status meanings:
+    - DONE — byte-copy succeeded + tests pass
+    - DONE_WITH_CONCERNS — completed but unsure about correctness
+    - **BLOCKED — 원본 mismatch at <file>** (v2.0.0+) — Edit "old_string not found".
+      The main agent will dispatch a Reorder subagent. Just report the file and stop.
+    - BLOCKED — other reason (file system error, test runner crash, etc.)
+    - NEEDS_CONTEXT — information missing from task description
+    
+    Never silently produce work you're unsure about.
 
     ## Changes Manifest (REQUIRED on DONE / DONE_WITH_CONCERNS) — v1.1.7+
 
