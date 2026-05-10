@@ -55,3 +55,9 @@
 | Fixture | 시나리오 |
 |---|---|
 | H11-user-edit-reorder | 사용자 mid-flight 수정 → Implementer BLOCKED → Reorder dispatch → DONE (silent overwrite 차단 검증) |
+
+## v2.0.1+ — same-file mechanical 묶음 룰 fixtures
+
+| Fixture | 시나리오 |
+|---|---|
+| H12-same-file-merge | 같은 파일 4 mechanical 변경 plan → D1 3 조건 catch → 1 task multi-step 묶음 (positive) + 5번째 algorithmic 변경 → 분리 (negative) |
