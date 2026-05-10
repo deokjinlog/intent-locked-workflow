@@ -76,3 +76,18 @@ def test_subagent_task_entry_check_commit_policy_single_rejected(tmp_path):
     result = subagent_task_entry_check(plan)
     assert result.ok is False
     assert "per-task" in result.reason
+
+
+def test_preflight_result_has_human_reason_field():
+    from scripts.preflight import PreflightResult
+    r = PreflightResult(False, "file_not_found")
+    assert hasattr(r, "human_reason")
+    assert r.human_reason == ""  # default empty string
+
+
+def test_docs_pretty_check_returns_human_reason_korean():
+    from pathlib import Path
+    from scripts.preflight import docs_pretty_check
+    r = docs_pretty_check(Path("/tmp/__nonexistent__-requirements.md"))
+    assert r.ok is False
+    assert "대상 파일이 존재하지 않습니다" in r.human_reason
