@@ -59,6 +59,7 @@ def build_waves(tasks: list[Task]) -> list[Wave]:
         wave = Wave(index=len(waves) + 1, tasks=wave_tasks)
         waves.append(wave)
 
+        placed_this_wave = {t.id for t in wave_tasks}
         for t in wave_tasks:
             placed.add(t.id)
 
@@ -66,7 +67,7 @@ def build_waves(tasks: list[Task]) -> list[Wave]:
             if tid in placed:
                 continue
             for dep in t.deps:
-                if dep in placed:
+                if dep in placed_this_wave:
                     indeg[tid] -= 1
                     if indeg[tid] < 0:
                         indeg[tid] = 0

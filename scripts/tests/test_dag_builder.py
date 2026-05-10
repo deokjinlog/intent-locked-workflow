@@ -79,3 +79,41 @@ def test_detect_conflicts_three_way_overlap():
     }
     conflicts = detect_conflicts(manifests)
     assert len(conflicts) == 3
+
+
+def test_strict_deps_ordering_with_file_overlap():
+    """T2 deps=[T1]. 둘 다 같은 파일 만지면 T2 가 T1 앞에 wave 배치 X.
+
+    Bug context (v1.1.16): Kahn indegree 0 후보가 T1 만일 때 정상이지만,
+    file overlap 으로 T1, T2 가 같은 wave 못 들어가면 T2 는 다음 wave 로
+    deferred. 이때 deps 우선순위 보장 — T2 가 W2 가 아니라 T1 의 W1 다음에
+    배치되어야 함. 회귀 패턴: deferred 후 deps 재계산 누락.
+    """
+    from scripts.dag_builder import Task, build_waves
+    tasks = [
+        Task(id=1, name="A", files=["shared.py"], deps=[]),
+        Task(id=2, name="B", files=["shared.py"], deps=[1]),
+    ]
+    waves = build_waves(tasks)
+    assert len(waves) == 2
+    assert [t.id for t in waves[0].tasks] == [1]
+    assert [t.id for t in waves[1].tasks] == [2]
+
+
+def test_deps_violated_when_file_overlap_defers_dep():
+    """후행 task 의 deps 가 같은 wave 내 다른 candidate 보다 앞에 와야 함.
+
+    예: T1, T2 (deps=[]), T3 deps=[T2]. T2/T3 파일 동일.
+    Kahn 0 후보 = [T1, T2]. file overlap 없음 → 둘 다 W1.
+    T3 는 deps=[T2] 만족 + T2 와 file overlap → W2.
+    """
+    from scripts.dag_builder import Task, build_waves
+    tasks = [
+        Task(id=1, name="A", files=["a.py"], deps=[]),
+        Task(id=2, name="B", files=["b.py"], deps=[]),
+        Task(id=3, name="C", files=["b.py"], deps=[2]),
+    ]
+    waves = build_waves(tasks)
+    assert len(waves) == 2
+    assert sorted(t.id for t in waves[0].tasks) == [1, 2]
+    assert [t.id for t in waves[1].tasks] == [3]
