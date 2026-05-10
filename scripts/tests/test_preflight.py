@@ -91,3 +91,38 @@ def test_docs_pretty_check_returns_human_reason_korean():
     r = docs_pretty_check(Path("/tmp/__nonexistent__-requirements.md"))
     assert r.ok is False
     assert "대상 파일이 존재하지 않습니다" in r.human_reason
+
+
+def test_code_pretty_check_human_reason_for_wrong_filename(tmp_path):
+    from scripts.preflight import code_pretty_check
+    p = tmp_path / "foo-requirements.md"
+    p.write_text("# title\n## 변경이력\n", encoding="utf-8")
+    r = code_pretty_check(p)
+    assert r.ok is False
+    assert "implementation-plan" in r.human_reason
+
+
+def test_code_pretty_check_human_reason_for_no_modified_blocks(tmp_path):
+    from scripts.preflight import code_pretty_check
+    p = tmp_path / "x-implementation-plan.md"
+    p.write_text("# title\n## 변경이력\n", encoding="utf-8")
+    r = code_pretty_check(p)
+    assert r.ok is False
+    assert "수정 후" in r.human_reason
+
+
+def test_execute_plan_mode_check_human_reason_for_missing_plan():
+    from pathlib import Path
+    from scripts.preflight import execute_plan_mode_check
+    r = execute_plan_mode_check(Path("/tmp/__nonexistent__-implementation-plan.md"))
+    assert r.ok is False
+    assert "구현계획서를 찾을 수 없습니다" in r.human_reason
+
+
+def test_subagent_entry_check_human_reason_for_wrong_policy(tmp_path):
+    from scripts.preflight import subagent_task_entry_check
+    p = tmp_path / "x-implementation-plan.md"
+    p.write_text("---\ncommit_policy: single\n---\n# title\n", encoding="utf-8")
+    r = subagent_task_entry_check(p)
+    assert r.ok is False
+    assert "per-task" in r.human_reason

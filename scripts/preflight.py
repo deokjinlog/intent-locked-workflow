@@ -100,7 +100,7 @@ def execute_plan_mode_check(plan_path: Path) -> PreflightResult:
         return PreflightResult(
             False,
             f"plan not found: {plan_path}",
-            f"플랜 파일이 존재하지 않습니다: {plan_path}",
+            f"구현계획서를 찾을 수 없습니다: {plan_path}",
         )
     text = plan_path.read_text(encoding="utf-8")
     policy = _read_commit_policy(text)
