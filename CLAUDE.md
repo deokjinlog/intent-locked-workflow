@@ -203,3 +203,24 @@ v2.0.0 메이저에서 subagent dispatch 패턴이 LLM transcription → byte-co
 - og-* skill 영향 0 — upstream mirror 보존.
 
 요약: 4 파일 변경은 묶어서 처리. 분리 release X.
+
+## writing-plans + auto-writing-plans same-file 묶음 룰 결합 (v2.0.1+)
+
+D1 (3 조건 AND — 같은 파일 / test 경계 X / mechanical) 룰 은 두 skill 본문에 동일하게 박힘. 한쪽만 수정 시 회귀.
+
+### 회귀 catch
+
+- writing-plans 의 룰 본문 / Self-Review 5번 항목 ↔ auto-writing-plans 의 Step 2 본문 룰 / Step 2 끝 자체 검토 동기화
+- grep `"Same-file mechanical 묶음 룰 (v2.0.1+)"` → 양 skill 모두 1 매치
+
+### 영향 범위
+
+- subagent 모드 plan 작성 흐름만 영향 — `executing-plans` (inline) 영향 0
+- og-* skill 영향 0
+- v2.0.0 byte-copy 룰 (multi-step 정합성 D3 가정) 와 결합 — 가정 깨지면 BLOCKED → reorder dispatch
+
+### Test fixture
+
+`skills/js-super-subagent-driven-development/tests/H12-same-file-merge/README.md` — 같은 파일 4 mechanical 변경 plan → 1 task multi-step 묶음 검증 (positive + negative).
+
+요약: 2 skill + fixture + CLAUDE.md 변경은 묶어서 처리.
