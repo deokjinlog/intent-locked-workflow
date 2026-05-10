@@ -161,3 +161,15 @@ js-super 자체 skill 의 Checklist 본문에 박힌 task 명칭은 **사용자 
 - **변경이력 footer 의 entry tag** (`[요구사항-수정]` 등) — schema 매직 키워드라 유지
 
 신규 skill 작성 시도 본 룰 따를 것. 회귀 시 `grep -nE "Invoke .* skill|Gate #|CH-[0-9]" <skill 본문 Checklist>` 로 catch.
+
+## auto-flow ↔ 기존 4 skill mirror 결합 (v1.1.17+)
+
+`auto-flow` 4 신규 skill (skills/auto-{brainstorming,designing-direction,writing-plans,executing-plans}/) 은 기존 4 skill 의 핵심 로직을 mirror 한 패턴 (og-* 와 동일). 다음 룰 적용:
+
+- **기존 4 skill body 변경 0** — auto-* 본문은 self-contained mirror. 본 4 skill 어떤 라인도 손대지 않음. 회귀 catch: `git diff HEAD~1 HEAD -- skills/{brainstorming,designing-direction,writing-plans,executing-plans}/SKILL.md` empty 보장.
+- **Gate #14 (실행 모드 선택) override 명시** — v1.1.12+ "자동승인 절대 X" 룰을 auto-executing-plans 가 명시 override. 일반 `/execute-plan` 영향 0 (게이트 그대로). auto-* 명시적 invoke 시에만 작동.
+- **docs-pretty 호출 부재** (v1.1.17+, PRD D9 amend) — auto-* 본문 어디에도 docs-pretty 호출 박지 않음. RAW 산출물 그대로 commit. 일반 흐름 영향 0. 회귀 catch: `for f in skills/auto-*/SKILL.md; do grep -c "docs-pretty" "$f"; done` → 모두 0 (Anti-Patterns 표 안의 1건만 허용).
+- **AskUserQuestion 호출 부재** — auto-* 본문 어디에도 AskUserQuestion 호출 X. clarifying Q 는 메인 turn 의 일반 prose 질의로 처리.
+- **Visual Companion / 카테고리 미니질문 / question plan 동의 등 PRD-mode 분기 부재** — Socratic only (D3).
+
+요약: auto-* 추가 / 변경은 atomic 으로 묶어 처리. 기존 4 skill 변경 + auto-* 변경 같이 commit X (분리 release).
