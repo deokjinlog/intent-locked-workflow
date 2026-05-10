@@ -29,6 +29,8 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 
 If you find yourself skipping ahead, stop and create the missing task.
 
+**Before invoking the next skill via Skill tool, mark ALL checklist TaskCreate items as completed (in_progress → completed). The Skill tool transition does NOT auto-complete prior tasks. (v1.1.15+, FR-2)**
+
 ## Inputs
 
 - `docs/features/<date>-<slug>/<slug>-requirements.md`
