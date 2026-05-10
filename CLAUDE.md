@@ -173,3 +173,33 @@ js-super 자체 skill 의 Checklist 본문에 박힌 task 명칭은 **사용자 
 - **Visual Companion / 카테고리 미니질문 / question plan 동의 등 PRD-mode 분기 부재** — Socratic only (D3).
 
 요약: auto-* 추가 / 변경은 atomic 으로 묶어 처리. 기존 4 skill 변경 + auto-* 변경 같이 commit X (분리 release).
+
+## implementer-prompt + reorder-prompt + plan_byte_check 결합 (v2.0.0+)
+
+v2.0.0 메이저에서 subagent dispatch 패턴이 LLM transcription → byte-copy + reorder 3-stage 분담 으로 근본 변경. 다음 4 파일은 atomic 변경 규칙 적용:
+
+1. `skills/js-super-subagent-driven-development/implementer-prompt.md` — STRICT BYTE-COPY 룰 + haiku 고정 + Status enum BLOCKED
+2. `skills/js-super-subagent-driven-development/reorder-prompt.md` — Status NEEDS_USER 형식 + sonnet 고정 + silent overwrite 차단
+3. `scripts/plan_byte_check.py` — `**원본**` 블록 byte-equal 검증 helper (writing-plans + auto-writing-plans 의 Self-Review)
+4. `skills/js-super-subagent-driven-development/SKILL.md` — Per-wave Sequence W-2 의 Stage 1/2/3 분기
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| W-2 분기 빠짐 | implementer BLOCKED 보고했는데 메인이 reorder 안 부르고 그대로 fail |
+| plan_byte_check 룰 약화 | plan 작성 시 byte-mismatch false-pass → 실행 단계 BLOCKED 빈도 ↑ |
+| reorder-prompt silent overwrite 차단 약화 | 사용자 mid-flight 수정 손실 위험 (v2.0.0 핵심 안전성 손상) |
+| implementer-prompt STRICT BYTE-COPY 약화 | drift 회귀 (v1.1.x 와 동일) |
+
+### Test fixture
+
+`skills/js-super-subagent-driven-development/tests/H11-user-edit-reorder/README.md` — 사용자 mid-flight 수정 시뮬레이션 + reorder dispatch 발화 검증.
+
+### 영향 범위
+
+- byte-copy + reorder 는 **subagent 모드에만** 적용 (subagent-driven-development + auto-executing-plans).
+- 일반 `/execute-plan` (executing-plans inline) 영향 0 — 사용자 LLM 자율 보정 선호 케이스 보존.
+- og-* skill 영향 0 — upstream mirror 보존.
+
+요약: 4 파일 변경은 묶어서 처리. 분리 release X.
