@@ -145,6 +145,30 @@ For each task in this wave (in plan order), 두 dispatch 를 한 메시지에 �
 
 페어 병렬 = wave 안 task **간** 병렬 (task A 와 task B 동시), task **안** 의 impl→review 는 직렬.
 
+### W-2 (v2.0.0+) Stage 1/2/3 분기
+
+For each task within wave, dispatch sequence is now:
+
+1. **Stage 1 — Implementer** (haiku, byte-copy)
+   Dispatch via `./implementer-prompt.md` (model="haiku" fixed).
+   - Status: DONE → proceed to Stage 3 (Spec Reviewer)
+   - Status: BLOCKED — 원본 mismatch → proceed to Stage 2 (Reorder)
+   - Status: BLOCKED — other → wave finalization failure isolation (D7), no Stage 2
+
+2. **Stage 2 — Reorder/Resolve** (sonnet, conditional)
+   Dispatch via `./reorder-prompt.md` (model="sonnet").
+   - Status: DONE → proceed to Stage 3 (Spec Reviewer)
+   - Status: NEEDS_USER → main agent invokes AskUserQuestion with reorder's
+     Suggested questions. User answers → main reconciles directly via Edit
+     → proceed to Stage 3.
+
+3. **Stage 3 — Spec Reviewer** (sonnet, unchanged)
+   Dispatch via `./spec-reviewer-prompt.md`. Same as v1.1.x.
+
+Stage 1 BLOCKED → Stage 2 dispatch is automatic (no user gate). Stage 2
+NEEDS_USER → main agent gate. Plan's `**Model**:` hint is IGNORED for
+Stage 1 (haiku fixed); spec reviewer remains sonnet (D11/D-T2 PRD).
+
 ### W-3. Spec reviewer ❌ 시 implementer 재dispatch
 
 기존 패턴 그대로. impl 재호출 → reviewer 재검 (working tree 만 갱신, commit 아직 X).
