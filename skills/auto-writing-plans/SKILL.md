@@ -26,6 +26,29 @@ tech-design §6 R-N → file:line + mitigation 매핑. 모든 R-N 이 §2 에 en
 
 `<slug>-implementation-plan.md` schema 따라 작성. frontmatter `commit_policy: per-task`. RAW 본문, code-pretty / docs-pretty 호출 X (D-T12 일관).
 
+### Step 4.5 — plan_byte_check 자동 (v2.0.0+)
+
+Plan 본문 자동 작성 직후, 메인이 helper 자동 호출:
+
+```bash
+source .venv/bin/activate && python -c "
+import sys
+from pathlib import Path
+from scripts.plan_byte_check import verify_plan_block_byte_equal
+mismatches = verify_plan_block_byte_equal(
+    Path('<PLAN_PATH>'),
+    Path('.'),
+)
+if mismatches:
+    for m in mismatches:
+        print(f'MISMATCH #{m.block_index} — {m.reason}')
+    sys.exit(1)
+sys.exit(0)
+"
+```
+
+미스매치 발견 시 메인이 즉시 plan 의 `**원본**` 블록 수정 후 재시도 (auto 모드 — 사용자 응답 wait X). 3회 재시도 후에도 실패 시 `ℹ️ plan_byte_check 3회 실패. 사용자 개입 필요.` 안내 후 종료. byte-copy 정밀도 강제는 v2.0.0 구현계획서의 핵심 precondition.
+
 ### Step 5 — verifying-spec 자동 실행
 
 `verifying-spec` invoke. 4축 보고서 생성. 결과는 transition notice 직전 노출.
