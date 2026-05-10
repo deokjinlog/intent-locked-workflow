@@ -31,7 +31,7 @@ _COMMIT_POLICY_LINE = re.compile(
 def _has_changelog_entries(text: str) -> bool:
     if "## 변경이력" not in text:
         return False
-    footer = text.split("## 변경이력", 1)[1]
+    footer = text.rsplit("## 변경이력", 1)[1]
     return _CHANGELOG_ENTRY.search(footer) is not None
 
 

@@ -126,3 +126,46 @@ def test_subagent_entry_check_human_reason_for_wrong_policy(tmp_path):
     r = subagent_task_entry_check(p)
     assert r.ok is False
     assert "per-task" in r.human_reason
+
+
+def test_changelog_in_code_block_not_matched(tmp_path):
+    """Plan 본문 안 ```markdown ... ## 변경이력 ... ``` literal 매치 안 됨.
+
+    Bug context (v1.1.16): docs-pretty / executing-plans pre-flight 가
+    plan 본문의 markdown code block 안 리터럴 `## 변경이력` 을 footer
+    entry 로 잘못 판정. fix: rsplit 으로 마지막 occurrence 만 검사.
+    """
+    from scripts.preflight import _has_changelog_entries
+    text = '''
+# Plan
+
+## 1. Tasks
+
+### Task 1: example
+
+```markdown
+## 변경이력
+
+### [날짜] [요구사항-수정]
+- 본문 예시
+```
+
+## 변경이력
+
+<!-- empty footer -->
+'''
+    assert _has_changelog_entries(text) is False
+
+
+def test_real_changelog_entry_still_detected(tmp_path):
+    """진짜 footer entry 는 여전히 감지."""
+    from scripts.preflight import _has_changelog_entries
+    text = '''
+# Plan
+
+## 변경이력
+
+### [2026-05-10 12:00] [요구사항-수정]
+- **id**: CH-20260510-001
+'''
+    assert _has_changelog_entries(text) is True
