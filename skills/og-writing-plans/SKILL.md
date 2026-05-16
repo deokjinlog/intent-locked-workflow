@@ -150,9 +150,15 @@ After saving the plan, offer execution choice:
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development (untouched-upstream, no og- variant needed — js-super did not modify it)
+- **REQUIRED SUB-SKILL:** Use **`superpowers:subagent-driven-development`** (upstream-untouched). ⚠️ NOT `js-super-sub-driven` — that's the js-super extended variant with wave-parallel + RISK + 변경이력. og 흐름은 upstream 원본만 사용.
 - Fresh subagent per task + two-stage review
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use js-super:og-executing-plans
 - Batch execution with checkpoints for review
+
+## Anti-Patterns (v2.0.2+ — og-flow subagent path 강화)
+
+| Wrong | Right |
+|---|---|
+| `js-super-sub-driven` 매치 — js-super 확장 wave-parallel 발화 | `superpowers:subagent-driven-development` upstream 원본만 사용. og 흐름은 단순 fresh subagent + 2-stage review 유지. |
