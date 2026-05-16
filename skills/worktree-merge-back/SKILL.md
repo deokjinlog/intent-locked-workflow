@@ -1,25 +1,8 @@
-# Worktree Merge-Back
+# Worktree Merge-Back (v2.0.5 slim)
 
 워크트리에서 진행한 feature 작업을 parent (main) 워크트리로 안전하게 머지. "Merge down before merging up" 패턴 — 충돌 해결은 feature sandbox 에서만, parent 워크트리는 항상 깨끗.
 
 **Announce at start:** "I'm using the worktree-merge-back skill — feature → parent merge with sandbox conflict resolution."
-
-## 사용자 질문 룰 (v2.0.3+) — 항상 AskUserQuestion
-
-이 skill 흐름 안에서 사용자에게 질문할 일이 생기면 **반드시** `AskUserQuestion`
-도구로 호출한다. 산문으로 "~ 할까요?" 한 줄 던지지 마라.
-
-### Why
-
-Notification 훅 (`elicitation_dialog` 매처) 이 알람을 발화하려면 도구 호출이
-실제로 일어나야 함. 산문 질문은 훅이 못 잡아서 사용자가 놓침 (v1.1.8 신고 재발).
-
-### How to apply
-
-- clarifying / Socratic / 모호점 확인 / 게이트 / 모드 선택 — 모두 포함
-- 단답 yes/no 도 prose X → `AskUserQuestion` choices `[yes, no]` 사용
-- 다중 선택은 enum choices 또는 multi-question batching (의미 결합 시 max 4 questions[])
-- **예외**: 본문 자체의 알람-friendly 안내문은 질문 아니라 안내 — 도구 호출 불필요
 
 ## When to Use
 
@@ -49,36 +32,34 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
 
 추가로 `git worktree list` 결과가 1개 (main 만 존재) 면 차단 — feature 워크트리 없음.
 
-## Process
+## Process (v2.0.5+ — 게이트 1건 only, 나머지 자동 진행)
 
-### Step 1 — Working tree 검사 + commit 확인
+기존 v2.0.4 의 게이트 4건 (Step 1/3/4/5) 을 **Step 3 충돌 게이트 1건** 으로 슬림. 나머지는 default 권장사항 자동 진행 + 안전성 안내문.
 
-- `git status --porcelain` 비어있음 → Step 2 자동 진행
-- 변경사항 있음 → AskUserQuestion:
-
-```python
-AskUserQuestion(questions=[{
-    "question": "Working tree 에 변경사항이 있습니다. 어떻게 처리할까요?",
-    "header": "Working tree",
-    "options": [
-        {"label": "지금 commit", "description": "다음 turn 에 commit 메시지 입력 → skill 이 commit 후 Step 2 진행"},
-        {"label": "직접 처리 후 재호출", "description": "skill 종료. 사용자가 수동 commit 후 재호출"}
-    ],
-    "multiSelect": False
-}])
-```
-
-"지금 commit" 선택 시 → 사용자가 다음 turn 에 메시지 prose 로 입력 → `git commit -m "<msg>"` 실행 후 Step 2.
-
-### Step 2 — Parent worktree 추론
+### Step 1 — Working tree 검사 (자동, 게이트 X)
 
 ```bash
-# main worktree path + branch 추출
+git status --porcelain
+```
+
+- 비어있음 → Step 2 자동 진행
+- 변경사항 있음 → **즉시 종료 + 안내**:
+
+```
+❌ Working tree 에 변경사항이 있습니다.
+   먼저 수동으로 commit 또는 stash 한 뒤 본 skill 을 재호출하세요.
+   (skill 이 임의 commit 메시지를 생성하지 않습니다 — 사용자 의도 보존)
+```
+
+→ 게이트 없음. 사용자가 직접 처리 후 재호출. 자동 commit 안 함 (메시지 임의 생성 = 사용자 의도 손상).
+
+### Step 2 — Parent worktree 추론 (자동)
+
+```bash
 MAIN_INFO=$(git worktree list --porcelain | head -3)
 MAIN_PATH=$(echo "$MAIN_INFO" | awk '/^worktree / {print $2; exit}')
 MAIN_BRANCH=$(echo "$MAIN_INFO" | awk '/^branch / {print $2; exit}' | sed 's|refs/heads/||')
 
-# 비표준 구조 차단
 WT_COUNT=$(git worktree list | wc -l)
 if [ "$WT_COUNT" -lt 2 ]; then
   echo "❌ feature 워크트리 없음. 현재 main 워크트리 1개만 존재."
@@ -86,16 +67,16 @@ if [ "$WT_COUNT" -lt 2 ]; then
 fi
 ```
 
-추론 실패 시 (multi-parent / nested) → 명시 차단 + 사용자가 수동 머지 안내.
+추론 실패 (multi-parent / nested) → 명시 차단 + 종료.
 
-### Step 3 — Parent 변경사항 흡수 (feature 쪽으로)
+### Step 3 — Parent 변경사항 흡수 (feature 쪽으로) — **유일한 게이트**
 
 ```bash
 git fetch origin
 git merge origin/$MAIN_BRANCH
 ```
 
-**충돌 발생 시**:
+**충돌 발생 시** — AskUserQuestion 게이트 (안전성, 데이터 손실 위험):
 
 ```python
 AskUserQuestion(questions=[{
@@ -109,96 +90,66 @@ AskUserQuestion(questions=[{
 }])
 ```
 
-자동 해결 시도 **절대 X** (한쪽 임의 채택 = 데이터 손실 위험).
+자동 해결 시도 **절대 X** (한쪽 임의 채택 = 데이터 손실 위험). 이 게이트가 본 skill 의 유일한 AskUserQuestion 호출.
 
-abort 선택 시 → `git merge --abort` 실행. 실패 시 "수동 정리 필요" 안내 후 종료.
+충돌 없으면 → Step 4 자동 진행.
 
-### Step 4 — Parent 워크트리로 머지
+### Step 4 — Parent 워크트리로 머지 (자동, default 기본 메시지)
 
 Pre-check (R3 mitigation):
 
 ```bash
-# Step 3 흡수 가정 검증 — feature HEAD 가 parent 의 후손인지
 git merge-base --is-ancestor origin/$MAIN_BRANCH HEAD || {
   echo "❌ Step 3 흡수 가정 깨짐. Step 3 중간 다른 작업 발생 의심. 수동 머지 필요."
   exit 1
 }
 ```
 
-검증 통과 시 merge commit 메시지 확인:
-
-```python
-AskUserQuestion(questions=[{
-    "question": "Parent 워크트리로 머지합니다. merge commit 메시지를 어떻게 할까요?",
-    "header": "Merge msg",
-    "options": [
-        {"label": "기본 메시지 사용", "description": "Merge branch '<feature>' into <parent>"},
-        {"label": "직접 입력", "description": "다음 turn 에 메시지 prose 입력"}
-    ],
-    "multiSelect": False
-}])
-```
-
-머지 실행:
+검증 통과 시 default 기본 메시지로 자동 머지:
 
 ```bash
 FEATURE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-git -C "$MAIN_PATH" merge --no-ff "$FEATURE_BRANCH" -m "<msg>"
+git -C "$MAIN_PATH" merge --no-ff "$FEATURE_BRANCH" \
+  -m "Merge branch '$FEATURE_BRANCH' into $MAIN_BRANCH"
 ```
 
-`git -C` 사용 (cwd 변경 X — skill 종료 후 사용자가 feature 워크트리에 그대로 유지).
+→ 게이트 없음. 메시지 customize 원하면 사용자가 직접 `git -C <main-path> commit --amend` 로 수정 (Step 4 이후 자유).
 
-### Step 5 — 사후 처리 (multi-question batching, 모두 default no)
+### Step 5 — 사후 처리 안내 (자동, 게이트 X)
 
-```python
-AskUserQuestion(questions=[
-    {
-        "question": "워크트리를 제거할까요?",
-        "header": "Worktree 제거",
-        "options": [
-            {"label": "no", "description": "그대로 두기 (default)"},
-            {"label": "yes", "description": "git worktree remove <path> 실행"}
-        ],
-        "multiSelect": False
-    },
-    {
-        "question": "feature 브랜치를 삭제할까요?",
-        "header": "브랜치 삭제",
-        "options": [
-            {"label": "no", "description": "그대로 두기 (default)"},
-            {"label": "yes", "description": "git branch -d <branch> 실행 (--force 안 함)"}
-        ],
-        "multiSelect": False
-    },
-    {
-        "question": "parent 를 remote 에 push 할까요?",
-        "header": "Push",
-        "options": [
-            {"label": "no", "description": "로컬에만 머지 유지 (default)"},
-            {"label": "yes", "description": "git push origin <parent> (--force 절대 X)"}
-        ],
-        "multiSelect": False
-    }
-])
+사후 처리 (worktree 제거 / 브랜치 삭제 / push) 는 모두 default no — skill 이 자동 실행하지 않음. 종료 메시지 한 줄로 안내:
+
+```
+✅ Merge 완료. Feature 워크트리: <FEATURE_BRANCH> → <MAIN_BRANCH> (commit: <merge-sha>)
+
+다음 단계 (필요 시 직접 실행):
+  - 워크트리 제거: git worktree remove <feature-path>
+  - 브랜치 삭제:   git branch -d <feature-branch>
+  - Remote push:   git -C <main-path> push origin <main-branch>
 ```
 
-각각 yes 선택된 항목만 실행. worktree remove 실패 (uncommitted 변경) 시 force 여부 추가 AskUserQuestion (default normal).
+→ 사용자가 의도에 맞게 직접 선택. `setting-up-worktrees` 의 "keep worktree" / "discard" 자유 결정 보존.
 
 ## Anti-Patterns
 
 | Wrong | Right |
 |---|---|
 | main 워크트리에서 invoke 후 그대로 진행 | HARD-GATE 차단. feature worktree 안에서만. |
-| Step 3 충돌을 자동 해결 (ours / theirs) | NEVER. 사용자 판단. |
+| Step 3 충돌을 자동 해결 (ours / theirs) | NEVER. 사용자 판단. (유일한 게이트) |
 | Step 4 를 Step 3 흡수 검증 없이 진행 | merge-base 검증 필수 (R3). |
-| `git push --force` 사용 | NEVER. normal push 만 (백로그 § Non-goals). |
+| `git push --force` 사용 | NEVER. push 자체를 skill 이 하지 않음 (Step 5 안내만). |
 | `cd <parent-path> && git ...` 패턴 | `git -C <parent-path>` 사용. cwd 변경 X. |
-| worktree remove 시 --force default | normal 시도 후 실패 시만 사용자 명시 force. |
-| 사후 처리 default yes | 모두 default no. 명시 yes 만 실행. |
-| Step 별 실패 시 다음 자동 진행 | 즉시 중단. 사용자가 수동 정리. |
+| 사후 처리 자동 실행 (worktree 제거 / push) | 모두 안내만. 사용자가 직접. |
+| Step 1 dirty 시 임의 commit 메시지 생성 | NEVER. 즉시 종료 + 사용자 재호출 안내. |
+
+## Why v2.0.5 slim
+
+- v2.0.4 출시 후 사용자 dogfood 결과 게이트 4건이 마찰 → 1건으로 축소.
+- 안전성 핵심 (Step 3 충돌 자동 해결 금지) 은 게이트 유지.
+- 나머지 3건은 "default 권장사항" 자동 진행 + 안내문 (사용자 의도 보존 + 마찰 ↓).
 
 ## Related Skills
 
-- `setting-up-worktrees` — 워크트리 생성 페어 (백로그 § 결합, 영향 0)
+- `setting-up-worktrees` — 워크트리 생성 페어 (영향 0)
 - `finishing-a-development-branch` — 테스트 게이트 + 종료 메시지 (자동 호출 X)
 - `change-history` — 본 skill 영향 0 (git 조작만, MD 안 건드림)
