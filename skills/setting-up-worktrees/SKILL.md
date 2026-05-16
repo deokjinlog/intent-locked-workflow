@@ -12,7 +12,7 @@ This skill MUST be invoked from a git repository. If the current working directo
 </HARD-GATE>
 
 <HARD-GATE>
-NEVER ask the user which env files to copy. ALWAYS auto-glob `.env*` in the project root and copy every match. The user only specifies branch names — env-file selection is automatic. The single exception: if the user EXPLICITLY says "X 파일은 복사하지 마" (exclude pattern), honor that.
+NEVER ask the user which 로컬 빌드 환경 파일 to copy. 메인 에이전트가 프로젝트 컨텍스트 (Android / iOS / Node / Flutter / Rust / etc.) 를 읽고 적절한 후보를 판단 + 후보 list 사용자에게 노출 + 복사. The user only specifies branch names — 파일 선택은 LLM-judged. The single exception: if the user EXPLICITLY says "X 파일은 복사하지 마" (exclude pattern), honor that.
 </HARD-GATE>
 
 ## Trigger Examples
@@ -29,7 +29,7 @@ NEVER ask the user which env files to copy. ALWAYS auto-glob `.env*` in the proj
 |---|---|
 | Worktree root | `<project-root>/.worktrees/` (override only if user explicitly asks) |
 | Branch creation | If branch missing → `-b <name>` from current HEAD. Existing local → use as-is. Remote-only → `-B <name> origin/<name>` |
-| Env files copied | **Auto-glob `.env*` (excludes `.env.example`, `.env.sample`)**. ALL matches copied to every worktree. |
+| 로컬 빌드 환경 파일 복사 | **메인 에이전트가 프로젝트 컨텍스트 기반 후보 판단** (Node/Web → `.env*` / Android → `local.properties`, keystore 류 / iOS → `*.xcconfig` 등 / Desktop → `secrets.*`). 후보 list 사용자 노출 후 자동 복사. committed templates / build artifacts 자동 제외. |
 | Claude memory folder | **Symlink handled by `worktree-memory-symlink` PostToolUse hook** — fires automatically on `git worktree add`. Skips if main has no memory yet or if worktree's memory dir already exists. The skill body does NOT perform this step. |
 | `.worktrees/` in `.gitignore` | Auto-add if missing |
 
@@ -39,7 +39,7 @@ NEVER ask the user which env files to copy. ALWAYS auto-glob `.env*` in the proj
 digraph wt_flow {
     "Verify git repo" [shape=box];
     "Parse branch list" [shape=box];
-    "Auto-glob .env* files\n(no user prompt)" [shape=box];
+    "LLM-judged 로컬 빌드 환경 파일\n후보 결정 (no user prompt)" [shape=box];
     "Ensure .worktrees/ exists\n+ in .gitignore" [shape=box];
     "For each branch" [shape=box];
     "Branch exists?" [shape=diamond];
@@ -50,8 +50,8 @@ digraph wt_flow {
     "Report summary" [shape=doublecircle];
 
     "Verify git repo" -> "Parse branch list";
-    "Parse branch list" -> "Auto-glob .env* files\n(no user prompt)";
-    "Auto-glob .env* files\n(no user prompt)" -> "Ensure .worktrees/ exists\n+ in .gitignore";
+    "Parse branch list" -> "LLM-judged 로컬 빌드 환경 파일\n후보 결정 (no user prompt)";
+    "LLM-judged 로컬 빌드 환경 파일\n후보 결정 (no user prompt)" -> "Ensure .worktrees/ exists\n+ in .gitignore";
     "Ensure .worktrees/ exists\n+ in .gitignore" -> "For each branch";
     "For each branch" -> "Branch exists?";
     "Branch exists?" -> "git worktree add <path> <branch>" [label="local or remote"];
@@ -79,22 +79,30 @@ If not in a repo, abort with: "현재 디렉터리가 git repo 아닙니다. `gi
 
 Extract `BRANCHES=(...)` from the user's message. Korean ticket-style names like `<TICKET>-<번호>-<설명>` are fine (UTF-8 OK). Do NOT ask about env files — those are auto-detected.
 
-**Step 2 — Auto-detect `.env*` files (NO user prompt)**
+**Step 2 — LLM-judged 로컬 빌드 환경 파일 후보 결정 (NO bash glob, NO user prompt)**
 
-```bash
-ENV_FILES=()
-for f in "$ROOT"/.env*; do
-    [ -f "$f" ] || continue
-    name=$(basename "$f")
-    # Skip templates (committed examples) — they're already in the worktree via git checkout
-    case "$name" in
-        .env.example|.env.sample|.env.template) continue ;;
-    esac
-    ENV_FILES+=("$name")
-done
-```
+메인 에이전트가 프로젝트 루트 + 설정 파일 (예: `package.json`, `build.gradle`, `Podfile`, `pubspec.yaml`, `Cargo.toml`) 을 read → 프로젝트 종류 추론 → 다음 **레시피** 참고하여 후보 list 결정:
 
-If `ENV_FILES` is empty after this, log a notice ("ℹ️ 프로젝트 루트에 .env* 파일 없음 — env 복사 skip") and proceed without copying. Don't abort.
+| 플랫폼 | 후보 (gitignored 인 경우 복사 대상) |
+|---|---|
+| Node / Web | `.env`, `.env.local`, `.env.production`, `.env.development`, `.envrc` (committed templates `.env.example` / `.env.sample` 제외) |
+| Android | `local.properties` (SDK 경로), `keystore.properties`, `*.keystore`, `*.jks`, `google-services.json` (gitignored 인 경우) |
+| iOS / macOS | `*.xcconfig` (local-only), `GoogleService-Info.plist` (gitignored 인 경우), `Secrets.swift` |
+| Desktop / 기타 | `secrets.properties`, `secrets.json`, `config.local.*` |
+| Flutter | `android/local.properties` + `android/key.properties` + iOS 항목 + `.env.*` |
+| Rust | `.env*`, `.cargo/credentials` (gitignored 인 경우) |
+
+**컨셉**: "로컬 빌드 환경 파일" = 빌드 / 실행 시 필요하지만 git committed 가 아닌 파일. build artifact (`dist/` / `build/` / `target/` / `.gradle/` / `node_modules/`) 와 IDE 디렉토리 (`.idea/` / `.vscode/local-state.json`) 와 OS 임시 파일 (`.DS_Store`) 은 **제외**.
+
+**Procedure**:
+
+1. 메인이 프로젝트 종류 추론 (위 레시피 기준)
+2. 루트에서 후보 파일 존재 확인 (`ls` + `git ls-files --error-unmatch <path>` 로 gitignored 인지 판정 — committed 면 git checkout 자동 복원 가능하므로 복사 skip)
+3. 후보 list 사용자에게 한 줄 노출: `ℹ️ 감지된 로컬 빌드 환경 파일: <list>. 추가/제외 알려주세요.`
+4. 사용자 응답 catch (기존 HARD-GATE 의 EXCLUDE 옵션 유지)
+5. ENV_FILES (또는 LOCAL_BUILD_FILES) 배열에 최종 후보 저장 → 다음 Step 으로 전달
+
+후보가 없으면 한 줄 안내 (`ℹ️ 프로젝트 루트에 로컬 빌드 환경 파일 후보 없음 — 복사 skip`) 후 다음 Step 진행. Don't abort.
 
 **Step 3 — Ensure `.worktrees/` exists and is gitignored**
 
@@ -177,8 +185,9 @@ Claude 메모리 폴더: 메인 → 워크트리 심링크 (n개)
 
 | Wrong | Right |
 |---|---|
-| Asking the user "which env files to copy?" | Forbidden by HARD-GATE. Auto-glob `.env*` and copy all (except templates). |
-| Skipping env copy because user didn't mention it | Always copy all detected `.env*`. The point is build-ready worktrees. |
+| Asking the user "which 로컬 빌드 환경 파일 to copy?" | Forbidden by HARD-GATE. 메인이 프로젝트 컨텍스트 보고 후보 자동 판단 + 노출 + 복사. |
+| Skipping copy because user didn't mention it | 항상 메인이 감지된 후보 모두 복사 시도 (사용자 명시 exclude 만 예외). build-ready worktree 가 목적. |
+| Hardcoded `.env*` glob 만 사용 (Android/iOS/desktop 미커버) | LLM-judged 레시피 적용. 새 플랫폼 (Flutter / RN / Rust) 도 컨텍스트 추론으로 cover. |
 | Force-create when worktree path already exists | Detect + skip with notice. Don't clobber user's WIP. |
 | Skip `.gitignore` update | Always add `.worktrees/` (idempotent check). |
 | Use `git checkout -b` first then `worktree add` | Prefer `worktree add -b <branch> <path>` (atomic). |
