@@ -4,6 +4,10 @@
 
 **Announce at start:** "I'm using the worktree-merge-back skill — feature → parent merge with sandbox conflict resolution."
 
+## Other / 모호 응답 처리 (v2.1.1+)
+
+본 skill 의 유일한 AskUserQuestion 게이트 (Step 3 충돌 처리) 에서 사용자가 "Other" 자유 응답 또는 "모르겠음 / 이해 안 됨" 류 답변 catch 시 → **그 질문만 단독 재호출 + prose 설명 추가**. 자동 진행 X (Step 4 진행 차단).
+
 ## When to Use
 
 - 사용자가 명시적으로 `/worktree-merge-back` 또는 본 skill 호출 시에만

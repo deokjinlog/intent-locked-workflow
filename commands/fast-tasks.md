@@ -6,6 +6,10 @@ description: 다중 가벼운 task 를 한 batch 로 처리 (Socratic 2~3 Q × N
 
 사용자에게 task 5~15개 한꺼번에 할당된 경우의 **lightweight batch 경로**. 명시 `/fast-tasks` 호출 시에만 발동.
 
+## Other / 모호 응답 처리 (v2.1.1+)
+
+Step 1 Socratic Q × N 흐름의 AskUserQuestion 게이트에서 사용자가 "Other" 자유 응답 또는 "모르겠음 / 이해 안 됨" 류 답변 catch 시 → **그 질문만 단독 재호출 + prose 설명 추가**. 다음 task 자동 진행 X (해당 task 명세 미확정 상태로 넘어가지 않음).
+
 ## 영구 생략 (가벼움이 의도)
 
 본 흐름은 다음 항목을 **절대 자동으로 추가하지 말 것**:
