@@ -25,7 +25,7 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 8. **문서 포맷 정리 (사용자 리뷰 전)** — pre-review format pass on the draft via `docs-pretty` skill (Sonnet subagent). Runs immediately after code-pretty and BEFORE showing the plan to the user. Re-fires together with code-pretty after each revision iteration (per-draft-state).
 9. **사용자 검토 (구현계획서)** — show the prettified plan + verifying-spec report + code-pretty diff summary; get approval (loop until OK; on changes → revise → back to step 6 verifying-spec)
 10. **변경이력 기록** — append first `[구현계획서-수정]` entry via `change-history` skill
-11. **구현 단계 핸드오프** — count tasks first, then offer the choice using the Execution Handoff message below (`executing-plans` or `js-super-subagent-driven-development`). Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
+11. **구현 단계 핸드오프** — count tasks first, then offer the choice using the Execution Handoff message below (`executing-plans` or `js-super-sub-driven`). Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
 
 If you find yourself skipping ahead, stop and create the missing task.
 
@@ -179,7 +179,7 @@ git commit -m "feat: add specific feature"
 
 ## Task Model Hint (v1.1.14+)
 
-Each task block MAY include `**Model**: haiku | sonnet | opus` to tell `js-super-subagent-driven-development` which model to dispatch the implementer with. Spec-reviewer is always sonnet (NOT controlled by this field).
+Each task block MAY include `**Model**: haiku | sonnet | opus` to tell `js-super-sub-driven` which model to dispatch the implementer with. Spec-reviewer is always sonnet (NOT controlled by this field).
 
 Evaluation rule:
 
@@ -191,7 +191,7 @@ Evaluation rule:
 | 설계 / 광범위 코드베이스 이해 | opus |
 | 누락 / 모호 | sonnet (보수 디폴트) |
 
-Backward compat: If the field is omitted, `js-super-subagent-driven-development` defaults to `sonnet`. Existing plans (v1.1.13 and earlier) work as-is.
+Backward compat: If the field is omitted, `js-super-sub-driven` defaults to `sonnet`. Existing plans (v1.1.13 and earlier) work as-is.
 
 Anti-pattern: setting `Model: haiku` for a task that touches Korean prose in skill bodies. Haiku has a known rephrasing risk on Korean text — see `skills/docs-pretty/SKILL.md:50` for the same constraint.
 
@@ -437,12 +437,12 @@ Call `AskUserQuestion`:
 > "Plan complete and saved to `docs/features/<date>-<slug>/<slug>-implementation-plan.md`. Two execution options:
 >
 > 1. **Inline** (recommended for medium plans, ≤ 12 tasks) — main agent edits directly via `executing-plans`; fast, fewer total tokens; main context accumulates with task count
-> 2. **Subagent** (recommended for large plans, 13+ tasks) — implementer + spec reviewer subagents via `js-super-subagent-driven-development`; preserves main context; adds dispatch cost
+> 2. **Subagent** (recommended for large plans, 13+ tasks) — implementer + spec reviewer subagents via `js-super-sub-driven`; preserves main context; adds dispatch cost
 >
 > Plan has <N> tasks. Which approach?"
 
 If Inline chosen → REQUIRED SUB-SKILL: `executing-plans`
-If Subagent chosen → REQUIRED SUB-SKILL: `js-super-subagent-driven-development`
+If Subagent chosen → REQUIRED SUB-SKILL: `js-super-sub-driven`
 
 The upstream `subagent-driven-development` is NOT offered in this handoff. Invoke it only when the user explicitly requests the upstream original.
 
