@@ -302,4 +302,47 @@ grep -nE "git merge --strategy.*ours|--strategy.*theirs|push.*--force|cd .*MAIN_
 요약: 단일 skill body + slash command + 3 fixture + CLAUDE.md 결합 메모 변경은
 묶어서 처리. 5+ 파일 atomic patch.
 
+## Other / 모호 응답 처리 룰 결합 (v2.1.1+)
+
+v2.1.1+ 에서 6곳 (5 skill + 1 command) 에 "Other / 모호 응답 처리" boilerplate
+추가. AskUserQuestion 묶음 응답 중 사용자가 "Other" 자유 응답 또는 "모르겠음 /
+이해 안 됨" 류 답변 시 → 그 질문만 단독 재호출 + prose 설명 추가. 자동 진행 X.
+
+### 적용 6곳
+
+- `skills/brainstorming/SKILL.md`
+- `skills/designing-direction/SKILL.md`
+- `skills/writing-plans/SKILL.md`
+- `skills/auto-brainstorming/SKILL.md`
+- `skills/worktree-merge-back/SKILL.md`
+- `commands/fast-tasks.md`
+
+### 회귀 패턴
+
+| 누락 | 증상 |
+|---|---|
+| 6곳 한 곳 boilerplate 누락 | 그 흐름에서 사용자 모호 응답 → 메인이 fall-through → 사용자 질문 씹힘 |
+| "anchor 질문 강제 X" 룰 확대 해석 | yes/no 명확 답변 외 (Other 포함) 모두 추가 clarify 안 함 → 회귀 |
+
+### 영향 범위
+
+- 6곳 본문 변경. 다른 skill / og-* / auto-* (auto-brainstorming 외) 영향 0
+- AskUserQuestion 도구 schema 변경 X (호출 패턴만 추가)
+- Notification.elicitation_dialog 매처 / repeat-alert.sh — 변경 X
+
+### Regression catch grep
+
+```bash
+grep -c "Other / 모호 응답 처리 (v2.1.1+)" \
+  skills/brainstorming/SKILL.md \
+  skills/designing-direction/SKILL.md \
+  skills/writing-plans/SKILL.md \
+  skills/auto-brainstorming/SKILL.md \
+  skills/worktree-merge-back/SKILL.md \
+  commands/fast-tasks.md
+# expected: 각 1 (6곳 모두 박혀 있어야 함)
+```
+
+요약: 6 파일 + CLAUDE.md 결합 메모 변경은 묶어서 처리. 7+ 파일 atomic patch.
+
 요약: 8 skill body + CLAUDE.md 결합 메모 변경은 묶어서 처리. 5+ 파일 atomic patch.
