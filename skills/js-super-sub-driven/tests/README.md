@@ -61,3 +61,7 @@
 | Fixture | 시나리오 |
 |---|---|
 | H12-same-file-merge | 같은 파일 4 mechanical 변경 plan → D1 3 조건 catch → 1 task multi-step 묶음 (positive) + 5번째 algorithmic 변경 → 분리 (negative) |
+
+## v2.0.2+ — og-flow rename + 핸드오프 강화 fixtures
+
+- `H13-og-flow-subagent-routing/` — og-flow Subagent path 매칭 검증 (upstream 원본 매칭 / js-super-sub-driven 미매칭)
