@@ -346,3 +346,48 @@ grep -c "Other / 모호 응답 처리 (v2.1.1+)" \
 요약: 6 파일 + CLAUDE.md 결합 메모 변경은 묶어서 처리. 7+ 파일 atomic patch.
 
 요약: 8 skill body + CLAUDE.md 결합 메모 변경은 묶어서 처리. 5+ 파일 atomic patch.
+
+## docs-pretty `.html` companion 결합 (v2.2.0+)
+
+v2.2.0+ 에서 `docs-pretty` 가 단일 subagent dispatch → **두 subagent 병렬 dispatch**
+로 변경. A (기존 `.md` format-only) + B (신규 `.html` 시각화 사본). AI 흐름 영향 0.
+다음 4 파일 결합 변경 atomic patch 룰:
+
+1. `skills/docs-pretty/SKILL.md` — Procedure Step 2 (단일 → 병렬) + Step 3 (A+B reconcile + 실패 매트릭스) + Anti-Patterns 갱신
+2. `skills/docs-pretty/html-companion-prompt.md` — Subagent B prompt (의미 보존 + Visual heuristics + self-contained)
+3. `.gitignore` — `docs/features/**/*.html` 한 줄
+4. CLAUDE.md — 본 섹션
+
+### 회귀 패턴 (안전성 손상 시)
+
+| 안티 패턴 | 증상 |
+|---|---|
+| 외부 CDN 참조 (`https://cdn.jsdelivr.net/...`) | `.html` offline 깨짐, D4 self-contained 위반 |
+| AI 가 `.html` 읽기 (`Read *.html` / `read_file *.html`) | 의미 drift 흐름 진입 위험, `.md` source-of-truth 손상 |
+| A 와 B 순차 dispatch (B 가 prettified `.md` 대기) | latency × 2, A 실패 시 B 차단 — 병렬 dispatch 룰 위반 |
+| `.html` git commit | `.gitignore` 차단 — repo 무게 ↑, 변경이력 polution |
+| B 의 `.md` 의역 / 요약 / 재구조화 | D3 semantic 1:1 룰 위반, `.html` 가 source-of-truth 와 diverge |
+| live doc 진입 후 `.html` 강제 재생성 | D6 boundary 위반, change-history 와 mismatch |
+
+### 영향 범위
+
+- `docs-pretty` Procedure 만 영향. `code-pretty` / 4 워크플로 skill / `change-history` / `auto-*` / `og-*` 영향 0
+- AI 흐름 모든 skill `.md` 만 읽음 (영향 0 보장)
+- `.html` 은 사람 전용 derived view, gitignored
+
+### Regression catch grep
+
+```bash
+# Anti-Pattern: 외부 CDN / .html 의존성
+grep -nE "https?://.*\.(css|js)|read_file.*\.html|Read.*\.html" \
+  skills/docs-pretty/SKILL.md skills/docs-pretty/html-companion-prompt.md
+# expected: 0 (Anti-Pattern catch 라인만 허용)
+
+# Anti-Pattern: 다른 skill 본문에 .html 참조
+grep -rn "\.html" \
+  skills/{brainstorming,designing-direction,writing-plans,executing-plans,auto-*,og-*}/SKILL.md
+# expected: 0 (.html 흐름은 docs-pretty 전용)
+```
+
+요약: 4 파일 (docs-pretty/SKILL.md + html-companion-prompt.md + .gitignore + CLAUDE.md)
++ H17 fixture + 6 manifest 변경은 atomic patch.
