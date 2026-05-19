@@ -127,6 +127,7 @@ A propagation run is correct when ALL hold:
 2. Every approved target produced a change-history entry
 3. All entries in the batch share **연관 항목** with the other CH-ids in the batch
 4. Code-only edits did not modify <slug>-requirements.md or <slug>-tech-design.md (reverse-cascade is forbidden)
+5. (v2.2.1+) `.html` 동봉본이 존재하는 feature 라면 마지막 단계에서 `/regen-html <slug>` 자동 호출 → live doc 의 `.html` stale 방지
 
 ## Related Skills
 
@@ -134,3 +135,4 @@ A propagation run is correct when ALL hold:
 - `brainstorming` / `designing-direction` / `writing-plans` — re-entered when an upstream MD edit needs a re-dialogue
 - `verifying-spec` — re-runs after upstream MD changes if scope is non-trivial
 - `risk-annotation` — invoked again if cascading touches code
+- `/regen-html <slug>` (v2.2.1+) — `.html` 동봉본 stale 방지, 마지막 단계 자동 호출
