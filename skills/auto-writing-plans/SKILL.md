@@ -1,6 +1,6 @@
 ---
 name: auto-writing-plans
-description: auto-flow 3단계 — requirements + tech-design 읽기 + AI 자동 task 분해 (TDD bite-sized + Model hint 자동) + RISK 코드 지점 §2 자동 + verifying-spec 자동 + code-pretty 호출 X (D-T12 와 일관) + change-history 자동 + auto-executing-plans 자동 invoke. AskUserQuestion / docs-pretty 호출 X.
+description: auto-flow 3단계 — requirements + tech-design 읽기 + AI 자동 task 분해 (TDD bite-sized + Model hint 자동) + RISK 코드 지점 §2 자동 + verifying-spec 자동 + code-pretty 호출 X (D-T12 와 일관) + change-history 자동 + auto-executing-plans 자동 invoke. AskUserQuestion / generating-html 호출 X.
 ---
 
 # Auto Writing Plans → <slug>-implementation-plan.md (auto)
@@ -34,7 +34,7 @@ tech-design §6 R-N → file:line + mitigation 매핑. 모든 R-N 이 §2 에 en
 
 ### Step 4 — 산출물 자동 작성
 
-`<slug>-implementation-plan.md` schema 따라 작성. frontmatter `commit_policy: per-task`. RAW 본문, code-pretty / docs-pretty 호출 X (D-T12 일관).
+`<slug>-implementation-plan.md` schema 따라 작성. frontmatter `commit_policy: per-task`. RAW 본문, code-pretty / generating-html 호출 X (D-T12 일관).
 
 ### Step 4.5 — plan_byte_check 자동 (v2.0.0+)
 
@@ -81,7 +81,7 @@ sys.exit(0)
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. |
-| docs-pretty 호출 | NEVER. |
+| generating-html 호출 | NEVER. |
 | code-pretty 호출 | NEVER. D-T12 일관. |
 | 일반 writing-plans skill body 호출 | NEVER. self-contained mirror (D-T1). |
 

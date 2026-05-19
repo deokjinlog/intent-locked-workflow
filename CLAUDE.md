@@ -111,16 +111,16 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 
 > 위 섹션은 upstream Superpowers 기여 룰. 아래는 js-super 포크 내부 skill 설계 관련 메모.
 
-## docs-pretty ↔ change-history 결합
+## generating-html ↔ change-history 결합
 
-`docs-pretty` skill은 "doc이 still 초안 단계인지" 판정하는 신호로 **`## 변경이력` footer가 비어 있는지 여부**를 직접 사용한다 (`skills/docs-pretty/SKILL.md` line 27/60/167/197). 즉:
+`generating-html` skill은 "doc이 still 초안 단계인지" 판정하는 신호로 **`## 변경이력` footer가 비어 있는지 여부**를 직접 사용한다 (`skills/generating-html/SKILL.md` line 27/60/167/197). 즉:
 
-- footer entry 0건 → 초안 → docs-pretty 발동
-- footer entry 1건 이상 → live doc → docs-pretty skip
+- footer entry 0건 → 초안 → generating-html 발동
+- footer entry 1건 이상 → live doc → generating-html skip
 
-이 결합 때문에 `change-history` skill의 "doc 최초 생성 시 자동으로 boilerplate entry를 logging하는 룰"을 제거하려면 **반드시 docs-pretty의 발동/중단 신호도 동시에 교체**해야 한다 (예: frontmatter `status` 플래그 / 첫 git commit 존재 여부 / 자동 발동 자체 폐지). 한쪽만 건드리면 다음 회귀가 발생한다:
+이 결합 때문에 `change-history` skill의 "doc 최초 생성 시 자동으로 boilerplate entry를 logging하는 룰"을 제거하려면 **반드시 generating-html의 발동/중단 신호도 동시에 교체**해야 한다 (예: frontmatter `status` 플래그 / 첫 git commit 존재 여부 / 자동 발동 자체 폐지). 한쪽만 건드리면 다음 회귀가 발생한다:
 
-- footer가 영구적으로 빈 채로 남음 → 이후 사용자가 부분 수정을 요청할 때마다 docs-pretty가 재발동 (의도와 반대)
+- footer가 영구적으로 빈 채로 남음 → 이후 사용자가 부분 수정을 요청할 때마다 generating-html가 재발동 (의도와 반대)
 
 요약: 이 두 skill의 룰 변경은 atomic하게 묶어 처리할 것.
 
@@ -135,7 +135,7 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 
 ## scripts/preflight.py ↔ 4 skill Pre-flight 결합
 
-v1.1.14+ 에서 `scripts/preflight.py` 가 docs-pretty / code-pretty / executing-plans / js-super-sub-driven 4 skill 의 Pre-flight 검사를 deterministic 코드로 통합. 즉:
+v1.1.14+ 에서 `scripts/preflight.py` 가 generating-html / code-pretty / executing-plans / js-super-sub-driven 4 skill 의 Pre-flight 검사를 deterministic 코드로 통합. 즉:
 
 - `scripts/preflight.py` 의 함수 시그니처 (반환값 형식 / exit code 룰) 변경 시 4 skill 본문의 bash one-liner 도 동시 수정
 - helper 의 매개변수 추가 시 모든 caller 의 호출 라인 동기화 필요
@@ -155,7 +155,7 @@ v1.1.14+ 에서 `scripts/preflight.py` 가 docs-pretty / code-pretty / executing
 
 js-super 자체 skill 의 Checklist 본문에 박힌 task 명칭은 **사용자 시야 (TaskCreate UI) 에 직접 노출**됨. 다음 룰 적용:
 
-- **사용자 친화 한국어 표현 사용** — 내부 용어 (`Invoke ... skill`, `Gate #N`, `CH-id`, `verifying-spec`, `docs-pretty` 등 영어 식별자) 미노출
+- **사용자 친화 한국어 표현 사용** — 내부 용어 (`Invoke ... skill`, `Gate #N`, `CH-id`, `verifying-spec`, `generating-html` 등 영어 식별자) 미노출
 - **본문의 다른 부분 (Process Flow, Detailed Step) 의 영어 식별자는 유지** — 메인 에이전트가 정확한 skill 호출에 필요
 - **upstream og-* skill 들 (verbatim)** — 손대지 않음
 - **변경이력 footer 의 entry tag** (`[요구사항-수정]` 등) — schema 매직 키워드라 유지
@@ -168,7 +168,7 @@ js-super 자체 skill 의 Checklist 본문에 박힌 task 명칭은 **사용자 
 
 - **기존 4 skill body 변경 0** — auto-* 본문은 self-contained mirror. 본 4 skill 어떤 라인도 손대지 않음. 회귀 catch: `git diff HEAD~1 HEAD -- skills/{brainstorming,designing-direction,writing-plans,executing-plans}/SKILL.md` empty 보장.
 - **Gate #14 (실행 모드 선택) override 명시** — v1.1.12+ "자동승인 절대 X" 룰을 auto-executing-plans 가 명시 override. 일반 `/execute-plan` 영향 0 (게이트 그대로). auto-* 명시적 invoke 시에만 작동.
-- **docs-pretty 호출 부재** (v1.1.17+, PRD D9 amend) — auto-* 본문 어디에도 docs-pretty 호출 박지 않음. RAW 산출물 그대로 commit. 일반 흐름 영향 0. 회귀 catch: `for f in skills/auto-*/SKILL.md; do grep -c "docs-pretty" "$f"; done` → 모두 0 (Anti-Patterns 표 안의 1건만 허용).
+- **generating-html 호출 부재** (v1.1.17+, PRD D9 amend) — auto-* 본문 어디에도 generating-html 호출 박지 않음. RAW 산출물 그대로 commit. 일반 흐름 영향 0. 회귀 catch: `for f in skills/auto-*/SKILL.md; do grep -c "generating-html" "$f"; done` → 모두 0 (Anti-Patterns 표 안의 1건만 허용).
 - **AskUserQuestion 호출 부재** — auto-* 본문 어디에도 AskUserQuestion 호출 X. clarifying Q 는 메인 turn 의 일반 prose 질의로 처리.
 - **Visual Companion / 카테고리 미니질문 / question plan 동의 등 PRD-mode 분기 부재** — Socratic only (D3).
 
@@ -347,19 +347,19 @@ grep -c "Other / 모호 응답 처리 (v2.1.1+)" \
 
 요약: 8 skill body + CLAUDE.md 결합 메모 변경은 묶어서 처리. 5+ 파일 atomic patch.
 
-## docs-pretty `.html` companion 결합 (v2.2.0 → v2.2.1+)
+## generating-html `.html` companion 결합 (v2.2.0 → v2.2.2+)
 
-**v2.2.0**: `docs-pretty` 가 두 subagent 병렬 dispatch (A `.md` format-only + B `.html` 시각화).
-**v2.2.1+**: A 제거 + B fire-and-forget — 메인 latency 거의 0 + 비용 절반. 신규 `/regen-html` slash command + `change-propagation` 자동 호출 + 디바운스 3초 + silent log.
+**v2.2.0**: `generating-html` 가 두 subagent 병렬 dispatch (A `.md` format-only + B `.html` 시각화).
+**v2.2.1+**: A 제거 + B fire-and-forget — 메인 latency 거의 0 + 비용 절반. 신규 `/sync-html` slash command + `change-propagation` 자동 호출 + 디바운스 3초 + silent log.
 
 AI 흐름 영향 0 (v2.2.0 답습 — 모든 skill `.md` 만 읽음).
 
 다음 5 파일 결합 변경 atomic patch 룰 (v2.2.1+):
 
-1. `skills/docs-pretty/SKILL.md` — Procedure Step 2 (병렬 두 dispatch → 단일 fire-and-forget) + Step 3 (A+B reconcile 제거 → 즉시 return + silent log) + Anti-Patterns 갱신
-2. `skills/docs-pretty/html-companion-prompt.md` — Subagent B prompt 그대로 보존 (v2.2.0 룰)
-3. `skills/change-propagation/SKILL.md` — Acceptance 5번 + Related Skills 끝에 `/regen-html` 라인 추가
-4. `commands/regen-html.md` — 신규 slash command (fire-and-forget B dispatch 명시 호출)
+1. `skills/generating-html/SKILL.md` — Procedure Step 2 (병렬 두 dispatch → 단일 fire-and-forget) + Step 3 (A+B reconcile 제거 → 즉시 return + silent log) + Anti-Patterns 갱신
+2. `skills/generating-html/html-companion-prompt.md` — Subagent B prompt 그대로 보존 (v2.2.0 룰)
+3. `skills/change-propagation/SKILL.md` — Acceptance 5번 + Related Skills 끝에 `/sync-html` 라인 추가
+4. `commands/sync-html.md` — 신규 slash command (fire-and-forget B dispatch 명시 호출)
 5. CLAUDE.md — 본 섹션
 
 `.gitignore` 변경 X (v2.2.0 의 `docs/features/**/*.html` 그대로 + `.js-super/html-regen.log` 는 기존 `.js-super/` glob 흡수).
@@ -372,15 +372,15 @@ AI 흐름 영향 0 (v2.2.0 답습 — 모든 skill `.md` 만 읽음).
 | AI 가 `.html` 읽기 (`Read *.html` / `read_file *.html`) | 의미 drift 흐름 진입 위험, `.md` source-of-truth 손상 |
 | `.html` git commit | `.gitignore` 차단 — repo 무게 ↑, 변경이력 polution |
 | B 의 `.md` 의역 / 요약 / 재구조화 | D3 semantic 1:1 룰 위반, `.html` 가 source-of-truth 와 diverge |
-| live doc 진입 후 `.html` 강제 재생성 (`/regen-html` 우회) | `change-propagation` 마지막 단계 또는 사용자 수동만 허용 |
+| live doc 진입 후 `.html` 강제 재생성 (`/sync-html` 우회) | `change-propagation` 마지막 단계 또는 사용자 수동만 허용 |
 | 메인이 fire-and-forget 결과 대기 (v2.2.1+) | latency 의도 무화 — `run_in_background=true` 강제 |
 | A (`.md` format-only) 부활 시도 (v2.2.1+) | v2.2.1 의 단순화 무화 — RAW `.md` 가 사용자 리뷰 surface |
 | 디바운스 skip (연속 fix 매번 dispatch) (v2.2.1+) | 비용 누적 — 3초 디바운스 + 이전 cancel 강제 |
-| `change-propagation` 마지막 단계 `/regen-html` 누락 (v2.2.1+) | live doc `.html` 영구 stale — Acceptance 5번 룰 위반 |
+| `change-propagation` 마지막 단계 `/sync-html` 누락 (v2.2.1+) | live doc `.html` 영구 stale — Acceptance 5번 룰 위반 |
 
 ### 영향 범위
 
-- `docs-pretty` Procedure + `change-propagation` Acceptance + 신규 `/regen-html` command 만 영향
+- `generating-html` Procedure + `change-propagation` Acceptance + 신규 `/sync-html` command 만 영향
 - `code-pretty` / 4 워크플로 skill (brainstorming/designing-direction/writing-plans/executing-plans) / `change-history` / `auto-*` / `og-*` 영향 0
 - AI 흐름 모든 skill `.md` 만 읽음 (영향 0 보장)
 - `.html` 은 사람 전용 derived view, gitignored
@@ -391,25 +391,34 @@ AI 흐름 영향 0 (v2.2.0 답습 — 모든 skill `.md` 만 읽음).
 ```bash
 # Anti-Pattern: 외부 CDN / .html 의존성
 grep -nE "https?://.*\.(css|js)|read_file.*\.html|Read.*\.html" \
-  skills/docs-pretty/SKILL.md skills/docs-pretty/html-companion-prompt.md
+  skills/generating-html/SKILL.md skills/generating-html/html-companion-prompt.md
 # expected: 0 (Anti-Pattern catch 라인만 허용)
 
 # Anti-Pattern: 다른 skill 본문에 .html 참조
 grep -rn "\.html" \
   skills/{brainstorming,designing-direction,writing-plans,executing-plans,auto-*,og-*}/SKILL.md
-# expected: 0 (.html 흐름은 docs-pretty 전용)
+# expected: 0 (.html 흐름은 generating-html 전용)
 
 # v2.2.1+ Anti-Pattern: 메인이 결과 대기 (fire-and-forget 위반)
-grep -nE "await.*Task|sync.*dispatch.*\.html" skills/docs-pretty/SKILL.md
+grep -nE "await.*Task|sync.*dispatch.*\.html" skills/generating-html/SKILL.md
 # expected: 0
 
 # v2.2.1+ Anti-Pattern: A (.md format-only) 부활
-grep -nE "format-only pass on .*\.md|Subagent A" skills/docs-pretty/SKILL.md
+grep -nE "format-only pass on .*\.md|Subagent A" skills/generating-html/SKILL.md
 # expected: 0
 
 # v2.2.1+ change-propagation 자동 호출 보장
-grep -c "/regen-html" skills/change-propagation/SKILL.md
+grep -c "/sync-html" skills/change-propagation/SKILL.md
 # expected: ≥ 1
 ```
 
-요약: 5 파일 (docs-pretty/SKILL.md + html-companion-prompt.md 보존 + change-propagation/SKILL.md + commands/regen-html.md + CLAUDE.md) + H17 patch + H18 신규 + 6 manifest 변경은 atomic patch.
+요약: 5 파일 (generating-html/SKILL.md + html-companion-prompt.md 보존 + change-propagation/SKILL.md + commands/sync-html.md + CLAUDE.md) + H17 patch + H18 신규 + 6 manifest 변경은 atomic patch.
+
+## generating-html naming 일관성 결합 (v2.2.2+)
+
+v2.2.2+ 에서 `docs-pretty` → `generating-html` skill 명칭 + `/regen-html` → `/sync-html` slash command 명칭 일괄 교체. 다음 룰 atomic patch:
+
+- **5 항목 atomic** — skill 디렉토리 rename + slash command rename + 13 파일 단어 swap + CLAUDE.md 결합 메모 + manifest 항목
+- **단어 grep 0 검증** — `grep -rn "docs-pretty\|regen-html" skills/ commands/ CLAUDE.md README.md --exclude-dir=og-* --exclude-dir=H4-preflight-fail --exclude-dir=H5-docs-pretty-pre-review --exclude-dir=H6-task-name-friendly` → 0
+- **Acceptance 5번 자동→안내** — `change-propagation` 마지막 단계의 `/sync-html` 자동 호출 → 사용자 안내로 완화 (auto-fire X). 사용자가 명시 호출
+- **commands/regen-html.md 삭제** — old slash command 제거 (sync-html.md 신규 생성으로 대체)

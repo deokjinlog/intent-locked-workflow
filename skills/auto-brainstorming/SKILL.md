@@ -1,6 +1,6 @@
 ---
 name: auto-brainstorming
-description: auto-flow 진입점 — Socratic clarifying Q (1~5개 적응) + AI 자동 approach 선택 + 자동 section 작성 + change-history 자동 + auto-designing-direction 자동 invoke. 사용자 입력은 clarifying Q 답변에만. AskUserQuestion / Visual Companion / docs-pretty 호출 X.
+description: auto-flow 진입점 — Socratic clarifying Q (1~5개 적응) + AI 자동 approach 선택 + 자동 section 작성 + change-history 자동 + auto-designing-direction 자동 invoke. 사용자 입력은 clarifying Q 답변에만. AskUserQuestion / Visual Companion / generating-html 호출 X.
 ---
 
 # Auto Brainstorming → <slug>-requirements.md (Socratic auto)
@@ -62,7 +62,7 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 
 `<slug>-requirements.md` 작성 (Socratic free-form):
 - H1 + Mode line + 배경 + 핵심 결정 + 우려/해결 + 다음 단계 + 변경이력 footer
-- docs-pretty 호출 X (D-T12). RAW 본문 그대로.
+- generating-html 호출 X (D-T12). RAW 본문 그대로.
 
 ### Step 5 — change-history 자동
 
@@ -81,7 +81,7 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. auto-flow 의 사용자 입력은 clarifying Q 답변에만. |
-| docs-pretty 호출 | NEVER. PRD D9 amend — auto-flow 는 review 없으므로 prettify 의미 없음. |
+| generating-html 호출 | NEVER. PRD D9 amend — auto-flow 는 review 없으므로 prettify 의미 없음. |
 | Visual Companion offer | NEVER. D-T11. |
 | 일반 brainstorming skill body 호출 | NEVER. self-contained mirror (D-T1). |
 | transition notice 후 사용자 응답 wait sleep | NEVER. harness 모델은 자동 다음 turn — sleep X. |

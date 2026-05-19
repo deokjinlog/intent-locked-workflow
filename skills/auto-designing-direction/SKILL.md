@@ -1,6 +1,6 @@
 ---
 name: auto-designing-direction
-description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자동 판정 + design decision 자동 alternatives 비교 → recommendation 자동 선택 + verifying-spec 4축 보고서 transition 직전 노출 + auto-writing-plans 자동 invoke. AskUserQuestion / docs-pretty 호출 X.
+description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자동 판정 + design decision 자동 alternatives 비교 → recommendation 자동 선택 + verifying-spec 4축 보고서 transition 직전 노출 + auto-writing-plans 자동 invoke. AskUserQuestion / generating-html 호출 X.
 ---
 
 # Auto Designing Direction → <slug>-tech-design.md (auto)
@@ -27,7 +27,7 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 
 ### Step 4 — 산출물 자동 작성
 
-`<slug>-tech-design.md` 7-section schema 따라 작성. RAW 본문, docs-pretty 호출 X.
+`<slug>-tech-design.md` 7-section schema 따라 작성. RAW 본문, generating-html 호출 X.
 
 ### Step 5 — verifying-spec 자동 실행
 
@@ -56,7 +56,7 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. |
-| docs-pretty 호출 | NEVER. D-T12 + PRD D9 amend. |
+| generating-html 호출 | NEVER. D-T12 + PRD D9 amend. |
 | 일반 designing-direction skill body 호출 | NEVER. self-contained mirror (D-T1). |
 | transition notice 후 wait sleep | NEVER. |
 

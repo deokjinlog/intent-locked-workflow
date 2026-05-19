@@ -43,8 +43,8 @@ You MUST create a TaskCreate task for each of these items and complete them in o
 4. **위험 코드 지점 (§2) 채우기** — every risk category from <slug>-tech-design.md §6 mapped to a concrete location + mitigation
 5. **자체 점검** — spec coverage / placeholder scan / type consistency / 위험 coverage
 6. **사양 정합성 검증** — main agent runs A+C verification on the plan via `verifying-spec` (Tolerance for missing skill)
-7. **코드 블록 포맷 정리** — pre-review code-block prettify on the draft via `code-pretty` skill (Sonnet subagent). Runs AFTER verifying-spec passes and BEFORE docs-pretty. Targets only `**수정 후**`-labeled code blocks. Stops once first change-history entry is logged.
-8. **문서 포맷 정리 (사용자 리뷰 전)** — pre-review format pass on the draft via `docs-pretty` skill (Sonnet subagent). Runs immediately after code-pretty and BEFORE showing the plan to the user. Re-fires together with code-pretty after each revision iteration (per-draft-state).
+7. **코드 블록 포맷 정리** — pre-review code-block prettify on the draft via `code-pretty` skill (Sonnet subagent). Runs AFTER verifying-spec passes and BEFORE generating-html. Targets only `**수정 후**`-labeled code blocks. Stops once first change-history entry is logged.
+8. **문서 포맷 정리 (사용자 리뷰 전)** — pre-review format pass on the draft via `generating-html` skill (Sonnet subagent). Runs immediately after code-pretty and BEFORE showing the plan to the user. Re-fires together with code-pretty after each revision iteration (per-draft-state).
 9. **사용자 검토 (구현계획서)** — show the prettified plan + verifying-spec report + code-pretty diff summary; get approval (loop until OK; on changes → revise → back to step 6 verifying-spec)
 10. **변경이력 기록** — append first `[구현계획서-수정]` entry via `change-history` skill
 11. **구현 단계 핸드오프** — count tasks first, then offer the choice using the Execution Handoff message below (`executing-plans` or `js-super-sub-driven`). Upstream `subagent-driven-development` is NOT offered here; only invoke it if the user explicitly asks for the upstream original.
@@ -215,7 +215,7 @@ Evaluation rule:
 
 Backward compat: If the field is omitted, `js-super-sub-driven` defaults to `sonnet`. Existing plans (v1.1.13 and earlier) work as-is.
 
-Anti-pattern: setting `Model: haiku` for a task that touches Korean prose in skill bodies. Haiku has a known rephrasing risk on Korean text — see `skills/docs-pretty/SKILL.md:50` for the same constraint.
+Anti-pattern: setting `Model: haiku` for a task that touches Korean prose in skill bodies. Haiku has a known rephrasing risk on Korean text — see `skills/generating-html/SKILL.md:50` for the same constraint.
 
 ## Code Block Convention (Before/After labels) — required for tasks that modify existing code
 
@@ -259,7 +259,7 @@ digraph plan_flow {
     "Invoke verifying-spec" [shape=box];
     "Verifier report → user decision" [shape=diamond];
     "Invoke code-pretty\n(pre-review, Sonnet subagent)" [shape=box];
-    "Invoke docs-pretty\n(pre-review, Sonnet subagent)" [shape=box];
+    "Invoke generating-html\n(pre-review, Sonnet subagent)" [shape=box];
     "Invoke change-history" [shape=box];
     "Hand off to /execute-plan" [shape=doublecircle];
 
@@ -268,8 +268,8 @@ digraph plan_flow {
     "Decompose into bite-sized tasks" -> "Self-review (internal)";
     "Self-review (internal)" -> "Run verifying-spec FIRST";
     "Run verifying-spec FIRST" -> "Invoke code-pretty\n(pre-review, Sonnet subagent)";
-    "Invoke code-pretty\n(pre-review, Sonnet subagent)" -> "Invoke docs-pretty\n(pre-review, Sonnet subagent)";
-    "Invoke docs-pretty\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report + code-pretty diff)";
+    "Invoke code-pretty\n(pre-review, Sonnet subagent)" -> "Invoke generating-html\n(pre-review, Sonnet subagent)";
+    "Invoke generating-html\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report + code-pretty diff)";
     "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Self-review (internal)" [label="no — re-verify + re-prettify"];
     "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Invoke change-history" [label="approve"];
     "Invoke change-history" -> "Hand off to /execute-plan";
@@ -395,12 +395,12 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
    - Procedure: consistency (FR + key decisions covered as tasks) + code impact (files/functions referenced exist or are explicitly created)
    - **Tolerance**: if verifying-spec skill is not installed, skip and emit the notice ("ℹ️ verify-gate 미설치, Phase 2 이후 활성화 — 검증 없이 진행")
 
-2. **Run code-pretty** (after verifying-spec passes, before docs-pretty):
+2. **Run code-pretty** (after verifying-spec passes, before generating-html):
    - Target: `<slug>-implementation-plan.md` (only `**수정 후**`-labeled blocks)
    - Output: diff summary text (preserved for the approval gate)
    - **Tolerance**: if code-pretty skill is not installed, skip and emit "ℹ️ code-pretty 미설치 — code blocks shown as-is"
 
-3. **Run docs-pretty** (immediately after code-pretty):
+3. **Run generating-html** (immediately after code-pretty):
    - Standard format-only pass (Sonnet subagent)
 
 4. **Single combined approval gate** — present in ONE message:
