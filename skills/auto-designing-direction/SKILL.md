@@ -27,7 +27,11 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 
 ### Step 4 — 산출물 자동 작성
 
-`<slug>-tech-design.md` 7-section schema 따라 작성. RAW 본문, generating-html 호출 X.
+`<slug>-tech-design.md` 7-section schema 따라 작성. RAW 본문.
+
+### Step 4.5 — generating-html fire-and-forget dispatch (v2.3.2+)
+
+`<slug>-tech-design.md` 작성 직후, **change-history entry 박히기 전** (footer 비어있음) 에 `generating-html` skill fire-and-forget dispatch (`run_in_background: true`). 메인 latency 거의 0. transition notice 시점에 사용자가 `.html` 검토 가능 (Type "stop" abort). v1.1.17 PRD D9 amend 반전 (v2.3.2+).
 
 ### Step 5 — verifying-spec 자동 실행
 
@@ -56,7 +60,7 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. |
-| generating-html 호출 | NEVER. D-T12 + PRD D9 amend. |
+| generating-html 동기 호출 (sync wait) | NEVER. v2.3.2+ — Step 4.5 fire-and-forget 만. (v1.1.17 "호출 부재" 룰 v2.3.2 반전.) |
 | 일반 designing-direction skill body 호출 | NEVER. self-contained mirror (D-T1). |
 | transition notice 후 wait sleep | NEVER. |
 

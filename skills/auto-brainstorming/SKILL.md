@@ -62,7 +62,17 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 
 `<slug>-requirements.md` 작성 (Socratic free-form):
 - H1 + Mode line + 배경 + 핵심 결정 + 우려/해결 + 다음 단계 + 변경이력 footer
-- generating-html 호출 X (D-T12). RAW 본문 그대로.
+- RAW 본문 그대로.
+
+### Step 4.5 — generating-html fire-and-forget dispatch (v2.3.2+)
+
+`<slug>-requirements.md` 작성 직후, **change-history 자동 entry 박히기 전** (footer 아직 비어있는 시점) 에 `generating-html` skill fire-and-forget dispatch:
+
+- `run_in_background: true` (fire-and-forget, 메인 latency 거의 0)
+- target: `<slug>-requirements.md`
+- 메인은 결과 wait X — 다음 Step 즉시 진행
+
+**왜 v2.3.2+ 도입**: v1.1.17 PRD D9 amend ("auto-flow 는 review 없으므로 prettify 의미 없음") 는 잘못된 가정. transition notice 시점에 사용자가 `.html` 검토 가능 (Type "stop" 으로 abort). v2.3.1 dogfood 에서 사용자 명시 catch — auto-flow 에서도 `.html` 동봉본 필요.
 
 ### Step 5 — change-history 자동
 
@@ -81,7 +91,7 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. auto-flow 의 사용자 입력은 clarifying Q 답변에만. |
-| generating-html 호출 | NEVER. PRD D9 amend — auto-flow 는 review 없으므로 prettify 의미 없음. |
+| generating-html 동기 호출 (sync wait) | NEVER. v2.3.2+ — Step 4.5 fire-and-forget dispatch 만. 메인이 결과 wait X. (v1.1.17 의 "호출 부재" 룰은 v2.3.2 에서 반전됨.) |
 | Visual Companion offer | NEVER. D-T11. |
 | 일반 brainstorming skill body 호출 | NEVER. self-contained mirror (D-T1). |
 | transition notice 후 사용자 응답 wait sleep | NEVER. harness 모델은 자동 다음 turn — sleep X. |

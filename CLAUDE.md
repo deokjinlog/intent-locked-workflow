@@ -168,7 +168,7 @@ js-super 자체 skill 의 Checklist 본문에 박힌 task 명칭은 **사용자 
 
 - **기존 4 skill body 변경 0** — auto-* 본문은 self-contained mirror. 본 4 skill 어떤 라인도 손대지 않음. 회귀 catch: `git diff HEAD~1 HEAD -- skills/{brainstorming,designing-direction,writing-plans,executing-plans}/SKILL.md` empty 보장.
 - **Gate #14 (실행 모드 선택) override 명시** — v1.1.12+ "자동승인 절대 X" 룰을 auto-executing-plans 가 명시 override. 일반 `/execute-plan` 영향 0 (게이트 그대로). auto-* 명시적 invoke 시에만 작동.
-- **generating-html 호출 부재** (v1.1.17+, PRD D9 amend) — auto-* 본문 어디에도 generating-html 호출 박지 않음. RAW 산출물 그대로 commit. 일반 흐름 영향 0. 회귀 catch: `for f in skills/auto-*/SKILL.md; do grep -c "generating-html" "$f"; done` → 모두 0 (Anti-Patterns 표 안의 1건만 허용).
+- **generating-html fire-and-forget dispatch** (v2.3.2+, v1.1.17 D9 amend 반전) — auto-brainstorming Step 4.5 / auto-designing-direction Step 4.5 / auto-writing-plans Step 4.6 에서 `run_in_background: true` 로 dispatch. 메인 latency 거의 0 + 사용자가 transition notice 시점에 `.html` 검토 가능 (Type "stop" abort). **auto-executing-plans 는 제외** (코드 실행 단계 — 의미 없음). 동기 호출 (sync wait) 은 여전히 금지. 회귀 catch: 3 skill 본문에 `Step 4.5\|Step 4.6` + `run_in_background: true` 매치 필수.
 - **AskUserQuestion 호출 부재** — auto-* 본문 어디에도 AskUserQuestion 호출 X. clarifying Q 는 메인 turn 의 일반 prose 질의로 처리.
 - **Visual Companion / 카테고리 미니질문 / question plan 동의 등 PRD-mode 분기 부재** — Socratic only (D3).
 

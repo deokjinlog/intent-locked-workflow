@@ -34,7 +34,7 @@ tech-design §6 R-N → file:line + mitigation 매핑. 모든 R-N 이 §2 에 en
 
 ### Step 4 — 산출물 자동 작성
 
-`<slug>-implementation-plan.md` schema 따라 작성. frontmatter `commit_policy: per-task`. RAW 본문, code-pretty / generating-html 호출 X (D-T12 일관).
+`<slug>-implementation-plan.md` schema 따라 작성. frontmatter `commit_policy: per-task`. RAW 본문, code-pretty 호출 X (D-T12 일관). generating-html 은 plan_byte_check 통과 후 Step 4.6 에서 fire-and-forget dispatch.
 
 ### Step 4.5 — plan_byte_check 자동 (v2.0.0+)
 
@@ -59,6 +59,10 @@ sys.exit(0)
 
 미스매치 발견 시 메인이 즉시 plan 의 `**원본**` 블록 수정 후 재시도 (auto 모드 — 사용자 응답 wait X). 3회 재시도 후에도 실패 시 `ℹ️ plan_byte_check 3회 실패. 사용자 개입 필요.` 안내 후 종료. byte-copy 정밀도 강제는 v2.0.0 구현계획서의 핵심 precondition.
 
+### Step 4.6 — generating-html fire-and-forget dispatch (v2.3.2+)
+
+plan_byte_check 통과 직후, **change-history entry 박히기 전** (footer 비어있음) 에 `generating-html` skill fire-and-forget dispatch (`run_in_background: true`). 메인 latency 거의 0. transition notice 시점에 사용자가 `.html` 검토 가능 (Type "stop" abort). v1.1.17 PRD D9 amend 반전 (v2.3.2+).
+
 ### Step 5 — verifying-spec 자동 실행
 
 `verifying-spec` invoke. 4축 보고서 생성. 결과는 transition notice 직전 노출.
@@ -81,7 +85,7 @@ sys.exit(0)
 | Wrong | Right |
 |---|---|
 | AskUserQuestion 호출 | NEVER. |
-| generating-html 호출 | NEVER. |
+| generating-html 동기 호출 (sync wait) | NEVER. v2.3.2+ — Step 4.6 fire-and-forget 만. (v1.1.17 "호출 부재" 룰 v2.3.2 반전.) |
 | code-pretty 호출 | NEVER. D-T12 일관. |
 | 일반 writing-plans skill body 호출 | NEVER. self-contained mirror (D-T1). |
 
