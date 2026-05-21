@@ -452,3 +452,49 @@ v2.2.2+ 에서 `docs-pretty` → `generating-html` skill 명칭 + `/regen-html` 
 - **단어 grep 0 검증** — `grep -rn "docs-pretty\|regen-html" skills/ commands/ CLAUDE.md README.md --exclude-dir=og-* --exclude-dir=H4-preflight-fail --exclude-dir=H5-docs-pretty-pre-review --exclude-dir=H6-task-name-friendly` → 0
 - **Acceptance 5번 자동→안내** — `change-propagation` 마지막 단계의 `/sync-html` 자동 호출 → 사용자 안내로 완화 (auto-fire X). 사용자가 명시 호출
 - **commands/regen-html.md 삭제** — old slash command 제거 (sync-html.md 신규 생성으로 대체)
+
+## `/audit-risk` 커맨드 결합 (v2.3.0+)
+
+v2.3.0+ 에서 `/audit-risk` 신규 slash command 추가. 5 read-only subagent (API Cost / PII / Sensitive Logic / Agent Risk / Governance) 병렬 + 1 sequential subagent F (HTML 보고서 생성). 자동 발동 X, 명시 호출만. 코드 변경 X.
+
+### 결합 파일 (3 atomic patch)
+
+1. `commands/audit-risk.md` — 메인 dispatch 본문 (5+1 subagent 단계별 안내 + 5 prompt schema inline + F 경로 명시)
+2. `commands/audit-report-prompt.md` — F subagent fresh-context prompt (v2.2.4 generating-html mirror + secret redaction `****` 강제 + self-contained inline 룰)
+3. `commands/audit-risk-tests/H23-e2e/` — fixture (G1~G6 시나리오 + expected-mock-findings.md ground truth)
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| F prompt 의 v2.2.4 mirror 약화 | 사무 톤 회귀 — Visual heuristics 미적용 |
+| Secret redaction 룰 약화 | raw API key / password 가 HTML 보고서 평문 노출 |
+| Self-contained inline 룰 약화 | 외부 CDN 참조 → offline 깨짐 + 보안 leak |
+| `commands/audit-risk.md` 의 5 subagent prompt schema drift | 영역별 검출 패턴 누락 → false-negative |
+| 자동 발동 경로 도입 | 5 Sonnet 호출 비용 spike (자동 트리거 절대 X — 명시 호출만) |
+| `docs/audit/` `.gitignore` 누락 | repo 노이즈 — 개인 도구 산출물 commit 위험 |
+
+### 영향 범위
+
+- 신규 3 파일 (`commands/audit-risk.md` + `commands/audit-report-prompt.md` + H23 fixture). `.gitignore` append 1 라인. README + CLAUDE.md boilerplate.
+- 기존 skill / scripts / og-* / auto-* / generating-html 영향 0
+- AskUserQuestion 도구 schema 변경 X
+- Notification 매처 / repeat-alert.sh 변경 X
+
+### Regression catch grep
+
+```bash
+# Anti-Pattern: F prompt 의 secret 노출 가능 패턴
+grep -nE "raw secret|api[_-]?key.*=|password.*=" commands/audit-report-prompt.md
+# expected: 0 (catch 라인만 허용)
+
+# Anti-Pattern: 외부 CDN 참조
+grep -nE "https?://.*\.(css|js)" commands/audit-report-prompt.md
+# expected: 0
+
+# audit-risk 자동 발동 (다른 skill / command 가 자동 호출하면 안 됨)
+grep -rn "/audit-risk\|audit-risk\.md" skills/ commands/ --include="*.md" | grep -v "commands/audit-risk.md\|commands/audit-report-prompt.md\|commands/audit-risk-tests"
+# expected: 0 (CLAUDE.md 결합 메모 안의 자기 참조는 별도)
+```
+
+요약: 3 파일 (commands/audit-risk.md + commands/audit-report-prompt.md + H23 fixture) + .gitignore + README + CLAUDE.md + 6 manifest = 7 항목 atomic patch.
