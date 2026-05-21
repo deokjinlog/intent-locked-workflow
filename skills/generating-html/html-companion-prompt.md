@@ -68,6 +68,45 @@ Output `.html` file: `<ABSOLUTE_HTML_PATH>` (same directory, same basename, `.ht
 - Hover tooltip (CSS / inline JS)
 - Animated 진입 (fade-in / slide-in on scroll)
 
+# Primary content default-visible (v2.2.4+ 보정, v2.3.3+)
+
+`.md` 의 콘텐츠는 **primary** (핵심 PRD 내용) 와 **secondary** (메타 / 보조 / 감사 로그) 로 나뉜다. 인터랙션은 secondary 에만 사용. primary 는 첫 페이지 로드 시 시각적으로 노출되어야 한다.
+
+### Primary content — default-visible 강제 (collapse 금지)
+
+다음 콘텐츠는 accordion / 닫힌 `<details>` / hidden tab / overlay modal 안에 **숨기지 마라**. 첫 로드 시 viewport 에 펼쳐진 상태로:
+
+- 배경 / 목적 / 문제 정의 본문
+- 모든 **FR** (Functional Requirement) 항목 본문 — 전체가 한눈에
+- 모든 **NFR** 항목 본문
+- 모든 **결정 사항** 본문 (alternatives 비교 포함)
+- 모든 **AC** (Acceptance Criteria) 체크리스트 — toggle 으로 hide X
+- **범위 밖 / Non-goals** 본문
+- **미정 사항** 본문
+- 위험 / 우려 / 영향 범위 본문
+
+→ "스크롤하면 클릭하라" 패턴 금지. 카드 grid / 색감 / 시각 강조는 가능하지만 **본문 자체는 항상 보여야 한다**.
+
+### Secondary content — 진보적 공개 OK
+
+다음만 collapse / tab / 닫힌 `<details>` 사용 가능:
+
+- `## 변경이력` footer entry — append-only audit log, 첫 로드 시 펼칠 필요 없음 (디폴트 closed)
+- TOC / 사이드 nav — sticky / collapsible OK
+- code block 안의 긴 raw output — 첫 ~15줄 보이고 expand
+- 다이어그램 raw source (Mermaid 코드 자체) — 렌더 결과는 보이고 코드는 collapse OK
+- 메타 notices (티켓 ID / 작성자 / 외부 링크) — 노출하되 핵심 내용보다 작게
+- 권장 조치 상세 (감사 보고서 등) — 카드 본문은 보이고 long-form recommendation 만 details OK
+
+### "Wow first" 의미 재정의 (v2.3.3+)
+
+v2.2.4 의 "Wow first" 는 **첫 viewport 에서** 발생해야 한다:
+
+- Hero / 시각 임팩트는 OK
+- 사용자가 스크롤 / 클릭 없이 **viewport 첫 1~2 화면 안에서 핵심 PRD 의 모양과 무게감이 전달**되어야 한다
+- accordion 으로 모든 카드를 닫아둔 채 "스크롤하면 클릭하라" 는 패턴은 **anti-Wow**
+- Hero / decoration 만 첫 viewport 채우고 본문이 스크롤 아래에 있으면 회귀
+
 # Self-contained rules (보존)
 
 - Inline CSS only (no `<link href="https://...">`)
@@ -101,6 +140,7 @@ Output `.html` file: `<ABSOLUTE_HTML_PATH>` (same directory, same basename, `.ht
 - `.md` 의 코드 블록 개수 == `.html` 의 `<pre><code>` 개수 (±0)
 - 외부 URL 참조 0 (모두 inline)
 - `.md` 본문 sentence count 와 `.html` sentence-level node count 차이 5% 이내
+- **Primary content default-visible** (v2.3.3+) — FR / NFR / AC / 결정 / 범위 밖 / 미정 항목 본문이 `<details>` (closed) / `display:none` / 닫힌 accordion 안에 있지 않음. grep `<details(?! open)` 또는 inline `display:none` 패턴이 primary 콘텐츠 ID 에 매칭되면 fail.
 
 If ANY check fails, do NOT write. Report failure and stop.
 
@@ -115,5 +155,11 @@ If ANY check fails, do NOT write. Report failure and stop.
 - **매 호출 같은 톤 반복** — 금지. variety = feature. 매번 다르게 시도.
 - **내용 변형** — 비교 카드 / 콘셉트 도식 / stepper 변환 시 단어 / 항목 / 결정 / 숫자 1:1 보존. 시각만 강화.
 - **인터랙션이 의미를 가림** — 금지. 인터랙션은 의미 표현 보조. 본문 내용 가려지면 안 됨.
+- **모든 FR / AC 카드 default-closed accordion** (v2.3.3+) — 금지. primary 내용 가림. 사용자 첫인상이 "안내만 있다" 가 되는 회귀.
+- **첫 카드만 auto-open, 나머지 closed** (v2.3.3+) — 금지. PRD 의 모든 FR / AC 은 등가. 일부만 default-open 은 자의적.
+- **`<details>` 안에 FR / AC / 결정 본문 wrap** (v2.3.3+) — 금지. `<details>` 는 secondary 전용 (변경이력 footer / 다이어그램 raw / 긴 코드 output). primary 에 사용 X.
+- **Hero / decoration 만 첫 viewport 채우고 본문은 스크롤 아래** (v2.3.3+) — 금지. "Wow first" 의 오용. 첫 viewport 에 핵심 내용 일부라도 보여야 함.
+- **Tab 으로 FR 들을 가르고 한 번에 한 FR 만 보이기** (v2.3.3+) — 금지. tab 은 secondary 전용 (예: "raw vs rendered"). primary 본문에 X.
+- **AC 체크리스트가 toggle 으로 hide** (v2.3.3+) — 금지. AC 는 PRD 의 최종 검증 기준 = primary. 한눈에 다 보여야 함.
 
 You have one job: make a sibling `.html` that humans say "**wow**" the moment they open it — while preserving every word, every decision, every number 1:1.
