@@ -254,7 +254,7 @@ areas = {
 }
 ```
 
-### Step 4 — Subagent F dispatch (HTML 보고서 생성)
+### Step 4 — Subagent F dispatch (HTML 보고서 생성, primary)
 
 메인이 `commands/audit-report-prompt.md` Read → 1 Task 호출:
 - `subagent_type: "general-purpose"`
@@ -264,6 +264,36 @@ areas = {
 - 출력 target: `docs/audit/<timestamp>-audit-risk.html`
 
 prompt 본문은 `commands/audit-report-prompt.md` 전체 + 입력 schema JSON inject.
+
+### Step 4.5 — F 결과 검증 + fallback (v2.3.1+)
+
+F 가 단일 Write tool 호출 후 보고. 메인이 다음 검증:
+
+```bash
+# (a) 파일 존재 + size guard (0 < size ≤ 120KB)
+[ -f "docs/audit/<timestamp>-audit-risk.html" ] && \
+  size=$(stat -f%z "docs/audit/<timestamp>-audit-risk.html" 2>/dev/null || stat -c%s "docs/audit/<timestamp>-audit-risk.html") && \
+  [ "$size" -gt 0 ] && [ "$size" -le 122880 ]
+```
+
+| F 보고 / 검증 결과 | 메인 액션 |
+|---|---|
+| `Status: DONE` + 파일 존재 + size OK | 정상 → Step 5 진행 |
+| `Status: BLOCKED — Write failed at <reason>` 또는 파일 부재 | **메인 takeover** (아래) |
+| `Status: BLOCKED — verification failed` | F 보고 reason 노출 + **메인 takeover** |
+| 파일 존재 + size = 0 (empty / corrupt) | partial write — `rm <path>` + **메인 takeover** |
+| 파일 존재 + size > 120KB | partial / runaway 가능 — `rm <path>` + **메인 takeover** (시각 요소 압축) |
+
+#### Fallback: 메인 takeover (v2.3.1+)
+
+F 가 BLOCKED 또는 partial write 한 경우, 메인이 직접 HTML 생성:
+
+1. **partial file cleanup**: `rm -f docs/audit/<timestamp>-audit-risk.html` (disk 잔존 방지)
+2. 메인이 `commands/audit-report-prompt.md` 의 룰 답습 (메모리에서 HTML 작성)
+3. 단일 Write tool 호출 — `docs/audit/<timestamp>-audit-risk.html` (메인은 컨텍스트에 5 areas raw 이미 보유 — 재전달 비용 0)
+4. takeover 결과를 사용자 출력에 표시: `⚠️ F subagent BLOCKED (<reason>) — 메인 takeover 로 HTML 생성됨.`
+
+이 fallback chain 은 v2.3.0 dogfood 에서 catch 된 회귀 해결: F 가 ~55KB+ HTML 을 chunk write 시도 → verification 무한 루프 + partial file disk 잔존.
 
 ### Step 5 — 사용자 1줄 요약 출력
 

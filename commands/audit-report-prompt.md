@@ -117,15 +117,27 @@ Output target: `docs/audit/<timestamp>-audit-risk.html` (timestamp 은 입력에
 - **findings reorder / 삭제**
 - **추가 commentary / 본문 예측**
 
+# Write Discipline (HARD-GATE, v2.3.1+)
+
+**ONE Write call only — NO chunk fallback.** v2.3.0 dogfood 에서 ~55KB+ HTML 을 단일 Write 못 할 때 chunk write / heredoc fallback 시도 → verification 무한 루프 + partial file disk 잔존 발견. v2.3.1 에서 다음 룰 강제:
+
+1. **Write tool 호출은 단 1회**. `content` 인자에 완성된 HTML 전체. chunk / append / heredoc / Bash `cat << EOF` 절대 X.
+2. **Write 실패 시 (size limit / tool error / timeout)** → 즉시 `BLOCKED — Write failed at <reason>` 보고 + 정지. **partial file 작성 X, retry X, fallback X**. 메인이 takeover.
+3. **Verification 은 메모리에서만**. 작성 전 HTML 전체 문자열을 변수로 보유 + verification check → ANY fail → DO NOT call Write tool. 부분 write 후 fail catch 패턴 금지 (disk 잔존 위험).
+4. **HTML 크기 hint**: 사무 톤 회피 + 적극 시각화 + 5 영역 카드 → 일반적으로 30~80KB. 100KB 초과 시 → "BLOCKED — HTML too large" 보고 + 메인 takeover (시각 요소 압축 권장).
+
 # How to Apply
 
 1. Read input JSON 전체
 2. **디자인 톤 선택** — inspiration 중 하나 (또는 mix). 매 호출마다 다르게 시도.
-3. HTML 생성 — semantic 1:1 + 적극 시각화 + 인터랙션 + secret 마스킹
-4. Write `docs/audit/<timestamp>-audit-risk.html` (Write tool)
-5. Report: "Audit report written: <path>. Tone: <chosen tone>. Findings: Critical=N High=N Medium=N Low=N. Areas active: <list>. Secrets redacted: <count>."
+3. HTML 전체를 **메모리에서** 작성 (변수로 보유) — semantic 1:1 + 적극 시각화 + 인터랙션 + secret 마스킹
+4. **메모리 상태에서 verification 수행** (아래 § Verification before writing) — fail 시 DO NOT call Write tool, BLOCKED 보고
+5. **단일 Write tool 호출** — `docs/audit/<timestamp>-audit-risk.html` 에 HTML 전체. 실패 시 BLOCKED 보고 (retry X)
+6. Report: "Audit report written: <path>. Tone: <chosen tone>. Findings: Critical=N High=N Medium=N Low=N. Areas active: <list>. Secrets redacted: <count>. Size: <KB>."
 
 # Verification before writing
+
+**Verification 은 단일 Write call 직전, 메모리 HTML 변수에 대해 수행. fail 시 Write 호출하지 말 것.**
 
 - 모든 `findings[]` 의 file:line 이 HTML 에 표시됨
 - 외부 URL 참조 0 (HTML 안 `https?://.+\.(css|js|woff|ttf|otf)` 0건)
@@ -133,8 +145,9 @@ Output target: `docs/audit/<timestamp>-audit-risk.html` (timestamp 은 입력에
 - 5 영역 score 모두 표시 (PASS 인 agent 도 status 명확)
 - timestamp 형식 valid + filename 일치
 - Disclaimer 상단 prominent 위치
+- HTML 크기 ≤ 100KB (size guard)
 
-ANY check fails → DO NOT write. Report failure + stop.
+ANY check fails → **DO NOT call Write tool**. Report `BLOCKED — verification failed at <check>` + stop. 메인이 takeover.
 
 # Anti-Patterns
 
@@ -144,5 +157,7 @@ ANY check fails → DO NOT write. Report failure + stop.
 - 사무 / 회의록 톤 — 금지. variety = feature.
 - typography + 색깔만 — 금지. 비교 카드 / 도식 / 점수 시각 / filter UI 적극 도입.
 - findings 의역 / 추가 commentary — 금지. raw 1:1 보존.
+- **Chunk write / heredoc / multiple Write call (v2.3.1+)** — 금지. 단일 Write call 만. 실패 시 BLOCKED 보고 + 메인 takeover.
+- **Partial file 작성 후 verification** (v2.3.1+) — 금지. verification 은 메모리 변수에 대해서만. disk 잔존 위험.
 
 You have one job: make an HTML that humans say "**wow**" the moment they open it — while preserving every finding, every line, every recommendation 1:1, and rigorously protecting secret values from leaking into the report.
