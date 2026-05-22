@@ -162,4 +162,106 @@ If ANY check fails, do NOT write. Report failure and stop.
 - **Tab 으로 FR 들을 가르고 한 번에 한 FR 만 보이기** (v2.3.3+) — 금지. tab 은 secondary 전용 (예: "raw vs rendered"). primary 본문에 X.
 - **AC 체크리스트가 toggle 으로 hide** (v2.3.3+) — 금지. AC 는 PRD 의 최종 검증 기준 = primary. 한눈에 다 보여야 함.
 
+# Dark premium default (v2.3.4+)
+
+**비주얼 테마 = "다크 프리미엄"** 이 모든 `.html` 산출물의 default. v2.2.4 의 6 톤 자유 (editorial / docs portal / playful / brutalist / experimental / dashboard) 는 이제 다크 프리미엄의 sub-variation 으로 흡수 — baseline 톤만 통일, variety 는 보존.
+
+**팔레트 예시** (정확 값 X — LLM 자율 선택):
+
+- **배경 (dark base)**: `#0a0b0f` / `#0d1117` / `#111218` 류 (깊은 어두운 톤)
+- **본문 텍스트 (high contrast)**: `#e6edf3` / `#f0f6fc` / `#e8eaf0` 류 — muted 도 `#8b949e` 보다 어둡지 않게
+- **악센트 (premium)**: 보라/시안/핑크 그라데이션 또는 단색 강조 — 매 호출 다르게
+- **카드 / 표면**: 반투명 흰색 overlay (`rgba(255,255,255,0.04~0.07)`) — glassmorphism 깊이감
+- **그림자 / glow**: subtle drop shadow + accent glow (`rgba(124,109,255,0.25)` 류)
+- **타이포**: heading bold + body 1.6~1.7 line-height + 한글 친화 폰트 스택
+
+"Premium dashboard / 고급 분석 도구" 톤. 사무 / 회의록 / 흰 배경 editorial 톤 금지.
+
+라이트 모드는 `prefers-color-scheme: light` 분기로만 옵셔널 제공 (default 가 dark, OS 설정 따라 명시적 라이트).
+
+## 4 요소 옵셔널 (v2.3.4+)
+
+산출물에 포함 **가능** 한 요소 (모두 옵셔널 — 본문 콘텐츠에 안 맞으면 사용 X):
+
+| 요소 | 적용 케이스 |
+|---|---|
+| **데이터 차트 / 그래프** | 숫자 비교 / 분포 / 시계열 / 비율 데이터 |
+| **인터랙티브 요소** | TOC / dark-toggle / copy 버튼 / smooth scroll / 보조 disclosure (primary 본문 X) |
+| **다이어그램 / 플로우** | 아키텍처 / 데이터 흐름 / DAG / 컴포넌트 관계 |
+| **핵심 요약 카드** | FR / 결정 / 위험 등 묶음 형태로 일관 표현 가능할 때 |
+
+4 요소 모두 적용해야 한다는 강제 X. LLM 이 콘텐츠 보고 판단.
+
+## WCAG AA baseline (v2.3.4+)
+
+다크 배경에서도 모든 텍스트 (muted 포함) contrast 4.5:1 이상 보장. 자동 검증 도구는 후속 후보 (현 버전 self-check).
+
+---
+
+# Impl-plan diff visualization (v2.3.4+)
+
+`impl-plan` 류 산출물에서 `**원본**` + `**수정본**` 쌍 (또는 동등한 before/after 코드 블록 쌍) 을 감지하면, `.html` 에서 **unified diff 시각화** 로 렌더:
+
+| 라인 종류 | 시각 표현 |
+|---|---|
+| **추가 라인** (수정본에만 존재) | 초록 배경 (`rgba(46,160,67,0.15)` 류) + 좌측 `+` 마커 + 초록 텍스트 톤 |
+| **삭제 라인** (원본에만 존재) | 빨강 배경 (`rgba(248,81,73,0.15)` 류) + 좌측 `-` 마커 + 빨강 텍스트 톤 |
+| **변경 X 라인** (양쪽 동일) | context — 기본 톤, 좌측 공백 마커 |
+
+GitHub dark 류 톤 사용. WCAG AA contrast 4.5:1 보존 (다크 프리미엄 정합).
+
+## Context 라인 진보적 공개 (C-2)
+
+- 변경 라인 ±N (기본 3) 만 default-visible
+- 그 외 unchanged 영역은 `"... unchanged N lines ..."` 형태로 collapse OK (`<details>` 사용 OK)
+- v2.3.3 "primary content default-visible" 룰의 **예외** (코드 raw 는 secondary 성격) — 단 변경 라인 자체는 항상 default-visible
+
+## Raw 원본/수정본 병행 옵셔널 (C-3)
+
+LLM 자율 — 두 raw 블록을 collapse 형태로 같이 제공 OK. 단:
+
+- raw 블록 default-collapsed (`<details>`) OK
+- diff 시각화가 primary, raw 는 보조
+
+## 신규 / 삭제 파일 fallback (C-4)
+
+- 신규 파일 (원본 X / 수정본 only) → 단순 코드 블록 (초록 배경 전체 적용 OK)
+- 삭제 파일 (원본 only / 수정본 X) → 단순 코드 블록 (빨강 배경 전체 적용 OK)
+- 진짜 before/after 쌍일 때만 unified diff 시각화
+
+self-contained inline (외부 diff lib 금지 — diff2html CDN 등). semantic / word-level / character-level diff 금지 — line-level 단순만.
+
+---
+
+# Change-history footer omission (v2.3.4+)
+
+`## 변경이력` 섹션 (또는 동등 footer) 은 `.html` 에서 **생략 OK** (사람 가독성 우선). 단:
+
+- 생략 시 `.html` 푸터 한 줄 안내: `"변경이력은 .md 원본 참조"` (또는 동등 문구)
+- 생략 vs 노출은 subagent B 자율 판단 (정보 hierarchy 기준 — entry 수 / 정보 밀도 등)
+
+기존 의미 1:1 보존 룰의 변경이력 footer 한정 예외. FR / AC / 배경 / 결정 / NFR / Non-goals / 미정 등 본문 콘텐츠는 그대로 1:1 보존 (v2.3.3 primary visibility 정합).
+
+---
+
+# Anti-Patterns (v2.3.4 추가)
+
+- **Default 흰 배경 (`#fff` / `#f8f9fa` 류) + 회색 muted 본문** (v2.3.4+) — 금지. 신고 사례 직격. 한글 가독성 망가짐.
+- **`prefers-color-scheme: dark` 만 dark 분기 (default light)** (v2.3.4+) — 금지. OS 설정 의존. default 가 dark 여야 함.
+- **6 톤 (editorial / playful / brutalist 등) 자유 baseline 선택** (v2.3.4+) — 금지. 다크 프리미엄 1 톤 baseline 강제. sub-variation 으로만 흡수.
+- **4 요소 모두 의무 사용** (v2.3.4+) — 금지. 4 요소는 옵셔널. 콘텐츠와 안 맞으면 사용 X.
+- **muted 텍스트 contrast 4.5:1 미만 (WCAG AA)** (v2.3.4+) — 금지. dark 배경 위 너무 어두운 회색 (`#6c757d` 류) 금지.
+- **원본 / 수정본 두 블록 별개 렌더 (diff 시각화 X)** (v2.3.4+) — 금지. C-1 룰 위반. 검토 효율 ↓.
+- **diff 시각화에 외부 라이브러리 의존 (e.g. diff2html CDN)** (v2.3.4+) — 금지. self-contained 룰 위반. inline CSS / SVG 만.
+- **word-level / character-level diff 적용** (v2.3.4+) — 금지. 의역/오류 위험. line-level 단순만.
+- **semantic diff (의미 변경 요약 / hint 텍스트)** (v2.3.4+) — 금지. 의미 1:1 룰 위반. 해석은 plan 본문에 맡김.
+- **diff 라인 색상 contrast 4.5:1 미만 (dark 배경 기준)** (v2.3.4+) — 금지. WCAG AA 와 충돌.
+- **context 라인 collapse 강제 (전부 hide)** (v2.3.4+) — 금지. 변경 라인 ±N 은 default-visible 보장.
+- **신규 / 삭제 파일도 억지 unified diff 형식** (v2.3.4+) — 금지. C-4 fallback 위반. 단순 코드 블록 OK.
+- **변경이력 entry 본문을 `.html` 에 그대로 1:1 렌더 강제** (v2.3.4+) — 금지. A-1 룰로 생략 허용.
+- **변경이력 footer 만 의미 변형 / 요약** (v2.3.4+) — 금지. 생략은 OK, 변형은 X. 의미 1:1 보존.
+- **변경이력 외 본문 콘텐츠도 같이 생략** (v2.3.4+) — 금지. A-1 은 변경이력 footer 한정. FR / AC 본문 생략은 v2.3.3 위반.
+
+---
+
 You have one job: make a sibling `.html` that humans say "**wow**" the moment they open it — while preserving every word, every decision, every number 1:1.
