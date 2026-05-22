@@ -452,3 +452,81 @@ v2.2.2+ 에서 `docs-pretty` → `generating-html` skill 명칭 + `/regen-html` 
 - **단어 grep 0 검증** — `grep -rn "docs-pretty\|regen-html" skills/ commands/ CLAUDE.md README.md --exclude-dir=og-* --exclude-dir=H4-preflight-fail --exclude-dir=H5-docs-pretty-pre-review --exclude-dir=H6-task-name-friendly` → 0
 - **Acceptance 5번 자동→안내** — `change-propagation` 마지막 단계의 `/sync-html` 자동 호출 → 사용자 안내로 완화 (auto-fire X). 사용자가 명시 호출
 - **commands/regen-html.md 삭제** — old slash command 제거 (sync-html.md 신규 생성으로 대체)
+
+## AskUserQuestion 도구 우선 (v2.3.5+)
+
+메인 에이전트가 사용자에게 **결정 / 선택 / 동의** 를 요청하는 모든 경우 → **AskUserQuestion 도구 호출** default. skill body 외 ad-hoc 결정에도 동일 적용.
+
+### 적용 대상
+
+- 모든 skill body 안 게이트 (기존 v2.0.3+ 8 skill boilerplate)
+- 메인 turn 의 ad-hoc 결정 요청 (skill body 무관)
+- v2.3.5+ execute-plan 룰 1 (critical 7 케이스) 재질문
+- 사용자가 모호 응답 시 재질문 (v2.1.1+ Other 룰)
+- 모드 선택 게이트 진입 시점
+- BLOCKED → self-correct / reorder 도 실패 시 사용자 개입
+
+### prose 예외 (좁게)
+
+- 자유 텍스트 / 긴 응답 요구 (open brainstorming question 등)
+- 사용자 응답 직후 확인용 단순 ack (단 AskUserQuestion yes/no 권장)
+- 상태 보고 / 진행 알림 (질문 형식 아님)
+
+### 알람 fire 보장
+
+`AskUserQuestion` 호출 → `Notification.elicitation_dialog` 발화 → `~/.claude/settings.json` 매처 → `repeat-alert.sh` fire. 사용자 백그라운드 작업 시 OS 알람 catch → 응답 흐름 보존.
+
+prose 질문은 알람 fire X — 사용자 attention 손실 위험.
+
+회귀 catch grep:
+
+```bash
+grep -c "AskUserQuestion 도구 우선 (v2.3.5+)" CLAUDE.md
+# expected: ≥ 1
+```
+
+## execute-plan critical/non-critical + AskUserQuestion 강제 결합 (v2.3.5+)
+
+v2.3.5+ 에서 `skills/executing-plans/SKILL.md` + `skills/js-super-sub-driven/SKILL.md` + `CLAUDE.md` 3 파일 atomic patch. 한쪽만 변경 시 inline vs subagent 모드 동작 불일치 + 글로벌 vs skill body 룰 불일치.
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| executing-plans 만 변경 | inline 흐름은 critical 판정 가능 / subagent 흐름은 옛 과보호 게이트 그대로 |
+| js-super-sub-driven 만 변경 | 반대 |
+| CLAUDE.md 만 변경 | skill body 안 boilerplate 누락 — 흐름 안에서 ad-hoc prose 질문 잔존 |
+| 룰 1 critical 표 일부 누락 | catch 못 한 케이스에서 자동 진행 → blast radius 위험 |
+| 룰 2 non-critical 표 누락 | "안전성" 명목 게이트 회귀 |
+| 룰 4 자가 복구 누락 | BLOCKED 시 즉시 사용자 재질문 → 알람 burst |
+
+### 영향 범위
+
+- 3 파일 atomic patch (위 표). 다른 skill / commands / scripts 영향 0
+- v1.1.12+ 자동승인 X / v2.0.0+ byte-copy reorder / v2.0.1+ same-file 묶음 / v2.0.3+ 8 skill boilerplate / v2.1.1+ Other 룰 — 모두 그대로
+- 알람 시스템 (`repeat-alert.sh` 4-layer) — fire 빈도만 정상화 (변경 X)
+- og-* / auto-* — Socratic only 룰 보존 (auto-* 는 본 룰 명시 예외 — Socratic prose default 유지)
+- writing-plans `**Model**:` 필드 — 룰 2 의 dispatch model 결정 근거 (변경 X)
+- `scripts/preflight.py` / `scripts/plan_byte_check.py` — 실행 단계 룰만이라 영향 0
+
+### Regression catch grep
+
+```bash
+grep -c "Critical / Non-critical 판정 룰 (v2.3.5+)" \
+  skills/executing-plans/SKILL.md skills/js-super-sub-driven/SKILL.md
+# expected: 각 1
+
+grep -c "사용자 질문 = AskUserQuestion 도구 (v2.3.5+)" \
+  skills/executing-plans/SKILL.md skills/js-super-sub-driven/SKILL.md
+# expected: 각 1
+
+grep -nE "병렬.*해도.*될까|묶을까|다음 task.*진입할까" \
+  skills/executing-plans/SKILL.md skills/js-super-sub-driven/SKILL.md
+# expected: 0 (Anti-Pattern catch 라인만 허용)
+
+grep -nE "이렇게.*할까요\?|어느.*쪽.*인가요\?" \
+  skills/executing-plans/SKILL.md skills/js-super-sub-driven/SKILL.md
+# expected: 0 (Anti-Pattern catch 라인만 허용)
+```
+
+요약: 3 파일 (executing-plans/SKILL.md + js-super-sub-driven/SKILL.md + CLAUDE.md) atomic patch. 5+ 파일 동시 push (3 + 6 manifest + 백로그 mv).
