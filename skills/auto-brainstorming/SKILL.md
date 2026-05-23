@@ -74,6 +74,8 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 
 **왜 v2.3.2+ 도입**: v1.1.17 PRD D9 amend ("auto-flow 는 review 없으므로 prettify 의미 없음") 는 잘못된 가정. transition notice 시점에 사용자가 `.html` 검토 가능 (Type "stop" 으로 abort). v2.3.1 dogfood 에서 사용자 명시 catch — auto-flow 에서도 `.html` 동봉본 필요.
 
+**v2.4+ race delay**: dispatch 후 **5초 delay** 후에 Step 5 (change-history) 진행. background subagent 가 .md 의 footer 0건 시점에 읽도록 보장 (race condition 해결).
+
 ### Step 5 — change-history 자동
 
 `change-history` skill invoke → 첫 `[요구사항-수정]` entry append. CH-id 자동 생성.

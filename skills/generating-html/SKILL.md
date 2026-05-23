@@ -252,3 +252,36 @@ A generating-html run is correct when ALL hold:
 - `writing-plans` — calls this on first save of `<slug>-implementation-plan.md`
 - `change-history` — invoked by the caller AFTER generating-html returns; logs the first entry on the now-prettified doc
 - `change-propagation` — for any post-init revision; generating-html is NEVER part of that flow
+
+## 비동기 신뢰성 룰 (v2.4+) — silent log monitor (v2.4+)
+
+`generating-html` 백그라운드 호출이 처음 `.md` 생성 시 가끔 실패하던 회귀를 해결한 4 룰. 호출자 측 (auto-* / `/sync-html` / `/audit-risk` 등) 이 같이 답습.
+
+### B-1 — dispatch 결과 verify
+
+호출 직후 메인이 dispatch id 를 받았는지 확인 (Agent tool return). 시간 경과 후 (사용자가 transition notice 받기 전) `.html` 파일 존재 확인. id 부재 시 메인이 직접 호출 (sync fallback).
+
+### B-3 — silent log monitor
+
+호출 시 `.js-super/html-regen.log` 에 entry 자동 append:
+
+```
+YYYY-MM-DD HH:MM:SS | DISPATCH | <slug>-<type>.md | agent_id=<id>
+YYYY-MM-DD HH:MM:SS | SUCCESS  | <slug>-<type>.html | <bytes> bytes
+YYYY-MM-DD HH:MM:SS | FAIL     | <slug>-<type>.md | <reason>
+```
+
+`/sync-html --check` 옵션으로 마지막 N entry (default 10) 조회. rotation 정책은 후속 후보 (현재는 append-only).
+
+### B-4 — 메인 응답에 dispatch 결과 명시
+
+호출자 측 (auto-brainstorming / auto-designing-direction / auto-writing-plans / `/sync-html` / `/audit-risk`) 의 transition notice 시점에 결과를 함께 알림:
+
+- 완료 시: "백그라운드 호출 완료 (N KB)"
+- 실패 시: "실패 — `/sync-html` 으로 사용자가 직접 재시도 필요"
+
+자동 retry 는 도입하지 않음 (사용자 의도 외 비용 누적 위험). 사용자 명시 호출만 trigger. 자동 retry 는 v2.4.x 후속 후보.
+
+### B-2 race delay 는 호출자 측에
+
+dispatch 와 change-history footer 추가 사이 race condition 해결을 위한 5초 delay 는 `generating-html` 자체에 박지 않고, 호출자 측 (auto-* 3 skill 의 Step 4.5/4.6) 에 박힘. 본 skill 은 호출 받으면 즉시 작업 시작 (delay 무관).

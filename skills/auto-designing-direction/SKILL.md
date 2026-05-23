@@ -33,6 +33,8 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 
 `<slug>-tech-design.md` 작성 직후, **change-history entry 박히기 전** (footer 비어있음) 에 `generating-html` skill fire-and-forget dispatch (`run_in_background: true`). 메인 latency 거의 0. transition notice 시점에 사용자가 `.html` 검토 가능 (Type "stop" abort). v1.1.17 PRD D9 amend 반전 (v2.3.2+).
 
+**v2.4+ race delay**: dispatch 후 **5초 delay** 후에 Step 5 (verifying-spec) 진행. background subagent 가 .md 의 footer 0건 시점에 읽도록 보장 (race condition 해결).
+
 ### Step 5 — verifying-spec 자동 실행
 
 `verifying-spec` skill invoke (메인 자체 수행 또는 skill 호출). 4축 보고서 생성. 결과는 다음 단계 transition notice 직전 노출.
