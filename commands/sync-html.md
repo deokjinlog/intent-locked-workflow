@@ -39,6 +39,31 @@
 - `.md` 가공 (`.md` 는 source-of-truth, 손대지 않음)
 - 결과 dispatch 노출 — silent
 
+## `--check` 옵션 (v2.4+)
+
+`--check` 플래그 명시 시 silent log (`.js-super/html-regen.log`) 의 마지막 N entry (default 10) 출력. `.html` 생성 dispatch / success / fail 결과를 사용자가 직접 확인.
+
+### 사용
+
+```
+/sync-html --check          # 마지막 10 entry 출력
+/sync-html --check 20       # 마지막 20 entry 출력
+```
+
+### 출력 형식
+
+```
+YYYY-MM-DD HH:MM:SS | DISPATCH | <slug>-<type>.md | agent_id=<id>
+YYYY-MM-DD HH:MM:SS | SUCCESS  | <slug>-<type>.html | <bytes> bytes
+YYYY-MM-DD HH:MM:SS | FAIL     | <slug>-<type>.md | <reason>
+```
+
+### 사용 시점 (B 항목 회귀 dogfood)
+
+- 백그라운드 호출 결과가 명시 안 됐을 때 (메인 응답에 B-4 메시지 누락 catch)
+- `.html` 생성 누락 의심 시
+- silent log 누적 확인 (rotation 정책 미도입 — append-only)
+
 ## 다음 단계
 
 자동 chain 없음. 1회성 액션.
