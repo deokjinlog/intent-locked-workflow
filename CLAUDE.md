@@ -530,3 +530,80 @@ grep -nE "이렇게.*할까요\?|어느.*쪽.*인가요\?" \
 ```
 
 요약: 3 파일 (executing-plans/SKILL.md + js-super-sub-driven/SKILL.md + CLAUDE.md) atomic patch. 5+ 파일 동시 push (3 + 6 manifest + 백로그 mv).
+
+## 한국어 친화 안내 톤 (v2.4+)
+
+js-super 의 사용자 노출 안내문 (메인이 사용자에게 직접 보여주는 모든 문구) 은 다음 룰을 따른다.
+
+### A-1: 짧은 한국어 문장
+
+- 한 문장에 정보 1~2개. 한 문단은 4 문장 이하.
+- 영어 식별자는 꼭 필요할 때만 사용하고, 처음 등장 시 한국어 설명을 함께 적는다.
+
+### A-2: 메모 / 슬래시 / 콜론 다발 금지
+
+- 사용자에게 보고할 때는 완전 문장으로 쓴다. `→`, `✅` 같은 마커는 진행 노트 한 줄 안에서만 허용.
+- 콜론 다발 (`결과: X / 다음: Y`) 보다 풀어쓰기를 우선.
+
+### A-3: 한국어-영어 mix 최소
+
+- 사용자 시야에 보이는 표현은 한국어 우선.
+- `fire-and-forget` → `백그라운드 호출`, `dispatch` → `호출`, `byte-copy` → `원본 그대로 보존` 등 한국어 대체어 사용.
+- 도구 / 함수 / 파일 이름은 그대로 영어.
+
+### A-4: 사용자 친화 보고
+
+- 무엇을 했는지 (1~2 문장) + 왜 그랬는지 (필요 시 1 문장) + 다음 단계 (1 문장).
+- 그 외 세부는 사용자가 자세히 묻기 전까지 생략.
+
+### A-5: 적용 영역 구분 (중요)
+
+| 영역 | 한국어 친화 톤 적용 |
+|---|---|
+| skill body 의 식별자, 함수 / 파일 이름 | 영어 그대로 (변경 X) |
+| skill body 의 룰 본문 (Why / How / Anti-Patterns 표) | 영어 그대로 (변경 X) — 메인 prompt 가공용 |
+| skill body 의 사용자 노출 안내문 (메인 turn 에 그대로 출력) | 한국어 친화 적용 |
+| CLAUDE.md 의 글로벌 톤 룰 | 한국어로 추가 (본 섹션) |
+| 메인이 사용자에게 보고하는 응답 양식 | 한국어 친화 적용 |
+| commands/*.md 사용자 안내문 | 한국어 친화 적용 |
+| README.md 사용자 안내 섹션 | 한국어 친화 적용 |
+
+### Before / After 예시
+
+❌ Before (영어-한국어 mix + 메모 패턴):
+
+> `✅ fire-and-forget dispatch 완료. byte-copy 룰 보존. → 다음 단계 진행.`
+
+✅ After (한국어 친화):
+
+> 백그라운드 호출이 끝났습니다. 원본 보존 룰을 그대로 따랐고, 다음 단계로 넘어갑니다.
+
+회귀 catch grep:
+
+```bash
+grep -c "한국어 친화 안내 톤 (v2.4+)" CLAUDE.md
+# expected: ≥ 1
+```
+
+## 비동기 .html 신뢰성 룰 (v2.4+)
+
+`generating-html` 백그라운드 호출이 처음 .md 생성 시 가끔 실패하던 회귀를 해결한 4 룰입니다.
+
+- **B-1 dispatch 결과 verify**: 호출 직후 메인이 id 를 받았는지 확인하고, 시간 경과 후 `.html` 파일 존재를 확인.
+- **B-2 race condition 해결**: dispatch 후 5초 delay 를 두고 그 다음 change-history footer 를 추가. background subagent 가 footer 0건 시점에 .md 를 읽도록 보장.
+- **B-3 silent log monitor**: `.js-super/html-regen.log` 에 호출 / 성공 / 실패 entry 를 자동 append. `/sync-html --check` 으로 사용자 조회 가능.
+- **B-4 메인 응답에 dispatch 결과 명시**: transition notice 시점에 "백그라운드 호출 완료 (N KB)" 또는 "실패 — 사용자가 `/sync-html` 으로 재시도 필요" 를 함께 알림.
+
+자동 retry 는 도입하지 않습니다 (사용자 의도 외 비용 누적 위험). 사용자가 명시 호출 (`/sync-html`) 으로 재시도. 자동 retry 는 v2.4.x 후속 후보.
+
+회귀 catch grep:
+
+```bash
+grep -c "5초 delay" skills/auto-brainstorming/SKILL.md skills/auto-designing-direction/SKILL.md skills/auto-writing-plans/SKILL.md
+# expected: 각 ≥ 1
+
+grep -c "silent log monitor (v2.4+)" skills/generating-html/SKILL.md
+# expected: ≥ 1
+```
+
+요약: v2.4 메이저 — A 광범위 (10+ skill + 10+ commands + README + CLAUDE.md) + B 4 룰 (generating-html + auto-* 3 race delay + `/sync-html --check`). atomic 처리.
