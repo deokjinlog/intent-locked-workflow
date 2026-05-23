@@ -7,7 +7,7 @@ description: auto-flow 진입점 — Socratic clarifying Q (1~5개 적응) + AI 
 
 js-super:auto-brainstorming 은 명시적 사용자 invoke (`/auto-brainstorm <피처명>`) 시에만 작동. PRD `auto-flow-requirements.md` D1~D12 (D9 amend) + tech-design D-T1~D-T12 의 자동 흐름 본문.
 
-**Announce at start:** "I'm using the auto-brainstorming skill — Socratic clarifying Q + 자동 진행."
+**Announce at start:** "auto-brainstorming skill 로 자동 진행하겠습니다 (Socratic clarifying Q + AI 자동 chain)."
 
 ## 사용자 질문 룰 (v2.0.3+) — 항상 AskUserQuestion
 
