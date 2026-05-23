@@ -1,9 +1,9 @@
 # /audit-risk
 
-프로젝트 전체 **보안 + 거버넌스 + 비용 1회성 감사** 커맨드. 코드 변경 X, HTML 보고서 1개 산출 (`docs/audit/<timestamp>-audit-risk.html`, gitignored).
+이 슬래시는 프로젝트 전체의 **보안 / 거버넌스 / 비용을 1회성으로 감사**하는 명령입니다. 코드는 변경하지 않고, HTML 보고서 1개를 산출합니다 (`docs/audit/<timestamp>-audit-risk.html`, gitignored).
 
-> **자동 발동 X** — 사용자 명시 호출만. 1회 호출 = Sonnet × 6 + 약간의 context7/WebSearch.
-> **best-effort LLM 감사** — 정확한 청구서 X, 외부 보안 도구 (Snyk / SonarQube / Semgrep) 와 보완 관계.
+> **자동 발동 없음** — 사용자가 명시적으로 호출할 때만 발동합니다. 1회 호출 시 Sonnet 보조 에이전트 6개 + 약간의 context7/WebSearch 비용이 듭니다.
+> **LLM 기반 best-effort 감사** — 정확한 청구서가 아닙니다. 외부 보안 도구 (Snyk / SonarQube / Semgrep) 와 보완 관계로 사용해주세요.
 
 ## 흐름 (메인 에이전트 단계별 실행)
 

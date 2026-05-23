@@ -1,10 +1,10 @@
 ---
-description: 다중 가벼운 task 를 한 batch 로 처리 (Socratic 2~3 Q × N + 단일 MD + parallel dispatch). 명시 슬래시 호출만 — 자동 발동 X.
+description: 가벼운 task 여러 개를 한 batch 로 처리합니다 (각 task 마다 Socratic 질문 2~3개 + 단일 .md 파일 + 보조 에이전트 병렬 호출). 명시 슬래시 호출만 — 자동 발동 X.
 ---
 
 # /fast-tasks
 
-사용자에게 task 5~15개 한꺼번에 할당된 경우의 **lightweight batch 경로**. 명시 `/fast-tasks` 호출 시에만 발동.
+task 5~15개가 한꺼번에 할당된 경우 쓰는 **가벼운 batch 경로** 입니다. 명시 `/fast-tasks` 호출 시에만 발동합니다.
 
 ## Other / 모호 응답 처리 (v2.1.1+)
 
@@ -61,24 +61,24 @@ docs/features/YYYY-MM-DD-fast-tasks-<batch-slug>/<batch-slug>-tasks.md
 - Independent: 3, 6, 8, 9, 10
 ```
 
-### Step 3 — Smart Parallel Dispatch
+### Step 3 — 보조 에이전트 병렬 호출
 
-메인이 §병렬화 계획 읽고:
+메인이 §병렬화 계획 을 읽고 다음과 같이 호출합니다:
 
-- **Chain**: 하나의 서브에이전트가 순서대로 (1 → 4 → 5)
-- **Independent**: 각각 별도 서브에이전트 동시 dispatch (Agent tool multi-call single message)
-- **종속 판단**: LLM 휴리스틱 (명세 + 영향 파일 기반). 사용자 명시 X.
+- **Chain (연결된 task)** — 하나의 보조 에이전트가 순서대로 처리합니다 (1 → 4 → 5).
+- **Independent (독립 task)** — 각각 별도 보조 에이전트로 동시 호출합니다 (Agent tool 한 메시지 안에 여러 호출).
+- **종속 판단** — LLM 휴리스틱 (명세 + 영향 파일 기반) 으로 결정합니다. 사용자가 명시할 필요 X.
 
-각 서브에이전트가 **commit 자체 수행** (per-task commit). 메인은 dispatch + 결과 종합만.
+각 보조 에이전트가 자체적으로 commit 까지 수행합니다 (task 단위 commit). 메인은 호출과 결과 종합만 합니다.
 
 ### Step 4 — 한 줄 요약
 
 ```
-✅ fast-tasks <batch-slug> 완료: N tasks / M commits / 0 blocked.
-   다음 단계: PR 또는 git merge 직접.
+✅ fast-tasks <batch-slug> 완료: N 개 task / M 개 commit / 멈춘 task 0 개.
+   다음 단계는 PR 또는 git merge 를 직접 진행해주세요.
 ```
 
-→ AskUserQuestion 게이트 X. 사용자가 직접 후속 처리.
+AskUserQuestion 게이트는 없습니다. 사용자가 직접 후속 처리합니다.
 
 ## Non-goals
 

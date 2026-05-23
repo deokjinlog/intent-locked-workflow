@@ -4,7 +4,7 @@ description: 현재 프로젝트 루트의 .worktrees/ 아래에 워크트리를
 
 # /worktree
 
-이 커맨드는 `setting-up-worktrees` skill을 invoke 합니다.
+이 슬래시는 `setting-up-worktrees` skill 을 호출합니다.
 
 ## 사용 예
 

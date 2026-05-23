@@ -1,8 +1,8 @@
 # /sync-html
 
-`<slug>` 인자 optional. 누락 시 `scripts/auto_flow.find_latest_slug(Path("docs/features"))` 호출 → 가장 최근 폴더 자동 선택. `--rebuild` 플래그 optional.
+`<slug>` 인자는 선택입니다. 누락 시 `scripts/auto_flow.find_latest_slug(Path("docs/features"))` 를 호출해서 가장 최근 폴더를 자동으로 선택합니다. `--rebuild` 플래그도 선택입니다.
 
-이 슬래시 명령은 **feature 디렉토리의 `.md` 내용을 `.html` 시각화 사본으로 sync** 합니다. 기존 `.html` 의 디자인 (레이아웃·색·여백) 은 보존 + 내용만 갱신. `--rebuild` 명시 시만 디자인 처음부터 재생성.
+이 슬래시는 feature 디렉토리의 `.md` 내용을 `.html` 시각화 사본으로 맞춥니다 (sync). 기존 `.html` 의 디자인 (레이아웃 / 색 / 여백) 은 보존하고 내용만 갱신합니다. `--rebuild` 를 명시했을 때만 디자인을 처음부터 재생성합니다.
 
 ## 동작
 

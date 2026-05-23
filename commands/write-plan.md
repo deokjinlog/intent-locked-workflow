@@ -4,12 +4,10 @@ description: <slug>-requirements.md + <slug>-tech-design.md를 기반으로 <slu
 
 # /write-plan
 
-이 커맨드는 `writing-plans` skill을 invoke 합니다.
+이 슬래시는 `writing-plans` skill 을 호출합니다.
 
-전제: 동일한 피처 폴더에 `<slug>-requirements.md` AND `<slug>-tech-design.md`가 모두 존재.
+전제: 동일한 피처 폴더에 `<slug>-requirements.md` 와 `<slug>-tech-design.md` 가 모두 있어야 합니다.
 
-산출물:
-- `docs/features/<날짜>-<slug>/<slug>-implementation-plan.md`
-- 메인 에이전트 검증 보고서 (대화로 출력, Phase 2 이후 활성)
+산출물은 `docs/features/<날짜>-<slug>/<slug>-implementation-plan.md` 와 메인 에이전트 검증 보고서 (대화로 출력) 입니다.
 
-다음 단계: `/execute-plan`
+다음 단계는 `/execute-plan` 입니다.

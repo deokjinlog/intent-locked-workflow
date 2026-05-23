@@ -1,8 +1,8 @@
 # /pretty-md
 
-`<slug>` 인자 optional. 누락 시 `scripts/auto_flow.find_latest_slug(Path("docs/features"))` 호출 → 가장 최근 폴더 자동 선택.
+`<slug>` 인자는 선택입니다. 누락 시 `scripts/auto_flow.find_latest_slug(Path("docs/features"))` 를 호출해서 가장 최근 폴더를 자동으로 선택합니다.
 
-이 슬래시 명령은 **feature 디렉토리의 모든 `<slug>-*.md` 에 format-only pass** 를 Sonnet subagent fire-and-forget 으로 dispatch 합니다. `.md` 자동 발동 경로 없음 — 사용자 명시 호출 (`/pretty-md`) 만 발동.
+이 슬래시는 feature 디렉토리의 모든 `<slug>-*.md` 파일에 **포맷만 정리하는 pass** 를 Sonnet 보조 에이전트로 백그라운드 호출합니다. `.md` 자동 발동 경로는 없습니다 — 사용자가 명시적으로 `/pretty-md` 를 호출했을 때만 발동합니다.
 
 ## 동작
 

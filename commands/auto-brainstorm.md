@@ -1,14 +1,13 @@
 ---
-description: auto-flow 진입 — Socratic clarifying Q + AI 자동 진행 + 4 단계 chain (brainstorm → design → write-plan → execute-plan) 끝까지. 사용자 입력은 clarifying Q 답변에만.
+description: 자동 흐름 진입 — Socratic 질문 (1~5개 적응) + AI 자동 진행 + 4 단계 자동 체인 (brainstorm → design → write-plan → execute-plan). 사용자 입력은 첫 질문 답변에만 받습니다.
 ---
 
 # /auto-brainstorm
 
-피처명을 인수로 주거나 (`/auto-brainstorm 사용자 잔액 출금`) 인수 없이 호출하면 한 줄 안내 후 진행. 이 커맨드는 `auto-brainstorming` skill 을 invoke 합니다.
+피처명을 인수로 주거나 (`/auto-brainstorm 사용자 잔액 출금`) 인수 없이 호출하면 한 줄 안내 후 진행합니다. 이 슬래시는 `auto-brainstorming` skill 을 호출합니다.
 
-산출물:
-- `docs/features/<오늘날짜>-<slug>/<slug>-requirements.md` (Socratic free-form, RAW)
+산출물은 `docs/features/<오늘날짜>-<slug>/<slug>-requirements.md` 입니다 (Socratic 자유 형식, RAW).
 
-다음 단계 (자동): `/auto-design` → `/auto-write-plan` → `/auto-execute-plan`
+다음 단계는 자동으로 이어집니다 — `/auto-design` → `/auto-write-plan` → `/auto-execute-plan`.
 
-mid-flight 인터럽트: 각 skill 전환 시 1줄 notice — `stop` / `멈춰` / `잠깐` 등 입력 시 cleanly exit.
+흐름 중간에 멈추고 싶으면 각 skill 전환 시 한 줄 안내가 노출되니, 그때 `stop` / `멈춰` / `잠깐` 같은 단어를 입력하면 깨끗하게 종료합니다.
