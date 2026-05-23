@@ -38,7 +38,7 @@ description: auto-flow 4단계 (마지막) — implementation-plan.md 읽기 + E
 ### Step 7 — auto-flow 완료 메시지
 
 ```
-ℹ️ ✅ auto-flow 완료. 변경 N commits. blocked tasks: <list 또는 "없음">.
+ℹ️ ✅ auto-flow 가 끝났습니다. 총 N commits 이고, blocked task 는 <list 또는 "없음"> 입니다.
 ```
 
 → 사용자가 catch + 다음 액션 (push / merge / discard) 직접 결정.
