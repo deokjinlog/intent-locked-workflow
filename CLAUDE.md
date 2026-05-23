@@ -548,8 +548,17 @@ js-super 의 사용자 노출 안내문 (메인이 사용자에게 직접 보여
 ### A-3: 한국어-영어 mix 최소
 
 - 사용자 시야에 보이는 표현은 한국어 우선.
-- `fire-and-forget` → `백그라운드 호출`, `dispatch` → `호출`, `byte-copy` → `원본 그대로 보존` 등 한국어 대체어 사용.
-- 도구 / 함수 / 파일 이름은 그대로 영어.
+- 시스템 용어도 가능한 한 한국어로 풀어쓴다:
+  - `fire-and-forget` → `백그라운드 호출`
+  - `dispatch` → `호출`
+  - `byte-copy` → `원본 그대로 보존`
+  - `wave-parallel` → `여러 작업 동시 진행`
+  - `override` → `자동 통과` 또는 `덮어쓰기` (맥락 따라)
+  - `subagent` → `보조 에이전트`
+  - `Anti-Pattern` → `안티 패턴` 또는 `금지 패턴`
+  - `Gate #N` → `승인 게이트` (번호 자체가 사용자에게 의미 없으면 번호 생략)
+- 도구 / 함수 / 파일 이름 (`AskUserQuestion`, `parse_interrupt`, `plan_byte_check` 등) 은 영어 그대로 유지.
+- 단순 git 용어 (`commit`, `push`, `merge`, `tag`) 도 영어 그대로 유지.
 
 ### A-4: 사용자 친화 보고
 
