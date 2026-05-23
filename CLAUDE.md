@@ -111,6 +111,20 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 
 > 위 섹션은 upstream Superpowers 기여 룰. 아래는 js-super 포크 내부 skill 설계 관련 메모.
 
+## ⚠️ 본 CLAUDE.md 의 적용 범위 (꼭 읽고 시작)
+
+이 파일은 **js-super 플러그인 자체를 개발하는 contributor 용 메모**입니다. 플러그인 사용자가 자기 프로젝트에서 js-super 를 쓸 때는 이 파일이 자동 로드되지 **않습니다**. 플러그인 cache 에 같이 들어가긴 하지만 사용자 환경의 CLAUDE.md 만 메인 시야에 들어와요. 그래서 여기에 룰을 박는다고 사용자 환경에 영향이 가는 게 아닙니다.
+
+사용자 환경에 영향 줄 룰 / 안내 / 톤 / 워크플로우 / 안티 패턴 catch — 이런 것들은 모두 사용자 환경에 실제로 전달되는 파일 (`skills/*/SKILL.md` skill 본문 / `commands/*.md` 슬래시 명령 설명 / `scripts/*.py` helper / `hooks/*.json`) 에 직접 박아주세요. 본 CLAUDE.md 에는 contributor 결합 메모 (atomic patch 범위 / 회귀 catch grep / skill 간 의존관계) 와 우리 자체 개발 시 메인 시야의 자기 참조 (톤 룰 / 보고 양식 / 안전성 원칙) 정도만 박습니다.
+
+### 미래 세션 catch 패턴
+
+"사용자가 이 안내문 어렵다고 catch 했으니 CLAUDE.md 에 톤 룰 박자" 같은 흐름 전에 — 그 룰이 가야 할 진짜 위치가 어디인지 한 번 더 생각해주세요. 보통 skill body 또는 commands 입니다.
+
+**회귀 사례**: v2.4 의 한국어 친화 톤 룰 (A-1~A-5) 을 CLAUDE.md 에만 박았는데 효과 미흡했음. 진짜 이유는 사용자 환경에 안 전달돼서. v2.4.2 에서 사용자 catch + 정정 (skill body + commands 의 실제 본문 정리로 전환).
+
+---
+
 ## generating-html ↔ change-history 결합
 
 `generating-html` skill은 "doc이 still 초안 단계인지" 판정하는 신호로 **`## 변경이력` footer가 비어 있는지 여부**를 직접 사용한다 (`skills/generating-html/SKILL.md` line 27/60/167/197). 즉:
