@@ -16,7 +16,7 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 `<slug>-requirements.md` 본문 분석. 항상 활성 4 (1,2,5,6) + 조건부 3 (3,4,7). 메인이 본문 컨텍스트로 판단 + 한 줄 announce:
 
 ```
-ℹ️ 활성 토픽: ... / 비활성: ... (이유: ...). [auto-flow — 사용자 응답 없이 진행]
+ℹ️ 활성 토픽은 ... 이고, 비활성 토픽은 ... 입니다 (이유: ...). [auto-flow 라 사용자 응답 없이 진행합니다]
 ```
 
 → 사용자 catch 가능 위치이지만 응답 wait X.
@@ -52,10 +52,10 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
    - C1 impact: ⚠️ 영향 N 컴포넌트
    - C2 ...
 
-ℹ️ Auto-proceeding to /write-plan. Type "stop" to abort.
+ℹ️ /write-plan 단계로 자동 넘어갑니다. 멈추려면 "stop" 입력해주세요.
 ```
 
-`parse_interrupt` 매치 시 exit + `ℹ️ OK. /write-plan 나중에 직접 실행.` 안내. 매치 X → `js-super:auto-writing-plans` invoke.
+`parse_interrupt` 매치 시 exit + `ℹ️ 알겠습니다. /write-plan 은 나중에 직접 실행해주세요.` 안내. 매치 X → `js-super:auto-writing-plans` invoke.
 
 ## Anti-Patterns
 

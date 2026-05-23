@@ -83,10 +83,10 @@ mkdir -p docs/features/$(date +%Y-%m-%d)-<slug>/
 ### Step 6 — Transition notice + auto-designing-direction invoke
 
 ```
-ℹ️ Auto-proceeding to /design. Type "stop" to abort.
+ℹ️ /design 단계로 자동 넘어갑니다. 멈추려면 "stop" 입력해주세요.
 ```
 
-다음 사용자 turn 의 입력에 `parse_interrupt` (scripts/auto_flow.py) 매치 시 cleanly exit + `ℹ️ OK. /design 나중에 직접 실행.` 안내. 매치 X 시 즉시 `js-super:auto-designing-direction` skill invoke.
+다음 사용자 turn 의 입력에 `parse_interrupt` (scripts/auto_flow.py) 매치 시 cleanly exit + `ℹ️ 알겠습니다. /design 은 나중에 직접 실행해주세요.` 안내. 매치 X 시 즉시 `js-super:auto-designing-direction` skill invoke.
 
 ## Anti-Patterns
 
