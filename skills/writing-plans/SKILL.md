@@ -393,12 +393,12 @@ This summarizes the corrected order (matches Checklist + Process Flow above):
    - Target: `<slug>-implementation-plan.md`
    - Upstream: `[<slug>-requirements.md, <slug>-tech-design.md]`
    - Procedure: consistency (FR + key decisions covered as tasks) + code impact (files/functions referenced exist or are explicitly created)
-   - **Tolerance**: if verifying-spec skill is not installed, skip and emit the notice ("ℹ️ verify-gate 미설치, Phase 2 이후 활성화 — 검증 없이 진행")
+   - **Tolerance**: if verifying-spec skill is not installed, skip and emit the notice ("ℹ️ verify-gate 가 설치되지 않았습니다. Phase 2 이후 활성화되며, 지금은 검증 없이 진행합니다.")
 
 2. **Run code-pretty** (after verifying-spec passes, before generating-html):
    - Target: `<slug>-implementation-plan.md` (only `**수정 후**`-labeled blocks)
    - Output: diff summary text (preserved for the approval gate)
-   - **Tolerance**: if code-pretty skill is not installed, skip and emit "ℹ️ code-pretty 미설치 — code blocks shown as-is"
+   - **Tolerance**: if code-pretty skill is not installed, skip and emit "ℹ️ code-pretty 가 설치되지 않았습니다. 코드 블록은 그대로 표시됩니다."
 
 3. **Run generating-html** (immediately after code-pretty):
    - Standard format-only pass (Sonnet subagent)
