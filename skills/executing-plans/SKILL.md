@@ -9,7 +9,7 @@ description: Use when you have a written implementation plan (<slug>-implementat
 
 Load plan, review critically, execute all tasks task-by-task, with strict per-edit discipline that captures before/after code and risk annotations into <slug>-implementation-plan.md change-history.
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+**Announce at start:** "executing-plans skill 로 본 계획을 task-by-task 실행하겠습니다."
 
 **Note (subagent path):** This skill is the **inline** execution mode. If subagents are available (Claude Code, Codex) AND the user wants to preserve main context for large features, the recommended subagent path is `js-super-sub-driven` (slim 2-stage: implementer + spec reviewer + main post-processing for RISK / 변경이력 / atomic commit). The original upstream `subagent-driven-development` (3-stage: + quality reviewer) is also available for compatibility but duplicates governance js-super already provides via `verifying-spec` + TDD + RISK + 변경이력.
 

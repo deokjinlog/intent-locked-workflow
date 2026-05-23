@@ -64,7 +64,7 @@ If you find yourself skipping ahead, stop and create the missing task.
 ```markdown
 # 개발방향: <feature-name>
 
-> **For agentic workers:** This document is the technical spec (architecture, components, data, interfaces, decisions, risks, test strategy). It is anchored to `<slug>-requirements.md` (the PRD) and consumed by `<slug>-implementation-plan.md` (step-by-step plan). NEXT STEP: invoke `writing-plans` skill (or run `/write-plan`) to produce `<slug>-implementation-plan.md` from this design. Do NOT include step-by-step implementation tasks here — those belong in the plan.
+> **다음 단계 안내**: 이 문서는 기술 설계서입니다 (아키텍처 / 컴포넌트 / 데이터 / 인터페이스 / 결정 / 위험 / 테스트 전략). `<slug>-requirements.md` (PRD) 를 기반으로 작성되고, 다음 단계 `<slug>-implementation-plan.md` (단계별 계획) 의 입력이 됩니다. 다음 단계로 `writing-plans` skill (또는 `/write-plan` 슬래시) 을 호출해서 구현 계획을 만드세요. 단계별 구현 task 는 여기 박지 마세요 — 그건 다음 산출물 (plan) 에 들어갑니다.
 
 ## 1. 아키텍처 개요 (diagram + prose)
 ## 2. 영향 받는 컴포넌트/파일
@@ -319,7 +319,7 @@ This summarizes the corrected order (matches Process detail steps 5-9 above, v1.
    - Target: `<slug>-tech-design.md`
    - Upstream: `[<slug>-requirements.md]`
    - Procedure: consistency (FR mapping coverage) + code impact (Grep for impacted files/callers, side-effect candidates)
-   - **Tolerance**: if verifying-spec skill is not installed, skip the call and emit a one-line notice ("ℹ️ verify-gate 미설치, Phase 2 이후 활성화 — 검증 없이 진행")
+   - **Tolerance**: if verifying-spec skill is not installed, skip the call and emit a one-line notice ("ℹ️ verify-gate 가 설치되지 않아 검증 없이 진행합니다.")
 
 2. **Invoke generating-html** (v1.1.15+ pre-review):
    - Format-only pass on the RAW doc BEFORE user sees it.

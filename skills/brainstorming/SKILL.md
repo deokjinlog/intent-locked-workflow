@@ -77,7 +77,7 @@ Save path: `docs/features/YYYY-MM-DD-<slug>/<slug>-requirements.md`
 ```markdown
 # 요구사항: <feature-name>
 
-> **For agentic workers:** This document is the PRD (planning-level only). NEXT STEP: invoke `designing-direction` skill (or run `/design`) to produce `<slug>-tech-design.md` from this document. Do NOT add tech decisions or implementation details here — those belong in the next two artifacts.
+> **다음 단계 안내**: 이 문서는 PRD (기획 단계 요구사항만) 입니다. 다음 단계로 `designing-direction` skill (또는 `/design` 슬래시) 을 호출해서 `<slug>-tech-design.md` (기술 설계서) 를 만드세요. 기술 결정이나 구현 세부사항은 여기 박지 마세요 — 그건 다음 두 산출물에 들어갑니다.
 
 ## 1. 배경/목적
 ## 2. 사용자 스토리 / 시나리오
@@ -246,9 +246,11 @@ When `AskUserQuestion` is unavailable, ask in prose:
 
 After change-history entry is logged, **automatically invoke** the `designing-direction` skill (or `js-super:designing-direction` depending on harness namespace). NO user gate here.
 
-Rationale: gate #8 (RAW 산출물 승인) already captured the user's intent to move forward. A separate "proceed to /design?" gate just adds friction — if the user wanted to stop, they'd have answered `no` at gate #8 or exited. Output a one-line notice `ℹ️ /design 단계로 자동 넘어갑니다 (v1.1.9 — 별도 게이트 제거됨). 멈추려면 "stop" 입력해주세요.` so the user has a chance to interrupt mid-transition if they really want to pause.
+Output a one-line notice `ℹ️ /design 단계로 자동 넘어갑니다. 멈추려면 "stop" 입력해주세요.` so the user has a chance to interrupt mid-transition if they really want to pause.
 
 If the user explicitly types "stop"/"멈춰"/"잠깐" after the notice, exit cleanly with `ℹ️ 알겠습니다. /design 은 나중에 직접 실행해주세요.` Otherwise auto-invoke.
+
+Rationale: gate #8 (RAW 산출물 승인) 에서 이미 사용자 의도가 다음 단계 진행으로 잡혔어요. 별도 "다음 단계 갈까요?" 게이트는 마찰만 더할 뿐이라 v1.1.9+ 에서 제거됐고, 대신 한 줄 안내로 사용자가 멈출 기회를 줍니다.
 
 ## Entry Router (v1.1.15+, FR-3)
 
@@ -333,7 +335,7 @@ When `AskUserQuestion` is unavailable:
 Parse intent in any language. Heuristics:
 - "1" / "PRD" / "구조화" / "기본" → PRD
 - "2" / "Socratic" / "소크라테스" / "자유" / "원본" → Socratic
-- Anything else → ask once more; if still unclear, default to PRD with a one-line note: "ℹ️ Ambiguous — defaulting to PRD."
+- Anything else → ask once more; if still unclear, default to PRD with a one-line note: "ℹ️ 잘 모르겠어서 PRD 로 기본 진행할게요."
 
 Once chosen, the mode is fixed for this brainstorming run.
 
@@ -428,7 +430,7 @@ Free-form upstream-superpowers-style dialogue. The doc is written as free-form p
 ```markdown
 # 요구사항: <feature-name>
 
-> **Mode:** Socratic (free-form). Downstream `designing-direction` reads this prose without expecting fixed PRD section IDs.
+> **모드**: Socratic (자유 형식). 다음 단계의 `designing-direction` 가 본 문서를 자유 형식 산문으로 읽습니다 (PRD 6 섹션 ID 강제 X).
 
 <sections that emerged from the dialogue, e.g.:>
 ## 배경

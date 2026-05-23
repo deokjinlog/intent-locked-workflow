@@ -139,7 +139,7 @@ Every implementation plan MUST start with:
 ```markdown
 # <Feature Name> 구현계획서
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **다음 단계 안내**: 이 계획을 task-by-task 로 실행하려면 `subagent-driven-development` (보조 에이전트 강제 모드, 권장) 또는 `executing-plans` (인라인 모드) 를 사용하세요. 각 step 은 체크박스 (`- [ ]`) 형식이라 진행 상황 추적이 가능합니다.
 
 **Goal:** <one sentence>
 
