@@ -313,6 +313,15 @@ grep -nE "git merge --strategy.*ours|--strategy.*theirs|push.*--force|cd .*MAIN_
 # expected: 0 (Anti-Pattern 표 안의 catch 라인만 허용)
 ```
 
+### v2.5.1+ 분기 — 재귀 머지 자동 시도는 안전
+
+v2.5.1 에서 `worktree-merge-back` Step 3 의 충돌 처리가 "모든 충돌 게이트" 에서 "git default 재귀 머지 자동 시도 + 실제 conflict marker 발생만 사용자 prose 안내" 로 완화됨. 이는 위 Anti-Pattern 표의 "자동 충돌 해결 도입 (`--strategy ours/theirs`)" 와 다름:
+
+- **허용 (v2.5.1+)**: git default 재귀 머지 (`git merge $MAIN_BRANCH`) — 3-way merge 알고리즘, 충돌 발생 시 conflict marker 만 남기고 자동 stop. ours/theirs 자동 적용 절대 X.
+- **여전히 차단**: `git merge --strategy ours` / `--strategy theirs` 자동 적용 — 한쪽 임의 채택 (데이터 손실).
+
+즉 v2.0.4+ 의 안전성 핵심 (`--strategy ours/theirs` 자동 차단) 은 그대로 유지. 사용자가 명시 `--strategy` 플래그 안 주면 위험 분기 진입 X.
+
 요약: 단일 skill body + slash command + 3 fixture + CLAUDE.md 결합 메모 변경은
 묶어서 처리. 5+ 파일 atomic patch.
 
@@ -674,3 +683,73 @@ grep -l "--no-ask" \
 ```
 
 요약: 8 skill body 분기 + 8 commands 안내 + CLAUDE.md 결합 메모 + 6 manifest bump = 23 파일 atomic patch.
+
+## worktree cleanup 자동화 결합 (v2.5.1+)
+
+v2.5.1+ 에서 `worktree-merge-back` 자동화 강화 + `worktree-remove` 신규 슬래시 명령 도입.
+
+### 적용 범위 (5 본문 + 6 manifest = 11 파일)
+
+- `skills/worktree-merge-back/SKILL.md` — Step 3 머지 대상 변경 (origin → 로컬) + 충돌 처리 완화 (재귀 머지 자동) + Step 4.5 신규 (env 동기화) + Step 5 보강
+- `commands/worktree-merge-back.md` — 안내 동기화
+- `skills/worktree-remove/SKILL.md` — 신규
+- `commands/worktree-remove.md` — 신규
+- `CLAUDE.md` — v2.0.4+ Anti-Pattern 표 v2.5.1+ 분기 + 본 섹션
+- 6 manifest — 버전 2.5.1
+
+### 핵심 룰
+
+- **D-1 머지 대상** = parent 워크트리의 로컬 브랜치 (origin 자동 fetch X). 사용자가 remote 동기화 원하면 진입 전 별도 `git fetch` + pull
+- **D-2 충돌 처리** = git default 재귀 머지 자동 + 실제 conflict marker 만 사용자 prose 안내. `--strategy ours/theirs` 자동 적용 절대 X (v2.0.4+ 안전성 유지)
+- **D-3 env 파일 동기화** = LLM 변경 의미 판단 + 각 파일 1줄 prose 보고 + 선택적 cp (`cp -P` symlink 보존). silent cp 절대 X
+- **D-4 worktree-remove** = 독립 슬래시 명령 (chain X). worktree-merge-back 의 Step 5 종료 메시지에 호출 안내만
+- **D-5 HARD-GATE worktree-only** = 두 skill 모두 유지 (main 워크트리 차단). 안전성 핵심
+- **D-6 worktree-remove 브랜치 삭제 default** = safe (-d). `--force` 옵트인 플래그 명시 시만 force (-D)
+
+### 회귀 catch grep (release 직전, `-F` fixed string 표준)
+
+```bash
+# D-1: origin 흡수 제거
+grep -nE "git fetch origin|origin/\\\$MAIN_BRANCH" skills/worktree-merge-back/SKILL.md
+# expected: 0 (Anti-Pattern catch 라인 / 안내 sentence 외)
+
+# D-2: 재귀 머지 표현 존재
+grep -F "git default 재귀 머지" skills/worktree-merge-back/SKILL.md
+# expected: >= 1
+
+# D-3: Step 4.5 env 동기화 존재
+grep -F "Step 4.5" skills/worktree-merge-back/SKILL.md
+# expected: >= 1
+
+# D-4: worktree-remove 신규 파일 존재
+test -f skills/worktree-remove/SKILL.md && test -f commands/worktree-remove.md
+echo $?
+# expected: 0
+
+# D-5: HARD-GATE 두 skill 모두
+grep -F "HARD-GATE — Worktree-Only" skills/worktree-merge-back/SKILL.md skills/worktree-remove/SKILL.md
+# expected: 각 1
+
+# D-6: default safe + --force 옵트인
+grep -nE "git branch -d|safe \(-d\)|--force" skills/worktree-remove/SKILL.md
+# expected: >= 2
+```
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| skill body 만 변경 | `/worktree-merge-back` 슬래시 명령 본문이 옛 표현 유지 → 사용자 혼란 |
+| commands 만 변경 | 메인이 skill body 따라 옛 글롭 적용 → env 동기화 누락 |
+| worktree-remove skill 만 신규 | 슬래시 명령 부재 → 사용자 진입 X |
+| HARD-GATE 한쪽 누락 | main 워크트리에서 호출 시 안전성 핵심 손상 |
+| `--force` 자동 적용 | 머지 안 된 브랜치 강제 삭제 → 데이터 손실 |
+
+### 영향 범위
+
+- 5 본문 + 6 manifest. 다른 skill / commands / scripts 영향 0
+- `setting-up-worktrees` / `finishing-a-development-branch` / `auto-*` / `og-*` 영향 0
+- `scripts/preflight.py` / `scripts/auto_flow.py` 영향 0
+- 자동 발동 경로 없음 — 명시 invoke 만
+
+요약: 5 본문 + 6 manifest + CLAUDE.md 결합 메모 변경은 atomic patch (Wave 0~5 + spec + [log] 묶음 commit).
