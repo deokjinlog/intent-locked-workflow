@@ -1,5 +1,5 @@
 ---
-description: "자유 텍스트 한 줄을 받아 글로벌 ~/.claude/skills/<slug>/SKILL.md 1 파일로 자동 생성하는 skill 빌더. frontmatter + 본문 instruction 까지 LLM 이 분해해서 한 턴에 생성."
+description: "사용자가 /new-skill 슬래시를 명시 호출했을 때만 발동. 자유 텍스트 한 줄을 받아 글로벌 ~/.claude/skills/<slug>/SKILL.md 1 파일로 자동 생성."
 argument-hint: "[<slug>] [--force] [--dry-run] <자유 텍스트 설명>"
 ---
 
@@ -65,7 +65,7 @@ description: "Use when the user saves a .md file — auto-format with prettier a
 
 step 폭주 catch 시 다음 한 줄을 사용자에게:
 
-> ⚠️ 입력 분해 결과 step {N} 개입니다. 너무 많을 수 있어요. 큰 작업이면 skill 두 개로 분리하는 것을 권합니다. 그대로 진행하시려면 `--force` 옵션 추가하거나 다시 호출해주세요.
+> ⚠️ 입력 분해 결과 step {N} 개입니다. 너무 많을 수 있어요. 큰 작업이면 skill 두 개로 분리하는 것을 권합니다. 그대로 진행하려면 같은 명령을 다시 호출해주세요. 분리하려면 자유 텍스트를 두 개로 나눠 두 번 호출해주세요.
 
 ### 3-3. 슬러그 자동 생성 (또는 명시 인자 사용)
 
@@ -167,9 +167,12 @@ frontmatter + 본문 instruction 미리보기만 메인 응답으로 출력:
 
 ### 5-3. 기존 파일 존재 + `--force` (백업 + 덮어쓰기)
 
-1. 기존 파일을 `~/.claude/skills/<slug>/SKILL.md.bak-<YYYYMMDDHHMMSS>` 로 백업 (Write 도구로 copy 하거나 별도 안내)
-2. 새 본문으로 덮어쓰기
-3. § 6 의 성공 보고 + 백업 경로 한 줄 추가
+다음 3 step 으로 진행 (단일 turn 흐름 — 사용자 응답 wait X):
+
+1. Read 도구로 기존 `~/.claude/skills/<slug>/SKILL.md` 읽기
+2. Write 도구로 `~/.claude/skills/<slug>/SKILL.md.bak-<YYYYMMDDHHMMSS>` 에 1번에서 읽은 내용 그대로 저장
+3. Write 도구로 `~/.claude/skills/<slug>/SKILL.md` 덮어쓰기 (새 본문)
+4. § 6 의 성공 보고 + 백업 경로 한 줄 추가
 
 ### 5-4. 신규 (정상 Write)
 
