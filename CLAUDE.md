@@ -893,3 +893,87 @@ test ! -d skills/new-skill && echo "OK: 빌더가 skill 로 안 박힘"
 - `using-superpowers` 본문 변경 X (글로벌 skill 자동 발동 메커니즘 그대로 활용)
 
 요약: 1 본문 (`commands/new-skill.md`) + CLAUDE.md 결합 메모 + 6 manifest = 8 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
+
+### v2.6.1+ 분기 — critical 3건 patch (release 직후 회수)
+
+v2.6.0 push 직후 메인 검토에서 catch 한 3 항목 patch. 의미 변경 아니라 본문 표현 정정 + 명시화.
+
+| Patch | 위치 | 변경 의도 |
+|---|---|---|
+| A description 좁히기 | `commands/new-skill.md` frontmatter description | "사용자가 `/new-skill` 슬래시를 명시 호출했을 때만 발동" 톤 우선 → 평상 대화 중 자동 발동 위험 catch 약화 (R-3 완화 — 100% 보장 X) |
+| B step 폭주 alert 정정 | `commands/new-skill.md` § 3-2 | `--force` 잘못 인용 제거. "다시 호출 / 두 번 호출" 2 옵션 명확 (R-4 완화) |
+| C `--force` 백업 instruction 명시화 | `commands/new-skill.md` § 5-3 | Read → Write bak → Write 덮어쓰기 3 step 명시 (R-5 완화 — Claude 도구 흐름 정확) |
+
+회귀 catch grep (release 직전 메인 dogfood):
+
+```bash
+# Patch A — 명시 호출 톤
+grep -F "명시 호출" commands/new-skill.md
+# expected: >= 1
+
+# Patch B — alert 메시지 정정 + --force 잘못 인용 제거
+grep -F "분리하려면 자유 텍스트를" commands/new-skill.md
+# expected: >= 1
+
+# Patch C — 3 step 명시
+grep -F "Read 도구로" commands/new-skill.md
+# expected: >= 1
+```
+
+## /remove-skill 빌더 결합 (v2.6.1+)
+
+v2.6.1+ 에서 `commands/remove-skill.md` 신규 추가 — 글로벌 `~/.claude/skills/<slug>/` 디렉토리를 안전하게 정리하는 instruction-only 슬래시 명령. `/new-skill` 짝 명령.
+
+### 적용 범위 (1 파일)
+
+- `commands/remove-skill.md` — 신규 (frontmatter + 6 섹션)
+- 다른 skill / commands / scripts / hooks 영향 0
+
+### 핵심 룰
+
+- **safe-rename default** — `~/.claude/skills/<slug>/` → `~/.claude/skills/<slug>.removed-<YYYYMMDDHHMMSS>/` rename. 회복 가능 (D-T1)
+- **`--force` 옵트인 hard-delete** — Bash 도구 `rm -rf` 호출. 회복 불가 (D-T2)
+- **`--dry-run` preview** — 변경 X, 메인 응답에 안내만 (D-T3)
+- **부재 시 abort + 글로벌 skill 목록 안내** (R-7 완화)
+- **timestamp `YYYYMMDDHHMMSS` 단위 unique** (R-8 완화)
+- **`/reload-plugins` 호출 안내** — rename 만으로 자동 발동 차단 보장 X 명확 (R-1 완화, 사용자 catch 영역)
+- **다른 위치 (`<plugin>/skills/` / 프로젝트 `.claude/skills/`) 검증 X** — 빌더 latency 보존, 사용자 catch 영역
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| safe-rename default 약화 (예: hard-delete default) | 사용자 실수 시 데이터 손실 (R-2 안전성 손상) |
+| `--force` 옵트인 X (default 적용) | 동일 — 데이터 손실 |
+| `/reload-plugins` 안내 누락 | 사용자 rename 후 자동 발동 차단 catch X (R-1 회귀) |
+| 부재 시 글로벌 skill 목록 안내 누락 | 사용자가 slug 오타 catch X (R-7 회귀) |
+| timestamp 형식 다른 값 (예: ISO 8601) | `.removed-*` 디렉토리 충돌 가능 (R-8 회귀) |
+
+### 회귀 catch grep
+
+```bash
+# 빌더 본문 존재
+test -f commands/remove-skill.md && echo "OK"
+# expected: OK
+
+# safe-rename default 명시
+grep -F "safe-rename" commands/remove-skill.md
+# expected: >= 1
+
+# /reload-plugins 안내 (R-1 완화)
+grep -F "/reload-plugins" commands/remove-skill.md
+# expected: >= 1
+
+# 결합 메모 본문 존재
+grep -cF "## /remove-skill 빌더 결합 (v2.6.1+)" CLAUDE.md
+# expected: >= 1
+```
+
+### 영향 범위
+
+- 1 파일 (`commands/remove-skill.md`) 신규. 다른 skill / commands / scripts / hooks / settings 영향 0
+- 사용자 환경 출력 — `~/.claude/skills/<slug>/` rename (또는 rm -rf). js-super 저장소 외
+- `/new-skill` 짝 명령 — 같이 사용하는 워크플로우 (만들기 → 정리하기)
+- `using-superpowers` 본문 변경 X
+
+요약: 1 본문 (`commands/remove-skill.md`) + `commands/new-skill.md` 3 patch + CLAUDE.md 결합 메모 (v2.6.1+ 분기 + 신규 섹션) + 6 manifest = 9 파일 atomic patch (Wave 0~3 + spec + [log] 묶음 commit).
