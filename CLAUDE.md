@@ -836,3 +836,60 @@ grep -cF "og-* mirror 룰 예외" CLAUDE.md
 - AskUserQuestion / `--no-ask` 플래그 / 8 skill body 결합 (v2.5+) — 영향 0
 
 요약: 10 본문 + 6 manifest = 16 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
+
+## /new-skill 빌더 결합 (v2.6.0+)
+
+v2.6.0+ 에서 `commands/new-skill.md` 신규 추가 — 자유 텍스트 한 줄을 받아 글로벌 `~/.claude/skills/<slug>/SKILL.md` 1 파일로 자동 생성하는 instruction-only 슬래시 명령. js-ralph 의 `/expand-plan` 패턴 답습 (instruction-only, bash 호출 없음, frontmatter + 본문 instruction).
+
+### 적용 범위 (1 파일)
+
+- `commands/new-skill.md` — 신규 (frontmatter + 8 섹션 본문)
+- 다른 skill / commands / scripts / hooks 영향 0
+
+### 핵심 룰
+
+- **instruction-only** — bash 호출 없음. Read / Edit / Write 도구만 사용. 메인 latency 거의 0
+- **글로벌 출력** — `~/.claude/skills/<slug>/SKILL.md` 로 Write. 사용자 PC 의 다른 플러그인 / 프로젝트 skill 디렉토리는 검증 대상 X (D-T4 — 빌더 latency 보존)
+- **LLM 분해 5 단계** — 트리거 조건 추출 / 수행 동작 추출 / 슬러그 자동 생성 / user-invocable 결정 / 충돌 검증 (D9)
+- **description 휴리스틱 3건 (D7)** — max 120자 auto trim (강제) + "Use when" 패턴 warn + 동사 시작 warn
+- **`--force` 시 백업** (`SKILL.md.bak-<timestamp>`) — 사용자 회수 가능 (D-T5)
+- **step 수 권장 1~7** — bite-size 룰 (D-T2). 8+ 시 alert
+- **비밀값 / 토큰 / 하드코딩 경로 catch 시 abort** — 자유 텍스트 그대로 박힘 방지 (R-4)
+- **빌더 자체는 command** — skill 로 만들면 자동 발동 사고 위험 (D8, META-BUILDER §5)
+
+### 회귀 패턴 (한쪽만 변경 시)
+
+| 누락 | 증상 |
+|---|---|
+| LLM 분해 5 단계 룰 약화 | 자유 텍스트 의도 미스 → 잘못된 trigger / 동작 박힘 (R-1) |
+| `--force` 백업 룰 약화 | 사용자 실수 시 복구 X (R-2 안전성 손상) |
+| description 휴리스틱 비활성 | 긴 description → 자동 발동 게이트 비용 ↑ / 오발동 (R-3) |
+| 비밀값 catch 비활성 | 사용자 PC 글로벌 skill 에 비밀값 누적 (R-4 보안) |
+| skill 로 빌더 변환 | 자동 발동 사고 ("대화 중에 안 부탁했는데도 발동") (D8 위반) |
+| 다른 위치 충돌 검증 추가 | 빌더 latency ↑ — D-T4 단순성 위배 |
+| 한국어 친화 톤 미적용 | js-super 톤 불일치 (v2.4+ A-1~A-5 위배) |
+
+### 회귀 catch grep
+
+```bash
+# 빌더 본문 존재 + 핵심 섹션 확인
+test -f commands/new-skill.md && grep -cF "## 3. LLM 분해 (5 단계)" commands/new-skill.md
+# expected: >= 1
+
+# 결합 메모 본문 존재
+grep -cF "## /new-skill 빌더 결합 (v2.6.0+)" CLAUDE.md
+# expected: >= 1
+
+# 안티 패턴 — skill 로 빌더 변환 catch (skills/ 안에 동일 이름 X)
+test ! -d skills/new-skill && echo "OK: 빌더가 skill 로 안 박힘"
+# expected: OK
+```
+
+### 영향 범위
+
+- 1 파일 (`commands/new-skill.md`) 신규. 다른 skill / commands / scripts / hooks / settings 영향 0
+- 사용자 환경 출력 (`~/.claude/skills/<slug>/SKILL.md`) — js-super 저장소 외, 사용자가 빌더 실행 시점에 Write
+- expand-plan.md (js-ralph) 패턴 답습 — js-super 저장소 안 다른 변경 X
+- `using-superpowers` 본문 변경 X (글로벌 skill 자동 발동 메커니즘 그대로 활용)
+
+요약: 1 본문 (`commands/new-skill.md`) + CLAUDE.md 결합 메모 + 6 manifest = 8 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
