@@ -1,8 +1,8 @@
-# Worktree Merge-Back (v2.0.5 slim)
+# Worktree Merge-Back (v2.5.1 — auto)
 
-워크트리에서 진행한 feature 작업을 parent (main) 워크트리로 안전하게 머지. "Merge down before merging up" 패턴 — 충돌 해결은 feature sandbox 에서만, parent 워크트리는 항상 깨끗.
+워크트리에서 진행한 feature 작업을 parent (main) 워크트리로 안전하게 머지 + 환경 파일 동기화. "Merge down before merging up" 패턴 — 충돌 해결은 feature sandbox 에서만, parent 워크트리는 항상 깨끗. v2.5.1+ 에서 자동화 강화 (parent 로컬 흡수 + 재귀 머지 자동 + env LLM 판단 + `/worktree-remove` 안내).
 
-**Announce at start:** "I'm using the worktree-merge-back skill — feature → parent merge with sandbox conflict resolution."
+**Announce at start:** "I'm using the worktree-merge-back skill — feature → parent merge with sandbox conflict resolution + env sync."
 
 ## Other / 모호 응답 처리 (v2.1.1+)
 
@@ -36,9 +36,11 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
 
 추가로 `git worktree list` 결과가 1개 (main 만 존재) 면 차단 — feature 워크트리 없음.
 
-## Process (v2.0.5+ — 게이트 1건 only, 나머지 자동 진행)
+## Process (v2.5.1+ — 게이트 0건, prose 보고 + 자동 진행)
 
-기존 v2.0.4 의 게이트 4건 (Step 1/3/4/5) 을 **Step 3 충돌 게이트 1건** 으로 슬림. 나머지는 default 권장사항 자동 진행 + 안전성 안내문.
+v2.0.5 의 Step 3 충돌 게이트 1건도 v2.5.1+ 에서 prose 안내로 대체 (재귀 머지 자동 + semantic conflict 만 prose 안내). 신규 Step 4.5 env 동기화 추가. 모든 단계 default 권장사항 자동 진행 + 안전성 안내문.
+
+`Other / 모호 응답 처리 (v2.1.1+)` 섹션은 Step 3 게이트가 없어진 v2.5.1+ 흐름에서는 비활성 — Step 4.5 env 동기화 prose 보고에 대한 사용자 자유 응답은 메인이 prose 로 follow-up.
 
 ### Step 1 — Working tree 검사 (자동, 게이트 X)
 
@@ -73,37 +75,37 @@ fi
 
 추론 실패 (multi-parent / nested) → 명시 차단 + 종료.
 
-### Step 3 — Parent 변경사항 흡수 (feature 쪽으로) — **유일한 게이트**
+### Step 3 — Parent 변경사항 흡수 (feature 쪽으로, 로컬 브랜치) — v2.5.1+ 자동화
+
+v2.5.1+ 에서 머지 대상이 `origin/$MAIN_BRANCH` (remote) 에서 **parent 워크트리의 로컬 브랜치** 로 변경됨. 사용자가 진입 전 remote 동기화가 필요했으면 별도 `git fetch` + pull 후 본 skill 호출.
 
 ```bash
-git fetch origin
-git merge origin/$MAIN_BRANCH
+git merge $MAIN_BRANCH
 ```
 
-**충돌 발생 시** — AskUserQuestion 게이트 (안전성, 데이터 손실 위험):
+**충돌 처리** — git default 재귀 머지 (3-way merge) 자동 시도. 결과는 두 가지:
 
-```python
-AskUserQuestion(questions=[{
-    "question": "Step 3 머지 충돌이 발생했습니다. 충돌 파일을 수동 해결 후 commit 하셨나요?",
-    "header": "충돌 처리",
-    "options": [
-        {"label": "수동 해결 + commit 완료", "description": "Step 4 진행"},
-        {"label": "abort", "description": "git merge --abort 실행 후 skill 종료"}
-    ],
-    "multiSelect": False
-}])
+1. **자동 머지 성공** (대부분 케이스) → Step 4 자동 진행
+2. **실제 conflict marker 발생** (semantic conflict) → 사용자 prose 안내:
+
+```
+❌ Step 3 머지 충돌이 발생했습니다.
+   다음 파일에 conflict marker 가 남았습니다: <FILES>
+   1. 충돌 파일을 수동 편집 + `git add <FILES>` + `git commit` 후
+   2. 본 skill 을 재호출해주세요.
+   (또는 `git merge --abort` 로 되돌리기)
 ```
 
-자동 해결 시도 **절대 X** (한쪽 임의 채택 = 데이터 손실 위험). 이 게이트가 본 skill 의 유일한 AskUserQuestion 호출.
+**절대 X**: `git merge --strategy ours` / `--strategy theirs` 자동 적용 (한쪽 임의 채택 = 데이터 손실). 사용자가 명시 `--strategy` 플래그 안 주면 위험 분기 진입 X.
 
-충돌 없으면 → Step 4 자동 진행.
+자동 머지 성공 시 → Step 4 자동 진행.
 
 ### Step 4 — Parent 워크트리로 머지 (자동, default 기본 메시지)
 
 Pre-check (R3 mitigation):
 
 ```bash
-git merge-base --is-ancestor origin/$MAIN_BRANCH HEAD || {
+git merge-base --is-ancestor $MAIN_BRANCH HEAD || {
   echo "❌ Step 3 흡수 가정 깨짐. Step 3 중간 다른 작업 발생 의심. 수동 머지 필요."
   exit 1
 }
@@ -119,31 +121,81 @@ git -C "$MAIN_PATH" merge --no-ff "$FEATURE_BRANCH" \
 
 → 게이트 없음. 메시지 customize 원하면 사용자가 직접 `git -C <main-path> commit --amend` 로 수정 (Step 4 이후 자유).
 
+### Step 4.5 — 환경 파일 동기화 (v2.5.1+ 신규)
+
+`.env*` 같은 gitignored 로컬 빌드 환경 파일은 git 머지로 못 옮김. 워크트리에서 새 키 추가했으면 parent 가 stale 상태로 남음. Step 4.5 에서 LLM 변경 의미 판단 후 선택적 cp.
+
+**대상 파일 감지**:
+
+- 후보 글롭: `.env*`, `local.properties`, `gradle-wrapper.properties`, 기타 플랫폼별 로컬 빌드 환경 파일 (`setting-up-worktrees` 의 LLM-judged Procedure 와 동일 룰)
+- 실제 비교 대상: 워크트리의 git untracked 또는 modified 파일 중 parent 와 내용이 다른 것
+
+```bash
+# 후보 catch (예시)
+CANDIDATES=$(git status --porcelain | grep -E "^\?\?|^.M" | awk '{print $2}' | grep -E "\.env|local\.properties|gradle-wrapper")
+```
+
+**LLM 판단** — 각 후보 파일의 변경 의미를 1줄 prose 보고:
+
+- 새 환경 변수 키 추가 → cp 권장
+- 임시 디버그 값 / 주석만 변경 → 제외 권장
+- 기존 키의 값 변경 → 보고 + 사용자 선택 보존 (silent cp 절대 X)
+
+prose 보고 예시:
+
+```
+🔧 환경 파일 동기화 검토:
+   - .env.local: 새 키 NEW_API_KEY 추가됨 → parent 로 cp 권장
+   - .env.development: DEBUG_MODE=true 임시 변경 → 제외 권장
+   - local.properties: sdk.dir 경로 변경됨 → 사용자 확인 필요 (둘 다 유효 경로)
+```
+
+**cp 실행** — `cp -p` (permission 보존) + `-P` (symlink 보존) default:
+
+```bash
+cp -pP "$CURRENT_PATH/$FILE" "$MAIN_PATH/$FILE"
+```
+
+symlink 발견 시 별도 prose 보고 후 사용자 선택. silent cp 절대 X.
+
+**절대 X**: 사용자 응답 없이 묵시적 cp 실행 (R-2 — LLM 오판 시 secret 노출). 모든 cp 결정은 prose 출력 후 사용자가 stop 가능 시점 보장.
+
+대상 파일 0건이면 한 줄 안내 후 Step 5 자동 진행:
+
+```
+🔧 동기화할 환경 파일 없음. Step 5 진행.
+```
+
 ### Step 5 — 사후 처리 안내 (자동, 게이트 X)
 
-사후 처리 (worktree 제거 / 브랜치 삭제 / push) 는 모두 default no — skill 이 자동 실행하지 않음. 종료 메시지 한 줄로 안내:
+사후 처리 (worktree 제거 / 브랜치 삭제 / remote push) 는 모두 default no — skill 이 자동 실행하지 않음. 종료 메시지 한 줄로 안내:
 
 ```
 ✅ Merge 완료. Feature 워크트리: <FEATURE_BRANCH> → <MAIN_BRANCH> (commit: <merge-sha>)
 
 다음 단계 (필요 시 직접 실행):
-  - 워크트리 제거: git worktree remove <feature-path>
-  - 브랜치 삭제:   git branch -d <feature-branch>
-  - Remote push:   git -C <main-path> push origin <main-branch>
+  - 워크트리 + 브랜치 정리: /worktree-remove   (v2.5.1+ 신규 슬래시 명령, 단독 호출)
+  - Remote 동기화:         git -C <main-path> pull   (parent 로컬 stale 시)
+  - Remote push:           git -C <main-path> push origin <main-branch>
 ```
 
-→ 사용자가 의도에 맞게 직접 선택. `setting-up-worktrees` 의 "keep worktree" / "discard" 자유 결정 보존.
+→ 사용자가 의도에 맞게 직접 선택. `setting-up-worktrees` 의 "keep worktree" / "discard" 자유 결정 보존. v2.5.1+ 에서 `/worktree-remove` 가 워크트리 + 브랜치 정리를 한 슬래시로 묶음 (chain X — 명시 호출만).
 
 ## Anti-Patterns
 
 | Wrong | Right |
 |---|---|
 | main 워크트리에서 invoke 후 그대로 진행 | HARD-GATE 차단. feature worktree 안에서만. |
-| Step 3 충돌을 자동 해결 (ours / theirs) | NEVER. 사용자 판단. (유일한 게이트) |
+| Step 3 충돌을 자동 해결 (`--strategy ours` / `theirs`) | NEVER. 안전성 핵심. 사용자가 명시 플래그 안 주면 자동 적용 X. (v2.0.4+ 룰 v2.5.1+ 유지) |
+| Step 3 git default 재귀 머지 자체를 차단 | OK. git default 3-way merge 는 안전 (conflict marker 발생 시 자동 stop). v2.5.1+ 자동화 정상 흐름. |
+| Step 3 머지 대상에 `origin/$MAIN_BRANCH` 사용 | v2.5.1+ 에서 로컬 `$MAIN_BRANCH` 로 변경. remote 동기화 원하면 사용자가 진입 전 별도 `git fetch` + pull. |
 | Step 4 를 Step 3 흡수 검증 없이 진행 | merge-base 검증 필수 (R3). |
+| Step 4.5 env cp 를 silent 로 실행 | NEVER. 각 파일 1줄 prose 보고 + 사용자 stop 가능 시점 보장 (R-2). |
+| Step 4.5 env LLM 판단 없이 모든 파일 자동 cp | 변경 의미 판단 후 선택적 cp. 임시 디버그 / 주석만 변경 제외. |
+| Step 4.5 symlink 를 `cp -L` (dereference) 로 따라가서 복사 | `-P` (보존) default. symlink 발견 시 별도 prose 보고. |
 | `git push --force` 사용 | NEVER. push 자체를 skill 이 하지 않음 (Step 5 안내만). |
 | `cd <parent-path> && git ...` 패턴 | `git -C <parent-path>` 사용. cwd 변경 X. |
-| 사후 처리 자동 실행 (worktree 제거 / push) | 모두 안내만. 사용자가 직접. |
+| 사후 처리 자동 실행 (worktree 제거 / push) | 모두 안내만. 사용자가 직접 (v2.5.1+ 에서 `/worktree-remove` 단독 슬래시 명령). |
 | Step 1 dirty 시 임의 commit 메시지 생성 | NEVER. 즉시 종료 + 사용자 재호출 안내. |
 
 ## Why v2.0.5 slim
@@ -151,6 +203,20 @@ git -C "$MAIN_PATH" merge --no-ff "$FEATURE_BRANCH" \
 - v2.0.4 출시 후 사용자 dogfood 결과 게이트 4건이 마찰 → 1건으로 축소.
 - 안전성 핵심 (Step 3 충돌 자동 해결 금지) 은 게이트 유지.
 - 나머지 3건은 "default 권장사항" 자동 진행 + 안내문 (사용자 의도 보존 + 마찰 ↓).
+
+## Why v2.5.1
+
+- v2.0.5 출시 후 사용자 dogfood 결과 4 가지 마찰 catch:
+  1. 머지 대상이 `origin/$MAIN_BRANCH` (remote) 라 parent 워크트리의 로컬 commit 이 머지 흐름에 자동 반영 X — 사용자가 별도 push 필요.
+  2. Step 3 충돌 게이트가 모든 충돌에서 사용자 응답 wait — 자동화 의도와 충돌.
+  3. `.env*` 같은 gitignored 환경 파일이 git 머지로 못 옮겨짐 — 새 키 추가하면 parent stale.
+  4. 사후 처리 안내가 한 줄 안내만 — 사용자가 매번 `git worktree remove` + `git branch -d` 수동 입력.
+- 해결:
+  1. **D-1** Step 3 머지 대상 `origin/$MAIN_BRANCH` → 로컬 `$MAIN_BRANCH` (사용자 의도 그대로)
+  2. **D-2** 충돌 처리 = git default 재귀 머지 자동 + semantic conflict 만 prose 안내 (자동화 ↑, 안전성 유지)
+  3. **D-3** Step 4.5 신규 — env 파일 LLM 판단 + 선택적 cp (silent 절대 X)
+  4. **D-4** `/worktree-remove` 신규 슬래시 명령 (독립, chain X) — Step 5 안내에 호출 추가
+- 안전성 핵심 (HARD-GATE worktree-only / `--strategy ours/theirs` 자동 차단) 모두 유지.
 
 ## Related Skills
 
