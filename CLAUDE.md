@@ -753,3 +753,86 @@ grep -nE "git branch -d|safe \(-d\)|--force" skills/worktree-remove/SKILL.md
 - 자동 발동 경로 없음 — 명시 invoke 만
 
 요약: 5 본문 + 6 manifest + CLAUDE.md 결합 메모 변경은 atomic patch (Wave 0~5 + spec + [log] 묶음 commit).
+
+## TaskCreate Checklist ↔ 9 skill body 결합 (v2.5.2+)
+
+v2.5.2+ 에서 9 skill body 에 `## Checklist` 섹션 신규 추가 — `using-superpowers` 의 "Has checklist? yes → TaskCreate per item" 분기 자동 발동 보장. 사용자 시야에 진행 상황 자동 노출.
+
+### 적용 범위 (9 skill)
+
+- **auto-* 4** — `auto-brainstorming`, `auto-designing-direction`, `auto-writing-plans`, `auto-executing-plans` (auto-flow 4 단계)
+- **반쪽 페어 1** — `executing-plans` (writing-plans 페어, v2.5.1 까지 비대칭이었음)
+- **cascading 1** — `change-propagation` (impact matrix → 갱신 cascading)
+- **subagent 1** — `js-super-sub-driven` (Wave 별 진행)
+- **og-* 2** — `og-writing-plans`, `og-executing-plans` (upstream mirror 룰 예외 — 아래 참조)
+
+### 비적용 영역 (의도적 제외)
+
+- `og-brainstorming` — 이미 Checklist 보유 (upstream 그대로 답습)
+- 워크트리 2 (`worktree-merge-back`, `worktree-remove`) — Step 수 적음, 사용자 catch 우선순위 낮음
+- `api-auto-testing`, `finishing-a-development-branch`, `subagent-driven-development` — 사용자 의사 미선택
+- 1회성 / 메타 skill — `change-history`, `risk-annotation`, `generating-html`, `verifying-spec`, `using-superpowers`, `writing-skills` 등 (task 분해 의미 없음)
+
+### og-* mirror 룰 예외 (D-4)
+
+`og-writing-plans` / `og-executing-plans` 는 upstream `superpowers` 5.0.7 mirror — 본문 변경 절대 X 가 기본 룰 (다른 CLAUDE.md 섹션에 명시). v2.5.2+ 가 이 룰의 명시 예외:
+
+- **Checklist 섹션 한정 추가만 예외**. 다른 영역 (Procedure / Anti-Patterns / Related Skills / 영어 식별자 / 본문 룰) 변경 절대 X
+- 향후 upstream 본문 변경 시 mirror 답습은 그대로. Checklist 섹션만 js-super 고유 추가로 유지
+
+### 핵심 룰
+
+- Checklist 항목 형식: `- [ ] Step N — <헤더 + 짧은 요약 1줄>`
+- 위치: 각 skill body 의 `## Process` 섹션 직전
+- 신규 분기 / 신규 도구 호출 패턴 도입 X — 기존 Process 흐름을 사용자 시야에 노출하는 단순 패턴
+- 메인 행동 변화: TaskCreate 도구 호출이 자동 발동 (v2.5.1 dogfood 세션에서 사용자 catch — "왜 태스크 생성안하고 했어?")
+
+### Process Step 헤더 ↔ Checklist 항목 동기화 룰 (R-4)
+
+각 skill body 의 Process Step 헤더 변경 시 Checklist 항목 본문도 동기화 필수. drift 회귀 catch grep:
+
+```bash
+# 각 skill 의 Step 헤더 ↔ Checklist 항목 매치
+for f in skills/auto-brainstorming/SKILL.md skills/auto-designing-direction/SKILL.md \
+         skills/auto-writing-plans/SKILL.md skills/auto-executing-plans/SKILL.md \
+         skills/executing-plans/SKILL.md skills/change-propagation/SKILL.md \
+         skills/js-super-sub-driven/SKILL.md skills/og-writing-plans/SKILL.md \
+         skills/og-executing-plans/SKILL.md; do
+  echo "=== $f ==="
+  echo "-- Process Step 헤더 --"
+  grep -E "^### Step [0-9]" "$f"
+  echo "-- Checklist 항목 --"
+  grep -E "^- \[ \] Step [0-9]" "$f"
+done
+```
+
+### 회귀 catch grep (release 직전, `-F` fixed string)
+
+```bash
+# 9 skill 모두 ## Checklist 섹션 존재
+grep -lF "## Checklist" \
+  skills/auto-brainstorming/SKILL.md \
+  skills/auto-designing-direction/SKILL.md \
+  skills/auto-writing-plans/SKILL.md \
+  skills/auto-executing-plans/SKILL.md \
+  skills/executing-plans/SKILL.md \
+  skills/change-propagation/SKILL.md \
+  skills/js-super-sub-driven/SKILL.md \
+  skills/og-writing-plans/SKILL.md \
+  skills/og-executing-plans/SKILL.md
+# expected: 9 lines (모두 매치)
+
+# og-* mirror 룰 예외 명시
+grep -cF "og-* mirror 룰 예외" CLAUDE.md
+# expected: >= 1
+```
+
+### 영향 범위
+
+- 10 본문 (9 skill + CLAUDE.md) + 6 manifest. 다른 skill / commands / scripts 영향 0
+- `using-superpowers` 본문 변경 X (기존 "Has checklist?" 분기 답습)
+- TaskCreate 도구 schema 변경 X (호출 빈도만 ↑)
+- Notification 매처 / repeat-alert.sh — 변경 X
+- AskUserQuestion / `--no-ask` 플래그 / 8 skill body 결합 (v2.5+) — 영향 0
+
+요약: 10 본문 + 6 manifest = 16 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
