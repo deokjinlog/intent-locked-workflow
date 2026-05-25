@@ -21,6 +21,14 @@ Load plan, review critically, execute all tasks task-by-task, with strict per-ed
 
 > **Task 이름 가이드 (FR-6 / v1.1.15+):** 구현계획서 §1 의 각 Task 이름은 사용자 친화 한국어로 작성되어야 합니다 (TaskCreate 시 그대로 노출). 내부 용어 (`Invoke ... skill`, `Gate #N`, 영어 식별자) 는 TaskCreate 이름에 노출하지 말 것. CLAUDE.md TaskCreate 명칭 룰 참조.
 
+## Checklist
+
+- [ ] Step 1 — Plan 로드 + 비판적 검토 (Plan Loading)
+- [ ] Step 2 — Code Edit Discipline (git-fast / memory-fallback 모드 선택)
+- [ ] Per-edit — risk-annotation 3-checklist + RISK comments
+- [ ] Per-task — consolidated [코드-수정] entry 1개 (change-history)
+- [ ] Step 3 — Complete Development (테스트 + finishing-a-development-branch)
+
 ## Plan Loading
 
 ### Step 1: Load and Review Plan

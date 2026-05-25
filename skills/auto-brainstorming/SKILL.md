@@ -58,6 +58,16 @@ critical 7 케이스 (파일 삭제 / `git push --force` / DB migration / mass c
 
 내부 escalation 경로 (BLOCKED 자가복구 실패 / critical 7 재질문 / Other 모호 응답 재질문) 에서도 `AskUserQuestion` 호출 **0 보장**. clarifying Q 자체는 그대로 prose 유지.
 
+## Checklist
+
+- [ ] Step 1 — Slug 추론 + 폴더 생성
+- [ ] Step 2 — Socratic clarifying questions (1~5개 적응)
+- [ ] Step 3 — AI 자동 approach 선택
+- [ ] Step 4 — 산출물 자동 작성 (<slug>-requirements.md)
+- [ ] Step 4.5 — generating-html fire-and-forget dispatch + 5초 race delay
+- [ ] Step 5 — change-history 자동 (첫 [요구사항-수정] entry)
+- [ ] Step 6 — Transition notice + auto-designing-direction invoke
+
 ## Process
 
 ### Step 1 — Slug 추론 + 폴더 생성

@@ -127,6 +127,14 @@ Task tool (general-purpose):
   prompt: <implementer-prompt 템플릿, {{MODEL}} 치환됨>
 ```
 
+## Checklist
+
+- [ ] Entry Guard (preflight + user-gate)
+- [ ] Plan Analysis & Wave Build (DAG 추론, 1회)
+- [ ] Wave 별 Sequence (W-1 시작 안내 → W-2 pair-parallel dispatch → W-3 재dispatch → W-4 finalization → W-5 완료 요약 → W-6 failure isolation)
+- [ ] End-of-Run Consolidator (§1~§5)
+- [ ] finishing-a-development-branch invoke
+
 ## Per-wave Sequence (v1.1.14+)
 
 For each wave (in order 1..N):

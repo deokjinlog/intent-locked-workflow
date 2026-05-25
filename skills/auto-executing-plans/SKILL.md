@@ -5,6 +5,16 @@ description: auto-flow 4단계 (마지막) — implementation-plan.md 읽기 + E
 
 # Auto Executing Plans → wave-parallel + finishing (auto)
 
+## Checklist
+
+- [ ] Step 1 — Entry Guard (preflight.subagent_task_entry_check)
+- [ ] Step 2 — slug 추론
+- [ ] Step 3 — wave-parallel subagent 강제 invoke (Gate 자동 통과)
+- [ ] Step 4 — failure isolation (D6)
+- [ ] Step 5 — End-of-run consolidator 자동
+- [ ] Step 6 — finishing-a-development-branch 자동 호출
+- [ ] Step 7 — auto-flow 완료 메시지
+
 ## Process
 
 ### Step 1 — Entry Guard

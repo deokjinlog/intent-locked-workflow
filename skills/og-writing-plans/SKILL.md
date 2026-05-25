@@ -24,6 +24,16 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+## Checklist
+
+- [ ] Scope Check — 작업 범위 확인
+- [ ] File Structure — plan 파일 경로 결정
+- [ ] Bite-Sized Task Granularity — task 단위 분해
+- [ ] Plan Document Header — frontmatter + 메타
+- [ ] Task Structure — 각 task 본문 (Files / TDD steps / Risk / 코드 블록)
+- [ ] Self-Review — plan 자체 검토 (no placeholders)
+- [ ] Execution Handoff — og-executing-plans 안내
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.

@@ -5,6 +5,17 @@ description: auto-flow 2단계 — requirements.md 읽기 + adaptive 7-topic 자
 
 # Auto Designing Direction → <slug>-tech-design.md (auto)
 
+## Checklist
+
+- [ ] Step 1 — 입력 확인 + slug 추론
+- [ ] Step 2 — adaptive 7-topic 자동 판정
+- [ ] Step 3 — AI 자동 design decision (각 활성 토픽)
+- [ ] Step 4 — 산출물 자동 작성 (<slug>-tech-design.md)
+- [ ] Step 4.5 — generating-html fire-and-forget dispatch + 5초 race delay
+- [ ] Step 5 — verifying-spec 자동 실행 (4축 보고서)
+- [ ] Step 6 — change-history 자동 ([개발방향-수정] entry)
+- [ ] Step 7 — Transition notice + auto-writing-plans invoke
+
 ## Process
 
 ### Step 1 — 입력 확인 + slug 추론

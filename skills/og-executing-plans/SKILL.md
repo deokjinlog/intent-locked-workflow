@@ -18,6 +18,12 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill (untouched-upstream, no og- variant needed — js-super did not modify it).
 
+## Checklist
+
+- [ ] Step 1 — Plan 로드 + 비판적 검토 (Load and Review Plan)
+- [ ] Step 2 — Task 실행 (Execute Tasks)
+- [ ] Step 3 — Complete Development
+
 ## The Process
 
 ### Step 1: Load and Review Plan

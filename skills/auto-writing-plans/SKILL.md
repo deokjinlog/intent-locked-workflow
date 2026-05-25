@@ -5,6 +5,18 @@ description: auto-flow 3단계 — requirements + tech-design 읽기 + AI 자동
 
 # Auto Writing Plans → <slug>-implementation-plan.md (auto)
 
+## Checklist
+
+- [ ] Step 1 — 입력 확인 + slug 추론
+- [ ] Step 2 — AI 자동 task 분해 (TDD bite-sized + Model hint 자동)
+- [ ] Step 3 — §2 위험 코드 지점 자동 (R-N → file:line 매핑)
+- [ ] Step 4 — 산출물 자동 작성 (<slug>-implementation-plan.md)
+- [ ] Step 4.5 — plan_byte_check 자동 (3회 재시도)
+- [ ] Step 4.6 — generating-html fire-and-forget dispatch + 5초 race delay
+- [ ] Step 5 — verifying-spec 자동 실행 (4축 보고서)
+- [ ] Step 6 — change-history 자동 ([구현계획서-수정] entry)
+- [ ] Step 7 — Transition notice + auto-executing-plans invoke
+
 ## Process
 
 ### Step 1 — 입력 확인 + slug 추론
