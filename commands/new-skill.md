@@ -1,11 +1,11 @@
 ---
-description: "사용자가 /new-skill 슬래시를 명시 호출했을 때만 발동. 자유 텍스트 한 줄을 받아 글로벌 ~/.claude/skills/<slug>/SKILL.md 1 파일로 자동 생성."
-argument-hint: "[<slug>] [--force] [--dry-run] <자유 텍스트 설명>"
+description: "사용자가 /new-skill 슬래시를 명시 호출했을 때만 발동. 자유 텍스트 한 줄을 받아 프로젝트 또는 전체(글로벌) <slug>/SKILL.md 1 파일로 자동 생성 + js-super 출처 표식 부여."
+argument-hint: "[<slug>] [--project|--global] [--force] [--dry-run] <자유 텍스트 설명>"
 ---
 
-# New Skill 빌더 (글로벌 skill 자동 생성)
+# New Skill 빌더 (프로젝트 / 전체 skill 자동 생성)
 
-사용자가 `$ARGUMENTS` 로 던진 자유 텍스트를 읽고, **자동 발동 트리거** + **수행 동작** 으로 분해한 뒤 `~/.claude/skills/<slug>/SKILL.md` 1 파일을 생성합니다. skill hot-reload 덕분에 저장 즉시 사용 가능합니다.
+사용자가 `$ARGUMENTS` 로 던진 자유 텍스트를 읽고, **자동 발동 트리거** + **수행 동작** 으로 분해한 뒤 `<SKILL_BASE>/<slug>/SKILL.md` 1 파일을 생성합니다. `<SKILL_BASE>` 는 스코프에 따라 결정됩니다 — 프로젝트면 `<project-root>/.claude/skills`, 전체면 `~/.claude/skills`. 생성 시 js-super 출처 표식 파일 `.js-super-skill.json` 도 함께 작성합니다. skill hot-reload 덕분에 저장 즉시 사용 가능합니다.
 
 ## 1. 사전 검증
 
@@ -23,19 +23,34 @@ argument-hint: "[<slug>] [--force] [--dry-run] <자유 텍스트 설명>"
 `$ARGUMENTS` 토큰 분해:
 
 - **첫 토큰이 kebab-case (소문자 + 하이픈) 패턴 매치** → slug 인자로 인식
+- **`--project` / `--global` 토큰** → 스코프 플래그로 인식 (위치 무관). 둘 다 주면 안내 후 중단
 - **`--force` / `--dry-run` 토큰** → 플래그로 인식 (위치 무관)
 - **나머지 (보통 따옴표 묶음)** → 자유 텍스트
 
 예시:
 ```
-/new-skill auto-format-md --dry-run "사용자가 .md 파일 저장하면 prettier 로 포맷"
+/new-skill auto-format-md --project --dry-run "사용자가 .md 파일 저장하면 prettier 로 포맷"
 ↓
 - slug 인자: "auto-format-md"
+- 스코프: project
 - 플래그: ["--dry-run"]
 - 자유 텍스트: "사용자가 .md 파일 저장하면 prettier 로 포맷"
 ```
 
-`/new-skill --dry-run "..."` 처럼 slug 인자가 없으면 § 3 단계에서 자동 생성.
+`/new-skill --dry-run "..."` 처럼 slug 인자가 없으면 § 3 단계에서 자동 생성. 스코프 플래그가 없으면 § 2.5 단계에서 사용자에게 묻습니다.
+
+## 2.5. 스코프 결정 (프로젝트 / 전체)
+
+생성 위치를 결정합니다. 조용한 기본값은 없습니다.
+
+- **`--project` 명시** → `<SKILL_BASE>` = `<project-root>/.claude/skills` (현재 작업 디렉토리 기준 `.claude/skills`). 없으면 생성.
+- **`--global` 명시** → `<SKILL_BASE>` = `~/.claude/skills`
+- **둘 다 없음** → 다음 한 줄로 사용자에게 묻고 응답을 기다립니다 (응답 전 진행 X):
+
+  > 이 skill 을 어디에 만들까요? **프로젝트** (현재 프로젝트의 `.claude/skills/`, 이 프로젝트에서만 발동) 또는 **전체** (`~/.claude/skills/`, 모든 프로젝트에서 발동) 중 골라주세요.
+
+  사용자 응답("프로젝트" / "전체" / "project" / "global" 등)을 파싱해서 `<SKILL_BASE>` 확정. 모호하면 1회 재질문 후 확정.
+- 확정된 스코프 값(`project` / `global`)은 § 5 의 마커 파일 `scope` 필드에 기록합니다.
 
 ## 3. LLM 분해 (5 단계)
 
@@ -85,13 +100,13 @@ step 폭주 catch 시 다음 한 줄을 사용자에게:
 
 ### 3-5. 충돌 검증
 
-`~/.claude/skills/<slug>/SKILL.md` 존재 여부 LS 도구로 확인:
+`<SKILL_BASE>/<slug>/SKILL.md` 존재 여부 LS 도구로 확인 (`<SKILL_BASE>` 는 § 2.5 에서 확정한 스코프 기준):
 
 - 존재 X → § 5 의 Write 분기로
 - 존재 Y + `--force` 명시 X → § 5 의 abort 분기로
 - 존재 Y + `--force` 명시 Y → § 5 의 백업 + 덮어쓰기 분기로
 
-**다른 위치 충돌은 검증 X**. js-super 의 `<plugin>/skills/` cache 또는 프로젝트 `.claude/skills/` 의 동일 이름 skill 은 사용자 catch 영역 (§ 6 보고 메시지 끝에 안내).
+**확정한 스코프 위치만 검증 X**. 반대 스코프(`--project` 면 글로벌, `--global` 이면 프로젝트) 또는 js-super 의 `<plugin>/skills/` cache 의 동일 이름 skill 은 사용자 catch 영역 (§ 6 보고 메시지 끝에 안내).
 
 ## 4. 사전 검증 룰 (Write 직전)
 
@@ -137,6 +152,20 @@ abort 메시지:
 
 ## 5. Write 또는 Dry-run 분기
 
+아래 모든 분기에서 `<SKILL_BASE>` 는 § 2.5 에서 확정한 스코프 기준 경로입니다 (`<project-root>/.claude/skills` 또는 `~/.claude/skills`).
+
+### 마커 파일 규약 (출처 표식)
+
+신규 / 덮어쓰기 Write 시 SKILL.md 와 같은 디렉토리에 `.js-super-skill.json` 을 함께 작성합니다. 이 파일이 `/list-skills` 조회·`/remove-skill` 삭제의 js-super 출처 판별 기준입니다.
+
+```json
+{
+  "generated_by": "js-super:new-skill",
+  "scope": "<project|global>",
+  "created": "<YYYY-MM-DDTHH:MM:SS>"
+}
+```
+
 ### 5-1. `--dry-run` 명시 시 (Write X)
 
 frontmatter + 본문 instruction 미리보기만 메인 응답으로 출력:
@@ -144,7 +173,8 @@ frontmatter + 본문 instruction 미리보기만 메인 응답으로 출력:
 ```
 ℹ️ /<slug> skill 미리보기 (--dry-run, Write X)
 
-저장 위치 (예정): ~/.claude/skills/<slug>/SKILL.md
+저장 위치 (예정): <SKILL_BASE>/<slug>/SKILL.md  (스코프: <project|global>)
+함께 생성: <SKILL_BASE>/<slug>/.js-super-skill.json (출처 표식)
 
 ---
 <frontmatter + 본문 preview>
@@ -156,52 +186,55 @@ frontmatter + 본문 instruction 미리보기만 메인 응답으로 출력:
 ### 5-2. 기존 파일 존재 + `--force` 없음 (abort)
 
 ```
-⚠️ ~/.claude/skills/<slug>/SKILL.md 가 이미 존재합니다.
+⚠️ <SKILL_BASE>/<slug>/SKILL.md 가 이미 존재합니다.
 
-기존 파일: ~/.claude/skills/<slug>/SKILL.md (<크기> KB, 마지막 수정 <timestamp>)
+기존 파일: <SKILL_BASE>/<slug>/SKILL.md (<크기> KB, 마지막 수정 <timestamp>)
 
-덮어쓰려면: /new-skill <slug> --force "..." (백업 후 덮어쓰기)
+덮어쓰려면: /new-skill <slug> <스코프 플래그> --force "..." (백업 후 덮어쓰기)
 다른 이름으로: /new-skill <다른-slug> "..."
 미리보기만: /new-skill <slug> --dry-run "..."
 ```
 
 ### 5-3. 기존 파일 존재 + `--force` (백업 + 덮어쓰기)
 
-다음 3 step 으로 진행 (단일 turn 흐름 — 사용자 응답 wait X):
+다음 step 으로 진행 (단일 turn 흐름 — 사용자 응답 wait X):
 
-1. Read 도구로 기존 `~/.claude/skills/<slug>/SKILL.md` 읽기
-2. Write 도구로 `~/.claude/skills/<slug>/SKILL.md.bak-<YYYYMMDDHHMMSS>` 에 1번에서 읽은 내용 그대로 저장
-3. Write 도구로 `~/.claude/skills/<slug>/SKILL.md` 덮어쓰기 (새 본문)
-4. § 6 의 성공 보고 + 백업 경로 한 줄 추가
+1. Read 도구로 기존 `<SKILL_BASE>/<slug>/SKILL.md` 읽기
+2. Write 도구로 `<SKILL_BASE>/<slug>/SKILL.md.bak-<YYYYMMDDHHMMSS>` 에 1번에서 읽은 내용 그대로 저장
+3. Write 도구로 `<SKILL_BASE>/<slug>/SKILL.md` 덮어쓰기 (새 본문)
+4. Write 도구로 `<SKILL_BASE>/<slug>/.js-super-skill.json` 작성 (위 마커 규약, 이미 있으면 갱신)
+5. § 6 의 성공 보고 + 백업 경로 한 줄 추가
 
 ### 5-4. 신규 (정상 Write)
 
-1. `~/.claude/skills/<slug>/` 디렉토리 생성 (필요 시)
-2. `~/.claude/skills/<slug>/SKILL.md` 작성
-3. § 6 의 성공 보고
+1. `<SKILL_BASE>/<slug>/` 디렉토리 생성 (필요 시)
+2. `<SKILL_BASE>/<slug>/SKILL.md` 작성
+3. Write 도구로 `<SKILL_BASE>/<slug>/.js-super-skill.json` 작성 (위 마커 규약)
+4. § 6 의 성공 보고
 
 ## 6. 보고 양식
 
 ### 6-1. 성공
 
 ```
-✅ /<slug> skill 이 ~/.claude/skills/<slug>/SKILL.md 에 생성되었습니다.
+✅ /<slug> skill 이 <SKILL_BASE>/<slug>/SKILL.md 에 생성되었습니다. (스코프: <project|global>)
 
 발동 조건: <description 1줄 요약>
+출처 표식: <SKILL_BASE>/<slug>/.js-super-skill.json (이 파일이 있어야 /list-skills 조회·/remove-skill 삭제 대상이 됩니다)
 
 저장 즉시 사용 가능합니다 (skill hot-reload).
 - 사용자 명시 호출: /<slug>
-- 자동 발동: Claude 가 description 매칭 판단 시
+- 자동 발동: Claude 가 description 매칭 판단 시 (프로젝트 스코프면 이 프로젝트에서만)
 ```
 
 (`--force` 시 추가 한 줄):
 ```
-백업: ~/.claude/skills/<slug>/SKILL.md.bak-<timestamp>
+백업: <SKILL_BASE>/<slug>/SKILL.md.bak-<timestamp>
 ```
 
-(다른 위치 동일 이름 가능성 한 줄 — 글로벌 외 위치는 검증 X 이므로):
+(다른 위치 동일 이름 가능성 한 줄 — 확정 스코프 외 위치는 검증 X 이므로):
 ```
-ℹ️ 다른 플러그인 또는 프로젝트 `.claude/skills/<slug>/` 에 동일 이름 skill 이 있으면 자동 발동 우선순위가 모호해질 수 있습니다. 명시 호출 (`/<slug>`) 은 글로벌 우선.
+ℹ️ 반대 스코프 또는 다른 플러그인의 동일 이름 skill 이 있으면 자동 발동 우선순위가 모호해질 수 있습니다. 명시 호출 (`/<slug>`) 시 프로젝트 skill 이 글로벌보다 우선.
 ```
 
 ### 6-2. Dry-run — § 5-1 그대로
@@ -215,7 +248,8 @@ frontmatter + 본문 instruction 미리보기만 메인 응답으로 출력:
 - **description 1줄 이상 (개행 / 120자+ 그대로) 금지** — 자동 trim 룰 (§ 4-1) 우선 적용
 - **동일 이름 skill 덮어쓰기 (`--force` 없이) 금지** — § 5-2 abort
 - **skill 본문에 비밀값 / 토큰 / 하드코딩 경로 박기 금지** — § 4-4 catch
-- **다른 위치 (`<plugin>/skills/` / `.claude/skills/`) 자동 검증 금지** — D-T4 단순성. 사용자 catch 영역
+- **확정 스코프 외 위치 (반대 스코프 / `<plugin>/skills/`) 자동 검증 금지** — D-T4 단순성. 사용자 catch 영역
+- **출처 표식(`.js-super-skill.json`) 작성 누락 금지** — 신규/덮어쓰기 Write 시 반드시 함께 작성 (§ 5). 누락 시 `/list-skills` 조회·`/remove-skill` 삭제 대상에서 빠짐
 - **`commands/<slug>.md` 자동 생성 금지** — commands 는 hot-reload 미지원이라 빌더 의미 ↓ (META-BUILDER §2). skill 만 생성
 
 ## 8. dogfood 시나리오 (사용자 검증용)
