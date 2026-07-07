@@ -89,7 +89,6 @@ If you are not sure whether your integration loads the bootstrap at session star
 
 Skills are not prose — they are code that shapes agent behavior. If you modify skill content:
 
-- Use `superpowers:writing-skills` to develop and test changes
 - Run adversarial pressure testing across multiple sessions
 - Show before/after eval results in your PR
 - Do not modify carefully-tuned content (Red Flags tables, rationalization lists, "human partner" language) without evidence the change is an improvement
@@ -634,7 +633,7 @@ v2.5.2+ 에서 9 skill body 에 `## Checklist` 섹션 신규 추가 — `using-s
 - `og-brainstorming` — 이미 Checklist 보유 (upstream 그대로 답습)
 - 워크트리 2 (`worktree-merge-back`, `worktree-remove`) — Step 수 적음, 사용자 catch 우선순위 낮음
 - `api-auto-testing`, `finishing-a-development-branch`, `subagent-driven-development` — 사용자 의사 미선택
-- 1회성 / 메타 skill — `change-history`, `risk-annotation`, `generating-html`, `verifying-spec`, `using-superpowers`, `writing-skills` 등 (task 분해 의미 없음)
+- 1회성 / 메타 skill — `change-history`, `risk-annotation`, `generating-html`, `verifying-spec`, `using-superpowers` 등 (task 분해 의미 없음)
 
 ### og-* mirror 룰 예외 (D-4)
 

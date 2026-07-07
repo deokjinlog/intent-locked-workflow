@@ -641,13 +641,13 @@ flowchart LR
 
 **검증·거버넌스 (4)** — verifying-spec / verification-before-completion / change-propagation / risk-annotation
 
-**서브에이전트 (3)** — dj-superkit-sub-driven / subagent-driven-development / dispatching-parallel-agents
+**서브에이전트 (2)** — dj-superkit-sub-driven / subagent-driven-development
 
 **테스트·디버깅 (2)** — test-driven-development / systematic-debugging
 
 **리뷰·마무리 (3)** — requesting-code-review / receiving-code-review / finishing-a-development-branch
 
-**메타 (2)** — using-superpowers / writing-skills
+**메타 (1)** — using-superpowers
 
 </details>
 
