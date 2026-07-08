@@ -85,15 +85,15 @@ flowchart LR
     classDef gate fill:#dc2626,stroke:#fca5a5,color:#fff,stroke-width:2px
     classDef out fill:#15803d,stroke:#86efac,color:#fff,stroke-width:2px
 
-    A["/brainstorm"]:::cmd --> B[요구사항.md]:::doc
+    A["/brainstorming"]:::cmd --> B[요구사항.md]:::doc
     B --> G1{확인 게이트}:::gate
     G1 --> C["/tech-design"]:::cmd
     C --> D[기술설계.md]:::doc
     D --> G2{확인 게이트}:::gate
-    G2 --> E["/write-plan"]:::cmd
+    G2 --> E["/writing-plans"]:::cmd
     E --> F[구현계획.md]:::doc
     F --> G3{확인 게이트}:::gate
-    G3 --> H["/execute-plan"]:::cmd
+    G3 --> H["/executing-plans"]:::cmd
     H --> I[코드 + 변경이력 + 위험 주석]:::out
 ```
 
@@ -117,10 +117,10 @@ flowchart LR
 **2. 첫 피처 만들기** — 슬래시 4 줄로:
 
 ```
-/brainstorm 사용자 잔액 출금 기능
+/brainstorming 사용자 잔액 출금 기능
 /tech-design
-/write-plan
-/execute-plan
+/writing-plans
+/executing-plans
 ```
 
 각 단계가 끝날 때마다 AI 가 한 번씩 물어봐요. 답변에 따라 다음 단계로.
@@ -276,7 +276,7 @@ flowchart LR
 
 ## 매일 쓰는 도구들
 
-### `/auto-brainstorm` — 한 번에 끝까지 자동 진행
+### `/auto-brainstorming` — 한 번에 끝까지 자동 진행
 
 > *"4 단계마다 매번 게이트 답하기 무거워요. clarifying Q 만 답하면 끝까지 갔으면 좋겠어요"*
 
@@ -289,7 +289,7 @@ flowchart LR
 **이렇게 쓰세요**
 
 ```
-/auto-brainstorm 사용자 잔액 출금 기능
+/auto-brainstorming 사용자 잔액 출금 기능
 ```
 
 → AI 가 Socratic clarifying Q 1~5 개를 물어봐요.
@@ -382,10 +382,10 @@ flowchart TD
 
 | 명령 | 결과물 | 한 줄 설명 |
 |---|---|---|
-| `/brainstorm <주제>` | `요구사항.md` | PRD 또는 자유 모드 선택 → 요구사항 정리 |
+| `/brainstorming <주제>` | `요구사항.md` | PRD 또는 자유 모드 선택 → 요구사항 정리 |
 | `/tech-design` | `기술설계.md` | 요구사항 기반 기술 설계 |
-| `/write-plan` | `구현계획.md` | task 단위로 잘게 쪼개기 |
-| `/execute-plan` | 코드 + 흔적 | 인라인 / 서브에이전트 모드 선택 |
+| `/writing-plans` | `구현계획.md` | task 단위로 잘게 쪼개기 |
+| `/executing-plans` | 코드 + 흔적 | 인라인 / 서브에이전트 모드 선택 |
 | `/auto-*` 4 개 | 같은 결과물 | 게이트 최소화 자동 진행 |
 | `/og-*` 3 개 | upstream 흐름 | dj-superkit 확장이 무겁다 싶을 때 |
 | `/fast-tasks` | task list | PRD 없이 잡일 묶어 처리 |
@@ -437,7 +437,7 @@ AI 는 항상 이 `.md` 만 봐요.
 ```python
 # RISK(side-effect):
 #   외부 결제 호출
-#   by: /write-plan T5
+#   by: /writing-plans T5
 ```
 
 3 가지 카테고리로 자동 부착.
@@ -463,9 +463,9 @@ PR 리뷰 시 `grep "# RISK"` 한 줄로 catch.
 
 ```
 docs/features/2026-05-23-잔액-출금/
-├── 잔액-출금-requirements.md      ← /brainstorm
+├── 잔액-출금-requirements.md      ← /brainstorming
 ├── 잔액-출금-tech-design.md       ← /tech-design
-└── 잔액-출금-implementation-plan.md ← /write-plan
+└── 잔액-출금-implementation-plan.md ← /writing-plans
 ```
 
 - 날짜는 **생성일** — 작업이 길어져도 폴더명은 안 바뀝니다
@@ -501,7 +501,7 @@ docs/features/2026-05-23-잔액-출금/
 <br/>
 
 ```python
-# RISK(side-effect): 외부 결제 호출, 멱등성 미보장 — by /write-plan T5
+# RISK(side-effect): 외부 결제 호출, 멱등성 미보장 — by /writing-plans T5
 def charge(user_id, amount):
     return payment_gateway.charge(user_id, amount)
 
@@ -622,7 +622,7 @@ flowchart LR
 
 - **일꾼 (haiku, 빠르고 저렴)** — 계획 그대로 실행. 의심스러우면 즉시 멈춥니다.
 - **조정자 (sonnet, 똑똑)** — 일꾼이 막히면 자동으로 복구 시도. 그래도 안 되면 사람에게.
-- 일반 `/execute-plan` (인라인) 은 영향 0 — 평소처럼 LLM 자율로 진행됩니다.
+- 일반 `/executing-plans` (인라인) 은 영향 0 — 평소처럼 LLM 자율로 진행됩니다.
 
 </details>
 
@@ -682,7 +682,7 @@ flowchart LR
 
 og-* 흐름은 변경이력 / 위험 주석 / `.html` 사본 / 검증 게이트가 **안 따라옵니다**. upstream 그대로의 가벼운 흐름.
 
-> **중요** — `/og-*` 와 정식 `/brainstorm` ... 흐름을 **한 피처 안에서 섞지 마세요**. 산출물 경로가 다르게 분리됩니다.
+> **중요** — `/og-*` 와 정식 `/brainstorming` ... 흐름을 **한 피처 안에서 섞지 마세요**. 산출물 경로가 다르게 분리됩니다.
 
 <br/>
 

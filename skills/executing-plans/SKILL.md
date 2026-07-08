@@ -49,7 +49,7 @@ This skill picks ONE mode at task start based on git availability + plan policy:
 | **memory-fallback** | git unavailable, OR plan frontmatter `commit_policy: single` / `none` | in-memory Read snapshot before every edit |
 
 <HARD-GATE>
-At task start (ONCE per `/execute-plan` run), run the mode check:
+At task start (ONCE per `/executing-plans` run), run the mode check:
 
 1. **Run mode-check helper (v1.1.14+ deterministic)**:
 
@@ -85,7 +85,7 @@ sys.exit(0 if result.ok else 1)
    - Both checks point to git-fast → mode = git-fast
    - Either check forces memory-fallback → mode = memory-fallback. If frontmatter requested `single`/`none` (i.e., user-intentional), proceed silently. If git was unavailable but frontmatter said `per-task`, WARN the user once: "⚠️ git repo 미초기화 → memory-fallback 모드로 진행합니다. 변경 전 코드 보존 비용이 큽니다."
 
-The chosen mode applies to the whole `/execute-plan` run. Do not switch mid-run.
+The chosen mode applies to the whole `/executing-plans` run. Do not switch mid-run.
 
 **Why a frontmatter field, not prose detection:** Prose scanning ("commit 생략" 등 키워드 매칭) is unreliable. The frontmatter field is unambiguous, machine-checkable, and lives next to the plan it governs.
 </HARD-GATE>

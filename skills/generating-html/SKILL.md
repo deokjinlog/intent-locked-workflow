@@ -24,7 +24,7 @@ Specifically, generating-html MUST NOT run on:
 - Any user-requested edit AFTER the first change-history entry exists (partial revisions, fixes, additions)
 - Any `change-history` entry append (the `## 변경이력` footer is the audit trail — never reformat it)
 - Any `change-propagation` cascade
-- Any in-task code-edit logging during `/execute-plan`
+- Any in-task code-edit logging during `/executing-plans`
 
 If you are unsure whether this is still in the "initial creation phase" — STOP. Look for an existing `## 변경이력` footer with one or more entries. If ANY entry exists, this is NOT initial creation. Skip this skill.
 </HARD-GATE>
@@ -35,7 +35,7 @@ If you are unsure whether this is still in the "initial creation phase" — STOP
 |---|---|
 | `brainstorming` just wrote RAW `<slug>-requirements.md`, about to show to user for review, no entries yet | User asked to update FR-3 wording in an already-live requirements.md (one with change-history entries) |
 | `tech-design` just wrote RAW `<slug>-tech-design.md`, about to show combined approval gate (doc + verify report), no entries yet | `change-propagation` is cascading edits across MDs |
-| `writing-plans` just completed verifying-spec + code-pretty on `<slug>-implementation-plan.md`, about to show prettified plan to user, no `## 변경이력` entries yet | `change-history` is appending a `[코드-수정]` entry mid-`/execute-plan` |
+| `writing-plans` just completed verifying-spec + code-pretty on `<slug>-implementation-plan.md`, about to show prettified plan to user, no `## 변경이력` entries yet | `change-history` is appending a `[코드-수정]` entry mid-`/executing-plans` |
 | `brainstorming` or `tech-design` user requested fix on draft — revise RAW, re-fire generating-html (per-draft loop) | First change-history entry has been logged — doc is now "live", do NOT fire |
 | `writing-plans` user requested revision, plan re-written, verifying-spec re-ran, code-pretty re-ran — fire generating-html again | (none for pre-review timing — generating-html now fires before every user review) |
 

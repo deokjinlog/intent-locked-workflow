@@ -10,7 +10,7 @@ description: upstream superpowers 원본 writing-plans 를 호출합니다. /og-
 
 ## dj-superkit 정식 흐름과의 차이
 
-| 항목 | `/write-plan` (dj-superkit 확장) | `/og-write-plan` (upstream 원본) |
+| 항목 | `/writing-plans` (dj-superkit 확장) | `/og-write-plan` (upstream 원본) |
 |---|---|---|
 | 입력 | `<slug>-requirements.md` + `<slug>-tech-design.md` (3-MD 분리) | upstream design doc 1개 |
 | 산출물 경로 | `docs/features/<date>-<slug>/<slug>-implementation-plan.md` | `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` |

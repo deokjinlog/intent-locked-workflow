@@ -1,6 +1,6 @@
 ---
 name: risk-annotation
-description: Use during /execute-plan whenever code is created or modified, and during verifying-spec when surveying existing code. Applies a 3-item self-checklist to detect side-effect/breaking/race risks, then attaches standardized "# ⚠️ RISK(category): reason — by context" comments to risky lines and records the placement in change-history.
+description: Use during /executing-plans whenever code is created or modified, and during verifying-spec when surveying existing code. Applies a 3-item self-checklist to detect side-effect/breaking/race risks, then attaches standardized "# ⚠️ RISK(category): reason — by context" comments to risky lines and records the placement in change-history.
 ---
 
 # Risk Annotation (Auto-Attach RISK Comments)
@@ -125,7 +125,7 @@ The "propose first" rule for existing-code annotations distinguishes survey from
 
 ## Acceptance
 
-After every code edit during /execute-plan:
+After every code edit during /executing-plans:
 1. The 3-checklist was run (silently, no user prompt)
 2. If any trigger fired, the matching `# ⚠️ RISK(...)` comment was inserted above the relevant line
 3. The change-history `[코드-수정]` entry has its `위험 카테고리` field set (or omitted if 0/3 triggered)

@@ -30,7 +30,7 @@ Notification 훅 (`elicitation_dialog` 매처) 이 알람을 발화하려면 도
 Take <slug>-requirements.md + <slug>-tech-design.md as inputs and produce a comprehensive implementation plan (`<slug>-implementation-plan.md`) decomposed into bite-sized TDD tasks. The upstream superpowers patterns (exact file paths, complete code in every step, TDD cycle, no placeholders, frequent commits) are inherited as-is. dj-superkit extends them with: change-history footer, structured "위험 코드 지점" section, and a verification gate after save.
 
 <HARD-GATE>
-Both <slug>-requirements.md and <slug>-tech-design.md must exist in the current feature folder. If either is missing, instruct the user to run /brainstorm or /tech-design first.
+Both <slug>-requirements.md and <slug>-tech-design.md must exist in the current feature folder. If either is missing, instruct the user to run /brainstorming or /tech-design first.
 </HARD-GATE>
 
 ### 예외 — `--no-ask` 플래그 (v2.5+)
@@ -110,15 +110,15 @@ commit_policy: per-task
 
 ### Frontmatter — `commit_policy` field
 
-This field tells `/execute-plan` how to commit work between tasks. It is the **single source of truth** for commit policy; do NOT scatter "no commits" or "single commit" instructions in prose.
+This field tells `/executing-plans` how to commit work between tasks. It is the **single source of truth** for commit policy; do NOT scatter "no commits" or "single commit" instructions in prose.
 
 | Value | Meaning | executing-plans mode |
 |---|---|---|
 | `per-task` (**default**) | One atomic commit per task (code + plan log together) | git-fast (if git repo present) |
-| `single` | All tasks accumulated into ONE commit at the very end of `/execute-plan` | memory-fallback |
-| `none` | No commits during `/execute-plan` (user commits manually after) | memory-fallback |
+| `single` | All tasks accumulated into ONE commit at the very end of `/executing-plans` | memory-fallback |
+| `none` | No commits during `/executing-plans` (user commits manually after) | memory-fallback |
 
-If the field is omitted, `/execute-plan` assumes `per-task`.
+If the field is omitted, `/executing-plans` assumes `per-task`.
 
 If the user explicitly requests `single` or `none` during planning, set the field accordingly and warn them once: "이 모드에서는 변경이력의 변경 전 코드를 in-memory로 보관해야 해서 토큰 비용이 큽니다. 가능하면 per-task를 권장합니다."
 
@@ -284,7 +284,7 @@ digraph plan_flow {
     "Invoke code-pretty\n(pre-review, Sonnet subagent)" [shape=box];
     "Invoke generating-html\n(pre-review, Sonnet subagent)" [shape=box];
     "Invoke change-history" [shape=box];
-    "Hand off to /execute-plan" [shape=doublecircle];
+    "Hand off to /executing-plans" [shape=doublecircle];
 
     "Read <slug>-requirements.md + <slug>-tech-design.md" -> "File structure outline";
     "File structure outline" -> "Decompose into bite-sized tasks";
@@ -295,7 +295,7 @@ digraph plan_flow {
     "Invoke generating-html\n(pre-review, Sonnet subagent)" -> "Single combined approval gate\n(plan + verify report + code-pretty diff)";
     "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Self-review (internal)" [label="no — re-verify + re-prettify"];
     "Single combined approval gate\n(plan + verify report + code-pretty diff)" -> "Invoke change-history" [label="approve"];
-    "Invoke change-history" -> "Hand off to /execute-plan";
+    "Invoke change-history" -> "Hand off to /executing-plans";
 }
 ```
 

@@ -41,7 +41,7 @@ HTTPS 를 쓰면 `git remote add origin https://github.com/실제아이디/dj-su
 /plugin install dj-superkit@dj-superkit
 ```
 
-세션 재시작 후 `/brainstorm 테스트` 로 동작 확인.
+세션 재시작 후 `/brainstorming 테스트` 로 동작 확인.
 
 ## 3. 알아둘 것 (기술 부채)
 

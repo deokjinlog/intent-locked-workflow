@@ -12,7 +12,7 @@ dj-superkit 워크플로에 최적화된 서브에이전트 경로. 1인 개발 
 ## Why this shape
 
 - **Spec reviewer 유지** — fresh-context 서브에이전트가 implementer 보고서 없이 코드를 line-by-line 대조하는 시각은 메인이 못 가짐. 메인의 `verifying-spec`은 plan ↔ 상위 산출물 정합성, 이 서브에이전트는 plan task ↔ 실제 코드 정합성 — 결이 다름.
-- **별도 quality reviewer 없음** — `/tech-design` / `/write-plan` 끝의 `verifying-spec`(코드 임팩트 분석) + bite-sized TDD(테스트 통과 baseline) + `risk-annotation` 3-checklist + 변경이력으로 대체. 1인 개발이 `finishing-a-development-branch`에서 최종 검수.
+- **별도 quality reviewer 없음** — `/tech-design` / `/writing-plans` 끝의 `verifying-spec`(코드 임팩트 분석) + bite-sized TDD(테스트 통과 baseline) + `risk-annotation` 3-checklist + 변경이력으로 대체. 1인 개발이 `finishing-a-development-branch`에서 최종 검수.
 - **메인 후처리 (RISK + 변경이력 + atomic commit)** — wave 끝마다 task 순서대로 자동.
 - **Wave-parallel (v1.1.14+)** — task 간 file-disjoint + deps-free 보장 시 동시 dispatch. final code reviewer 없는 dj-superkit 의 cross-task 의존이 약한 점을 활용.
 
@@ -48,7 +48,7 @@ digraph when_to_use {
 - 메인이 wave 끝에서 commit 하므로 git 필수 (v1.1.14+ implementer 가 commit 안 함)
 - `commit_policy: single` / `none` 인 plan과는 호환 안 됨 → 이 경우 `executing-plans` (memory-fallback) 사용
 
-`/execute-plan` 진입 시 mode-check (이미 `executing-plans`에 정의됨)에서 `commit_policy != per-task` 면 이 스킬은 후보에서 제외.
+`/executing-plans` 진입 시 mode-check (이미 `executing-plans`에 정의됨)에서 `commit_policy != per-task` 면 이 스킬은 후보에서 제외.
 
 ## Entry Guard (v1.1.15+ user-gate)
 
@@ -451,7 +451,7 @@ The whole run is complete only when End-of-Run Consolidator emits the 구현 요
 - `risk-annotation` — Wave finalization §W-4 (b) 에서 사용
 - `change-history` — End-of-Run Consolidator §3 에서 사용
 - `finishing-a-development-branch` — 모든 task 완료 후 호출 (slim, v1.1.14+)
-- `verifying-spec` — `/tech-design`, `/write-plan` 단계에서 사전 게이트로 이미 수행됨 (이 스킬은 그 결과를 신뢰)
+- `verifying-spec` — `/tech-design`, `/writing-plans` 단계에서 사전 게이트로 이미 수행됨 (이 스킬은 그 결과를 신뢰)
 
 ## Critical / Non-critical 판정 룰 (v2.3.5+)
 

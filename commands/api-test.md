@@ -6,7 +6,7 @@ description: 구현된 API에 대해 자동 테스트를 진행합니다. 메인
 
 이 슬래시는 `api-auto-testing` skill 을 호출합니다.
 
-전제: 동일 피처 폴더에 `<slug>-implementation-plan.md` 가 있고, 코드 구현이 완료되어 있어야 합니다 (즉 `/execute-plan` 이 끝난 상태).
+전제: 동일 피처 폴더에 `<slug>-implementation-plan.md` 가 있고, 코드 구현이 완료되어 있어야 합니다 (즉 `/executing-plans` 이 끝난 상태).
 
 흐름:
 1. API 인벤토리를 추출합니다.

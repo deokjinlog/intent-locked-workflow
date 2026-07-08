@@ -10,7 +10,7 @@ description: upstream superpowers 원본 executing-plans 를 호출합니다. /o
 
 ## dj-superkit 정식 흐름과의 차이
 
-| 항목 | `/execute-plan` (dj-superkit 확장) | `/og-execute-plan` (upstream 원본) |
+| 항목 | `/executing-plans` (dj-superkit 확장) | `/og-execute-plan` (upstream 원본) |
 |---|---|---|
 | 모드 분기 | Inline (executing-plans) / Subagent (dj-superkit-sub-driven) 양자택일 | Inline 단일 (Subagent 원하면 `subagent-driven-development` 직접 호출) |
 | 실행 모드 | git-fast / memory-fallback (commit_policy 기준) | upstream 단일 모드 — 그냥 plan 따라 실행 |

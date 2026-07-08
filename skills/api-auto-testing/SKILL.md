@@ -1,11 +1,11 @@
 ---
 name: api-auto-testing
-description: Use when /api-test is invoked after /execute-plan has implemented APIs. Drives the 6-step pipeline — API inventory from <slug>-implementation-plan.md and code → SQL guides for test data acquisition (user pastes results) → pytest scenario code generation (with conftest.py auth fixture auto-selected via detect_auth.py) → execution → result recording in <slug>-implementation-plan.md change-history → fail-handling proposal.
+description: Use when /api-test is invoked after /executing-plans has implemented APIs. Drives the 6-step pipeline — API inventory from <slug>-implementation-plan.md and code → SQL guides for test data acquisition (user pastes results) → pytest scenario code generation (with conftest.py auth fixture auto-selected via detect_auth.py) → execution → result recording in <slug>-implementation-plan.md change-history → fail-handling proposal.
 ---
 
 # API Auto-Testing Pipeline
 
-After /execute-plan implements new API endpoints, /api-test orchestrates a 6-step pipeline that generates pytest scenarios with auto-detected auth, runs them, and records results to <slug>-implementation-plan.md change-history.
+After /executing-plans implements new API endpoints, /api-test orchestrates a 6-step pipeline that generates pytest scenarios with auto-detected auth, runs them, and records results to <slug>-implementation-plan.md change-history.
 
 <HARD-GATE>
 Triggered ONLY by explicit /api-test (no auto-run). DB access is via SQL-paste only — NEVER use MCP DB connectors or run SQL through the user's DB credentials directly. The user pastes SQL results into the conversation.
@@ -14,7 +14,7 @@ Triggered ONLY by explicit /api-test (no auto-run). DB access is via SQL-paste o
 ## When to Invoke
 
 - The user issues `/api-test` for the current feature folder
-- <slug>-implementation-plan.md exists and includes new/modified API endpoints (typically just after /execute-plan)
+- <slug>-implementation-plan.md exists and includes new/modified API endpoints (typically just after /executing-plans)
 
 ## 6-Step Pipeline
 
@@ -136,7 +136,7 @@ Invoke change-history skill to append a [API테스트] entry to <slug>-implement
 - **결과**: PASS 3 / FAIL 1 / ERROR 0
 - **실패 상세**: test_withdraw_negative_amount → 422 기대, 200 응답
 - **결과 파일**: api-tests/results/2026-05-02-1530.json
-- **다음 액션**: 음수 amount 검증 누락 → /execute-plan 재진입 권장
+- **다음 액션**: 음수 amount 검증 누락 → /executing-plans 재진입 권장
 ```
 
 ## Failure Handling
@@ -148,12 +148,12 @@ When the JSON report shows failures, surface them to the user:
 원인: src/wallet/service.py의 withdraw에 음수 검증 누락으로 보입니다.
 
 선택:
-A) /execute-plan 재진입 → 수정 후 재테스트
+A) /executing-plans 재진입 → 수정 후 재테스트
 B) 시나리오 자체가 잘못 → 시나리오 코드 수정
 C) 무시하고 마무리
 ```
 
-The user's choice routes back to either /execute-plan (cascading code fix) or scenario edit (scoped to api-tests folder).
+The user's choice routes back to either /executing-plans (cascading code fix) or scenario edit (scoped to api-tests folder).
 
 ## Anti-Patterns
 
@@ -162,7 +162,7 @@ The user's choice routes back to either /execute-plan (cascading code fix) or sc
 | Use MCP DB connector to query directly | Forbidden by HARD-GATE. SQL-paste only. |
 | Embed secrets in scenario files | Use env vars (`API_BASE_URL`, `API_TOKEN`, `TEST_USER_EMAIL`) loaded from `.env.test` (in .gitignore). |
 | Report only PASS counts | Include FAIL/ERROR detail. The whole point is failure visibility. |
-| Auto-run on every /execute-plan | Manual trigger only. The user runs /api-test when they want it. |
+| Auto-run on every /executing-plans | Manual trigger only. The user runs /api-test when they want it. |
 
 ## Red Flags
 

@@ -10,7 +10,7 @@ This skill defines the schema and procedure for appending entries to the `## 변
 <HARD-GATE>
 You MUST append a 변경이력 entry to the affected MD whenever you:
 - Edit/Create/Delete any of <slug>-requirements.md, <slug>-tech-design.md, <slug>-implementation-plan.md
-- Modify code as part of /execute-plan
+- Modify code as part of /executing-plans
 - Run an API test pipeline via /api-test (record results)
 NEVER skip this. The history is the only audit trail outside git.
 </HARD-GATE>
@@ -22,7 +22,7 @@ NEVER skip this. The history is the only audit trail outside git.
 | <slug>-requirements.md edited | <slug>-requirements.md `## 변경이력` |
 | <slug>-tech-design.md edited | <slug>-tech-design.md `## 변경이력` |
 | <slug>-implementation-plan.md edited | <slug>-implementation-plan.md `## 변경이력` |
-| Code edited via /execute-plan | <slug>-implementation-plan.md `## 변경이력` (with [코드-수정] tag) |
+| Code edited via /executing-plans | <slug>-implementation-plan.md `## 변경이력` (with [코드-수정] tag) |
 | Verification-only task (no code change) | <slug>-implementation-plan.md `## 변경이력` (with `[검증]` tag) |
 | Release / version bump / git tag | <slug>-implementation-plan.md `## 변경이력` (with `[릴리즈]` tag) |
 | API test executed via /api-test | <slug>-implementation-plan.md `## 변경이력` (with [API테스트] tag) |
@@ -204,7 +204,7 @@ digraph change_history {
 | "This change is too small to log" | Even tiny edits decay context over time. Log everything. |
 | "I'll invent a CH-id manually" | Duplicates and gaps will appear. Always use the helper script. |
 | "git log already has the diff (per-task mode)" | git log lacks intent, scope, risk category. Use slim entry + commit SHA in per-task mode. |
-| "Batch entries at end of session" | Applies to manual editing only. Subagent / `/execute-plan` runs MUST batch (end-of-run consolidator) — see "End-of-Run Consolidated Batch Entry" section. |
+| "Batch entries at end of session" | Applies to manual editing only. Subagent / `/executing-plans` runs MUST batch (end-of-run consolidator) — see "End-of-Run Consolidated Batch Entry" section. |
 
 ## Red Flags (STOP if you think these)
 
