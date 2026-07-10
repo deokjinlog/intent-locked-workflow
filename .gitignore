@@ -7,6 +7,9 @@ docs/features/**/*.html
 # OS / 에디터 잡파일
 .DS_Store
 *.swp
+
+# devlog 개인 로그 + 발행 초안 (learning-notes 후신, 개인용)
+docs/devlog/
 docs/learning/
 
 # design-gallery 시안 (사람용 파생 뷰 — design-system.md 만 커밋)
