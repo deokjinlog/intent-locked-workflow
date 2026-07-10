@@ -62,7 +62,7 @@ def dark_bg(s):
 # (레벨, 설명, 위반이면 True 인 함수)
 RULES = {
     "01": [("FAIL", "흰/밝은 배경 금지 (HUD는 어둠)", lambda s: not dark_bg(s))],
-    "02": [("FAIL", "애니메이션 금지 (정적이 신뢰)", lambda s: has(s, r"@keyframes|animation\s*:")),
+    "02": [("FAIL", "애니메이션 금지 (정적이 신뢰)", lambda s: has(s, r"@keyframes\b|animation\s*:\s*(?!none\b|unset\b|initial\b|inherit\b)")),
            ("FAIL", "그림자 금지", has_shadow),
            ("FAIL", "그라디언트 금지", lambda s: has(s, r"(?:linear|radial|conic)-gradient\s*\(")),
            ("FAIL", "라운드 금지 (radius 0)", radius_nonzero)],
