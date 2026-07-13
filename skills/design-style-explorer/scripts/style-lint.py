@@ -89,7 +89,34 @@ RULES = {
            ("FAIL", "모노스페이스 금지", lambda s: has(s, r"font-family[^;}]*monospace"))],
     "12": [("FAIL", "플랫 금지 (box-shadow 필수)", lambda s: not has_shadow(s)),
            ("FAIL", "다크 배경 금지", dark_bg)],
+    "13": [("FAIL", "다크 배경 필수 (오로라는 어둠 위 광채)", lambda s: not dark_bg(s)),
+           ("FAIL", "오로라 그라디언트 필수", lambda s: not has(s, r"(?:linear|radial|conic)-gradient\s*\("))],
+    "14": [("FAIL", "라운드 카드 필수 (벤토)", lambda s: not radius_nonzero(s)),
+           ("FAIL", "그리드 레이아웃 필수 (벤토 조합)", lambda s: not has(s, r"display\s*:\s*grid|grid-template"))],
+    "15": [("FAIL", "다크 배경 금지 (파스텔 밝게)", dark_bg),
+           ("FAIL", "소프트 섀도 필수 (클레이 입체)", lambda s: not has_shadow(s)),
+           ("FAIL", "라운드 필수 (말랑)", lambda s: not radius_nonzero(s)),
+           ("FAIL", "세리프 금지", has_serif)],
+    "16": [("FAIL", "elevation 그림자 필수 (머티리얼)", lambda s: not has_shadow(s)),
+           ("FAIL", "글래스(backdrop-filter) 금지", lambda s: has(s, r"backdrop-filter")),
+           ("FAIL", "세리프 금지", has_serif)],
+    "17": [("FAIL", "그라디언트 필수 (크롬·홀로그램)", lambda s: not has(s, r"(?:linear|radial|conic)-gradient\s*\(")),
+           ("FAIL", "세리프 금지", has_serif)],
+    "18": [("FAIL", "그림자 금지 (격자·타이포가 위계)", has_shadow),
+           ("FAIL", "라운드 금지 (radius 0)", radius_nonzero),
+           ("FAIL", "그라디언트 금지", lambda s: has(s, r"(?:linear|radial|conic)-gradient\s*\(")),
+           ("FAIL", "다크 배경 금지 (순백)", dark_bg)],
+    "19": [],  # 맥시멀리즘 — 구조 규칙 없음(과잉이 정체성), MANUAL 로 판단
+    "20": [("FAIL", "다크 배경 필수 (관제 대시보드)", lambda s: not dark_bg(s))],
 }
+
+# 모든 스타일 공통 — 콘텐츠 견고성 (WARN, references/content-checklist.md 축)
+# FAIL 아님(exit code 영향 X) — 최악 콘텐츠 견딤 자동 신호만.
+UNIVERSAL = [
+    ("WARN", "tabular-nums 없음 (큰 숫자 정렬)", lambda s: not has(s, r"tabular-nums|font-variant-numeric")),
+    ("WARN", "반응형 @media 없음 (모바일 대응)", lambda s: not has(s, r"@media")),
+    ("WARN", "prefers-reduced-motion 없음 (접근성)", lambda s: not has(s, r"prefers-reduced-motion")),
+]
 
 # 정규식으로 못 잡는 의미 규칙 — 사람이 확인
 MANUAL = {
@@ -105,12 +132,22 @@ MANUAL = {
     "10": "KPI마다 헤드라인 해설(데이터와 일치) / 수직 괘선 남발 금지",
     "11": "모든 색 따뜻한 톤 / 유기 radius 일관 규칙 / 성장 은유 과하지 않게",
     "12": "광원 좌상단 일관 / 볼록·오목이 위계와 일치 / 눌림 반응 전 요소",
+    "13": "오로라 3색은 배경/보더 글로우에만 / 텍스트 흰빛 / 대비 4.5:1",
+    "14": "비대칭 벤토 배열(큰1+중2~3+소 여러) / 카드마다 독립 위젯 / 균일 카드 아님",
+    "15": "이중 소프트 섀도(바깥 진하게+안쪽 밝게) / radius 28px+ / 파스텔 채도",
+    "16": "elevation 단계(dp1·2·4·8) / FAB 우하단 / 큰 터치 타겟",
+    "17": "크롬 텍스트 + 신스웨이브 그리드 지평선 / 네온 마젠타·시안 / 스캔라인",
+    "18": "엄격한 모듈 그리드 / 빨강 딱 1곳 액센트 / 비대칭 대형 타이포",
+    "19": "색·패턴·폰트 폭발 + 겹침 / 단 본문 가독 사수(색면 위 잉크블랙)",
+    "20": "촘촘한 위젯 그리드 / 게이지·스파크라인 / 상태 임계 색+텍스트",
 }
 
 STYLE_NAME = {
     "01": "SF HUD", "02": "공공포털", "03": "트렌디 SaaS", "04": "고밀도 터미널",
     "05": "브루탈리즘", "06": "글래스모피즘", "07": "미니멀 모노크롬", "08": "럭셔리 다크",
     "09": "레트로 픽셀", "10": "에디토리얼", "11": "네이처 오가닉", "12": "뉴모피즘",
+    "13": "오로라 그라디언트", "14": "벤토 그리드", "15": "클레이모피즘", "16": "머티리얼",
+    "17": "Y2K 베이퍼웨이브", "18": "스위스", "19": "맥시멀리즘", "20": "다크 대시보드",
 }
 
 
@@ -128,11 +165,14 @@ def lint(path, override=None):
         print(f"[SKIP] {os.path.basename(path)} — 스타일 번호 인식 실패 (--style NN 지정)")
         return 0
     html = rd(path)
-    fails = [(desc) for lvl, desc, fn in RULES[nn] if fn(html)]
+    fails = [desc for lvl, desc, fn in RULES[nn] if fn(html)]
+    warns = [desc for lvl, desc, fn in UNIVERSAL if fn(html)]
     tag = "FAIL" if fails else "PASS"
     print(f"[{tag}] {os.path.basename(path)}  (STYLE {nn} · {name})")
     for d in fails:
         print(f"    ✗ {d}")
+    for d in warns:
+        print(f"    ⚠ {d}  (콘텐츠 견고성)")
     print(f"    [MANUAL] {MANUAL.get(nn,'')}")
     return len(fails)
 
