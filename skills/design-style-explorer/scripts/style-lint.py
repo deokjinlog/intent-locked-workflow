@@ -47,24 +47,50 @@ def has_serif(s):
     # 'sans-serif' 의 serif 는 오탐 — 부정 lookbehind 로 제외
     return has(s, r"font-family\s*:[^;}]*(?<!sans-)\bserif\b")
 
-def dark_bg(s):
-    m = re.search(r"(?:body|html)\s*\{[^}]*?background[^;}]*?(#[0-9a-fA-F]{3,6})", s, re.I | re.S)
-    if not m:
-        return False
-    h = m.group(1).lstrip("#")
+def _hex_dark(h):
+    h = h.lstrip("#")
     if len(h) == 3:
         h = "".join(c * 2 for c in h)
+    if len(h) != 6:
+        return False
     try:
         r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
         return (r + g + b) / 3 < 60
     except ValueError:
         return False
 
+def _resolve_vars(val, s):
+    # var(--x) → :root 등에 정의된 --x 의 hex 값으로 치환
+    def rep(m):
+        vm = re.search(re.escape(m.group(1)) + r"\s*:\s*(#[0-9a-fA-F]{3,6})", s, re.I)
+        return vm.group(1) if vm else m.group(0)
+    return re.sub(r"var\((--[\w-]+)\)", rep, val)
+
+def _block_bg_dark(block, s):
+    # 규칙 블록의 background 값의 '첫 색'이 어두우면 다크로 본다 (그라디언트/변수 포함)
+    bm = re.search(r"background(?:-color|-image)?\s*:\s*([^;}]+)", block, re.I)
+    if not bm:
+        return False
+    hexes = re.findall(r"#[0-9a-fA-F]{3,6}", _resolve_vars(bm.group(1), s))
+    return bool(hexes) and _hex_dark(hexes[0])
+
+def dark_bg(s):
+    # body/html/:root 직접 배경 (그라디언트·CSS 변수 포함)
+    for sel in (r"body", r"html", r":root"):
+        for m in re.finditer(sel + r"\s*\{([^}]*)\}", s, re.I | re.S):
+            if _block_bg_dark(m.group(1), s):
+                return True
+    # 풀뷰포트(100vh) 래퍼에 다크 배경 → 시각적으로 다크
+    for m in re.finditer(r"\{([^}]*(?:min-height|height)\s*:\s*100vh[^}]*)\}", s, re.I | re.S):
+        if _block_bg_dark(m.group(1), s):
+            return True
+    return False
+
 # (레벨, 설명, 위반이면 True 인 함수)
 RULES = {
     "01": [("FAIL", "흰/밝은 배경 금지 (HUD는 어둠)", lambda s: not dark_bg(s))],
     "02": [("FAIL", "애니메이션 금지 (정적이 신뢰)", lambda s: has(s, r"@keyframes\b|animation\s*:\s*(?!none\b|unset\b|initial\b|inherit\b)")),
-           ("FAIL", "그림자 금지", has_shadow),
+           ("FAIL", "그림자 금지 (부드러운 elevation)", soft_shadow),
            ("FAIL", "그라디언트 금지", lambda s: has(s, r"(?:linear|radial|conic)-gradient\s*\(")),
            ("FAIL", "라운드 금지 (radius 0)", radius_nonzero)],
     "03": [("FAIL", "모노스페이스 금지", lambda s: has(s, r"font-family[^;}]*(?:monospace|Plex Mono|Share Tech)")),
@@ -75,7 +101,7 @@ RULES = {
            ("FAIL", "블러 금지", lambda s: has(s, r"blur\s*\(")),
            ("FAIL", "부드러운 그림자 금지 (하드섀도만)", soft_shadow)],
     "06": [("FAIL", "backdrop-filter 필수 (유리)", lambda s: not has(s, r"backdrop-filter"))],
-    "07": [("FAIL", "그림자 금지", has_shadow),
+    "07": [("FAIL", "그림자 금지 (부드러운 elevation)", soft_shadow),
            ("FAIL", "라운드 금지 (radius 0)", radius_nonzero),
            ("FAIL", "그라디언트 금지", lambda s: has(s, r"(?:linear|radial|conic)-gradient\s*\("))],
     "08": [("FAIL", "그림자 금지 (조명으로 표현)", soft_shadow),
@@ -84,7 +110,7 @@ RULES = {
     "09": [("FAIL", "라운드 금지 (픽셀)", radius_nonzero),
            ("FAIL", "블러 금지", lambda s: has(s, r"blur\s*\(")),
            ("FAIL", "세리프 금지", has_serif)],
-    "10": [("FAIL", "카드 그림자 금지", has_shadow),
+    "10": [("FAIL", "카드 그림자 금지 (부드러운)", soft_shadow),
            ("FAIL", "다크 배경 금지", dark_bg)],
     "11": [("FAIL", "순백/순흑 금지", lambda s: has(s, r"#fff(fff)?\b|#000(000)?\b|:\s*white\b|:\s*black\b")),
            ("FAIL", "모노스페이스 금지", lambda s: has(s, r"font-family[^;}]*monospace"))],
