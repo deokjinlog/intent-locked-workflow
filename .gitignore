@@ -15,3 +15,7 @@ docs/learning/
 # design-gallery 시안 (사람용 파생 뷰 — design-system.md 만 커밋)
 docs/design-gallery/**/*.html
 docs/design-gallery/**/content-spec.md
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
