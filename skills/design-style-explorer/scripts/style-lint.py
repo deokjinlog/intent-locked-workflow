@@ -44,7 +44,8 @@ def has_shadow(s):
     return has(s, r"box-shadow\s*:\s*(?!none)[^;}\n]*\d")
 
 def has_serif(s):
-    return has(s, r"font-family\s*:[^;}]*\bserif\b")
+    # 'sans-serif' 의 serif 는 오탐 — 부정 lookbehind 로 제외
+    return has(s, r"font-family\s*:[^;}]*(?<!sans-)\bserif\b")
 
 def dark_bg(s):
     m = re.search(r"(?:body|html)\s*\{[^}]*?background[^;}]*?(#[0-9a-fA-F]{3,6})", s, re.I | re.S)
