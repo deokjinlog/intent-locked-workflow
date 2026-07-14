@@ -2,15 +2,15 @@
 
 # dj-superkit
 
-### 프로덕션 코드를 안전하게 · 실용적으로 만드는 Claude Code 워크플로우 플러그인
+### AI는 빠르게, 코드는 안전하게.
 
-머릿속 아이디어가 실제 코드가 되기까지, 매 단계마다 한 번 더 확인합니다.
-**문서와 코드가 따로 놀지 않도록, AI 가 멋대로 진행하지 않도록.**
+아이디어에서 코드까지 **4단계** — 매 단계, 한 번 더 확인합니다.
+문서와 코드가 따로 놀지 않도록, AI가 멋대로 진행하지 않도록.
 
 <br/>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-7c3aed?style=for-the-badge&labelColor=0d1117">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.1-7c3aed?style=for-the-badge&labelColor=0d1117">
   <img alt="Upstream" src="https://img.shields.io/badge/upstream-superpowers%205.0.7-f97316?style=for-the-badge&labelColor=0d1117">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge&labelColor=0d1117">
   <img alt="Language" src="https://img.shields.io/badge/lang-한국어-3b82f6?style=for-the-badge&labelColor=0d1117">

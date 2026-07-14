@@ -1,7 +1,7 @@
 {
   "name": "dj-superkit",
-  "description": "superpowers를 계승한 프로덕션 안전성 에이전틱 플러그인 — 확인 게이트 / 변경이력 / 위험 주석 / wave-parallel",
-  "version": "1.2.0",
+  "description": "AI는 빠르게, 코드는 안전하게 — 아이디어→코드 4단계 확인 워크플로 (게이트 / 변경이력 / 위험 주석 / wave-parallel)",
+  "version": "1.2.1",
   "author": {
     "name": "djchoi",
     "email": "deokjinlog@users.noreply.github.com"
