@@ -40,7 +40,7 @@
 
 <br/>
 
-> ## 빨리 가는 게 아니라, 제대로 간다.
+> ## 코드보다 먼저, 의도를 맞춘다.
 >
 > 하나의 아이디어를 **바로 코드로 쓰지 않습니다.**
 > `기획 → 설계 → 계획 → 실행` 네 단계를 지나며,
@@ -61,14 +61,13 @@ AI는 코드를 너무 빨리 짭니다. 문제는 속도가 아니라 **방향*
 기획 의도를 잠그고(lock), 그 의도를 요구사항 · 설계 · 계획 문서로 눈에 보이게 남겨요.
 **같은 문서를 보며 "이게 맞다"를 확인한 다음**에야 코드가 시작됩니다.
 
-이건 AI를 더 빨리 달리게 하는 물건이 아닙니다.
+AI를 더 빨리 달리게 하는 물건이 아닙니다.
 **사람과 사람이, 그리고 사람과 AI가 의도를 맞춰가는 소통 도구**입니다.
 
 ---
 
-## 이것은 코드 생성기가 아닙니다
+## 자동완성이 아니라, 레일이자 자물쇠
 
-자동완성 도구가 아닙니다.
 AI가 제멋대로 못 가게 붙잡는 **레일**이자, 기획 의도를 잠그는 **자물쇠**이며,
 기획자와 개발자를 잇는 **공용 문서**입니다.
 
@@ -131,8 +130,6 @@ Claude Code 안에서:
 
 ## 스킬 27개
 
-안에 뭐가 들었나 —
-
 | 그룹 | 스킬 |
 |---|---|
 | **워크플로 코어 (4)** | brainstorming · tech-design · writing-plans · executing-plans |
@@ -150,19 +147,6 @@ Claude Code 안에서:
 
 ---
 
-## 파일 구조
-
-```
-intent-locked-workflow/
-├── skills/          # 27개 스킬 — 워크플로 4단계 + 자동 / 검증 / 리뷰 …
-├── commands/        # 슬래시 명령 — 감사 · 잡일 · 빌더
-├── hooks/           # 세션 훅 — 스킬 자동 발동
-├── scripts/         # 결정론적 헬퍼 — 게이트 · 변경이력 · DAG
-└── .claude-plugin/  # 플러그인 매니페스트
-```
-
----
-
 ## superpowers 계승
 
 이 저장소는 [superpowers](https://github.com/obra/superpowers) 5.0.7 (MIT, Jesse Vincent) 위에
@@ -177,16 +161,14 @@ intent-locked-workflow/
 ## 라이선스 · 기여
 
 **MIT** — upstream superpowers 와 동일합니다.
-MIT 조건에 따라 원저작권자(Jesse Vincent) 표기를 유지하고, 그 위의 확장분에 대한 저작권을 함께 둡니다.
-자세한 내용은 [LICENSE](LICENSE) 를 봐 주세요.
+자세한 내용은 [LICENSE](LICENSE), 쉬운 설명은 [LICENSE_NOTES](LICENSE_NOTES.md) 에 있어요.
 
-버그 제보 · 제안 · 기여는 [GitHub Issues](https://github.com/deokjinlog/intent-locked-workflow/issues) 로 받습니다.
-기여 방법과 원칙은 [CONTRIBUTING](CONTRIBUTING.md) 에 정리해 뒀어요.
-스킬은 사람의 행동을 바꾸는 코드라서, 스킬 본문을 고칠 때는 그 변경이 실제로 더 나은지 근거를 함께 주세요.
+기여 방법과 원칙은 [CONTRIBUTING](CONTRIBUTING.md) 에 정리해 뒀습니다.
+버그 제보 · 제안은 [GitHub Issues](https://github.com/deokjinlog/intent-locked-workflow/issues) 로 받아요.
 
 ---
 
 <div align="center">
 <br/>
-<sub><b>빨리 가는 게 아니라, 제대로 간다.</b></sub>
+<sub><b>코드보다 먼저, 의도를 맞춘다.</b></sub>
 </div>
