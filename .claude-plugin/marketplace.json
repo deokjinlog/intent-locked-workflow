@@ -1,19 +1,19 @@
 {
-  "name": "dj-superkit",
-  "description": "superpowers 5.0.7 계승 — AI는 빠르게, 코드는 안전하게: 아이디어→코드 4단계 확인 워크플로",
+  "name": "intent-locked-workflow",
+  "description": "빨리 가는 게 아니라 제대로 간다 — 기획 의도를 고정하는 4단계 게이트 워크플로 (superpowers 5.0.7 계승)",
   "owner": {
     "name": "djchoi",
     "email": "deokjinlog@users.noreply.github.com"
   },
-  "homepage": "https://github.com/deokjinlog/dj-superkit",
+  "homepage": "https://github.com/deokjinlog/intent-locked-workflow",
   "plugins": [
     {
-      "name": "dj-superkit",
-      "description": "superpowers 5.0.7 계승 — AI는 빠르게, 코드는 안전하게: 아이디어→코드 4단계 확인 워크플로 (게이트 / 변경이력 / 위험 주석 / wave-parallel)",
-      "version": "1.2.2",
+      "name": "intent-locked-workflow",
+      "description": "빨리 가는 게 아니라 제대로 간다 — 기획 의도를 고정하고 설계·계획·코드가 그 의도대로만 흐르는 4단계 게이트 워크플로 (superpowers 5.0.7 계승)",
+      "version": "1.3.0",
       "source": "./",
-      "homepage": "https://github.com/deokjinlog/dj-superkit",
-      "repository": "https://github.com/deokjinlog/dj-superkit",
+      "homepage": "https://github.com/deokjinlog/intent-locked-workflow",
+      "repository": "https://github.com/deokjinlog/intent-locked-workflow",
       "author": {
         "name": "djchoi",
         "email": "deokjinlog@users.noreply.github.com"

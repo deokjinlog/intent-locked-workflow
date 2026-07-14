@@ -22,9 +22,9 @@ argument-hint: "(인자 없음)"
 - **프로젝트**: `<cwd>/.claude/skills/*/` 중 `.dj-superkit-skill.json` 존재하는 것
 - **글로벌**: `~/.claude/skills/*/` 중 `.dj-superkit-skill.json` 존재하는 것
 
-### 그룹 B — dj-superkit 내장 skill
+### 그룹 B — intent-locked-workflow 내장 skill
 
-- `~/.claude/plugins/cache/dj-superkit/dj-superkit/<버전>/skills/*/`
+- `~/.claude/plugins/cache/intent-locked-workflow/intent-locked-workflow/<버전>/skills/*/`
 - 버전 디렉토리가 여러 개면 **가장 높은 버전** 하나만 사용 (version sort 기준 마지막)
 
 ### 그룹 C — 기타 (직접 생성 / 다른 플러그인)

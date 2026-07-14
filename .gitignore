@@ -8,6 +8,11 @@ docs/features/**/*.html
 .DS_Store
 *.swp
 
+# 이전·제거된 기능의 산출물 (로컬 보존, 플러그인 repo 에는 미포함)
+docs/design-gallery/
+docs/devlog/
+docs/learning/
+
 # 파이썬 캐시
 __pycache__/
 *.pyc
