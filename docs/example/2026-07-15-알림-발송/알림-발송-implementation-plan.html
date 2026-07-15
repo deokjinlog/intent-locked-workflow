@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 발송 구현계획서 — intent-locked-workflow</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#0a0a0a; --cell:#121214; --line:#26262b;
+    --ink:#f4f4f5; --dim:#b8b8c0; --mute:#75757f;
+    --lime:#a3e635; --red:#f87171; --amber:#fbbf24; --violet:#a78bfa; --cyan:#22d3ee;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"D2Coding",monospace;
+  }
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);
+    line-height:1.72;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:64px 64px;background-position:-1px -1px}
+  .veil{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(1100px 600px at 50% -10%,rgba(163,230,53,.07),transparent 60%),
+               linear-gradient(180deg,rgba(10,10,10,.86),rgba(10,10,10,.97))}
+
+  .ribbon{background:var(--lime);color:#0a0a0a;text-align:center;font-size:12px;font-weight:800;
+    padding:9px 16px;letter-spacing:.3px;border-bottom:2px solid #0a0a0a}
+  .ribbon code{background:rgba(0,0,0,.16);padding:1px 6px}
+
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px 110px}
+
+  header{padding:72px 0 12px;border-bottom:2px solid var(--lime)}
+  .tag{display:inline-block;background:var(--lime);color:#0a0a0a;font-size:11px;font-weight:800;
+    letter-spacing:2px;padding:3px 9px;text-transform:uppercase}
+  h1{margin:16px 0 0;font-size:clamp(30px,5.4vw,54px);font-weight:800;letter-spacing:-1.8px;
+    line-height:1.06;text-transform:uppercase}
+  .sub{color:var(--mute);margin:14px 0 18px;font-size:12.5px}
+  .up{font-size:12px;color:var(--mute);margin:0 0 16px}
+  .up a{color:var(--lime);text-decoration:none;border-bottom:1px dotted rgba(163,230,53,.5)}
+  .fm{display:inline-block;font-size:11.5px;background:var(--cell);border:1px solid var(--line);
+    padding:5px 10px;color:var(--cyan)}
+
+  h2{font-size:12px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;
+    margin:62px 0 20px;color:#0a0a0a;background:var(--lime);display:inline-block;padding:4px 11px}
+  h3{font-size:15px;font-weight:800;color:var(--ink);margin:34px 0 12px;letter-spacing:-.2px;
+    padding-left:12px;border-left:3px solid var(--violet)}
+  p{color:var(--dim);font-size:14px}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .55s,transform .55s}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+
+  pre.dag{background:var(--cell);border:1px solid var(--line);padding:20px;overflow-x:auto;
+    font-size:12.5px;color:var(--dim);line-height:1.8;margin:0}
+  pre.dag b{color:var(--lime)}
+
+  .task{background:var(--cell);border:1px solid var(--line);padding:20px 22px;margin:0 0 14px;
+    transition:.22s}
+  .task:hover{border-color:var(--violet);transform:translateX(4px)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+  .chip{font-size:10.5px;font-weight:800;letter-spacing:1px;padding:3px 8px;text-transform:uppercase}
+  .chip.m{background:rgba(34,211,238,.14);color:var(--cyan);border:1px solid rgba(34,211,238,.34)}
+  .chip.d{background:rgba(167,139,250,.14);color:var(--violet);border:1px solid rgba(167,139,250,.34)}
+  .chip.w{background:rgba(163,230,53,.14);color:var(--lime);border:1px solid rgba(163,230,53,.34)}
+  ol.steps{margin:0;padding-left:20px;color:var(--dim);font-size:13.5px}
+  ol.steps li{padding:3px 0}
+  ol.steps b{color:var(--ink)}
+  .verify{margin:12px 0 0;padding:9px 13px;background:rgba(163,230,53,.07);
+    border-left:3px solid var(--lime);font-size:12.5px;color:var(--dim)}
+  .verify b{color:var(--lime)}
+  .note{margin:0 0 12px;padding:10px 13px;background:rgba(167,139,250,.09);
+    border-left:3px solid var(--violet);font-size:12.5px;color:var(--dim)}
+  .note b{color:var(--violet)}
+
+  .lbl{font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--mute);margin:14px 0 6px}
+  .codewrap{position:relative}
+  pre.code{background:#08080a;border:1px solid var(--line);padding:34px 18px 16px;overflow-x:auto;
+    font-size:12.4px;line-height:1.7;color:#d4d4d8;margin:0}
+  pre.code .rk{color:var(--amber)}
+  pre.code .kw{color:var(--violet)}
+  pre.code .st{color:var(--lime)}
+  pre.code .cm{color:var(--mute)}
+  .lang{position:absolute;top:9px;left:16px;font-size:10px;font-weight:800;letter-spacing:1.4px;
+    color:var(--mute);text-transform:uppercase}
+  .copy{position:absolute;top:6px;right:6px;background:var(--cell);border:1px solid var(--line);
+    color:var(--dim);padding:4px 10px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:.2s}
+  .copy:hover{background:var(--lime);color:#0a0a0a;border-color:var(--lime)}
+  .orig pre.code{opacity:.5;border-style:dashed}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mute);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;
+    padding:0 12px 9px 0;font-weight:800}
+  td{padding:11px 12px 11px 0;border-top:1px solid var(--line);color:var(--dim);vertical-align:top}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .cat{font-size:10px;font-weight:800;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;white-space:nowrap}
+  .cat.b{background:rgba(248,113,113,.16);color:var(--red)}
+  .cat.s{background:rgba(251,191,36,.15);color:var(--amber)}
+  .cat.r{background:rgba(167,139,250,.17);color:var(--violet)}
+  code{color:var(--cyan);font-size:12.5px}
+  .scroll{overflow-x:auto}
+  ol.rb{color:var(--dim);font-size:13.5px;padding-left:20px}
+
+  details.log{margin-top:14px;border:1px solid var(--line);background:var(--cell)}
+  details.log summary{padding:14px 18px;cursor:pointer;font-size:12.5px;color:var(--dim);font-weight:700;
+    list-style:none;display:flex;align-items:center;gap:10px;transition:.2s;letter-spacing:.4px}
+  details.log summary::-webkit-details-marker{display:none}
+  details.log summary::before{content:"[+]";color:var(--lime);font-weight:800}
+  details.log[open] summary::before{content:"[-]"}
+  details.log summary:hover{background:rgba(163,230,53,.06);color:var(--ink)}
+  .tl{padding:4px 20px 20px}
+  .ch{padding:13px 0 13px 16px;border-left:2px solid var(--line);position:relative}
+  .ch.key{border-left-color:var(--lime);background:rgba(163,230,53,.05)}
+  .ch .m2{font-size:11px;color:var(--mute)}
+  .kind{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;
+    background:rgba(167,139,250,.16);color:var(--violet);margin-left:6px;letter-spacing:.6px}
+  .ch.key .kind{background:var(--lime);color:#0a0a0a}
+  .ch .w2{color:var(--ink);font-weight:700;margin:5px 0 3px;font-size:13.5px}
+  .ch .y2{color:var(--mute);font-size:12.5px;margin:0}
+  .ch .y2 b{color:var(--dim)}
+
+  footer{margin-top:70px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--mute);font-size:12px;text-align:center}
+  footer a{color:var(--lime)}
+</style>
+</head>
+<body>
+
+<div class="veil"></div>
+
+<div class="ribbon">
+  사람이 읽는 사본 — 원본은 <code>알림-발송-implementation-plan.md</code> 입니다. 코드를 몰라도 이 문서로 게이트에서 검토할 수 있어요.
+</div>
+
+<div class="wrap">
+  <header>
+    <span class="tag">③ 계획 → ④ 실행</span>
+    <h1>알림 발송<br>구현계획서</h1>
+    <p class="sub">intent-locked-workflow 예시 산출물 · 2026-07-15</p>
+    <p class="up">상위 문서: <a href="알림-발송-requirements.md">요구사항</a> · <a href="알림-발송-tech-design.md">개발방향</a></p>
+    <span class="fm">commit_policy: per-task</span>
+  </header>
+
+  <section id="s0" class="reveal">
+    <h2>0. 작업 의존 관계 (DAG)</h2>
+    <pre class="dag">Task 1 (알림 엔티티) ──┬──▶ Task 3 (생성 서비스) ──▶ Task 4 (워커 + 재시도)
+Task 2 (사용자 설정) ──┘
+       │
+       └──────────────▶ Task 5 (조회/읽음 API)
+
+<b>wave 1</b>: Task 1 · Task 2   (서로 독립 — 동시 진행)
+<b>wave 2</b>: Task 3 · Task 5   (Task 5 는 Task 1 만 필요)
+<b>wave 3</b>: Task 4</pre>
+  </section>
+
+  <section id="s1" class="reveal">
+    <h2>1. 단계별 작업</h2>
+
+    <h3>Task 1 — 알림 엔티티 + 마이그레이션</h3>
+    <div class="task">
+      <div class="meta"><span class="chip m">Model: haiku</span><span class="chip d">의존: 없음</span><span class="chip w">wave 1</span></div>
+      <ol class="steps">
+        <li><code>tests/test_notification_entity.py</code> — 기본 상태 <b>대기</b>, <code>dedup_key</code> 없으면 거부. <b>실패 확인.</b></li>
+        <li><code>models/notification.py</code> 생성 → 통과.</li>
+        <li>마이그레이션 — <code>notifications</code> 테이블 + <code>dedup_key</code> <b>unique 인덱스</b>.</li>
+      </ol>
+      <p class="verify"><b>검증:</b> <code>pytest tests/test_notification_entity.py</code> 통과 + 같은 <code>dedup_key</code> 2회 삽입 시 DB 예외.</p>
+    </div>
+
+    <h3>Task 2 — 사용자 알림 설정</h3>
+    <div class="task">
+      <div class="meta"><span class="chip m">Model: haiku</span><span class="chip d">의존: 없음 (Task 1 과 동시)</span><span class="chip w">wave 1</span></div>
+      <ol class="steps">
+        <li><code>tests/test_notification_pref.py</code> — 미설정 시 기본 켜짐, 끄면 꺼짐. <b>실패 확인.</b></li>
+        <li><code>models/notification_pref.py</code> + 마이그레이션 → 통과.</li>
+      </ol>
+      <p class="verify"><b>검증:</b> <code>pytest tests/test_notification_pref.py</code> 통과.</p>
+    </div>
+
+    <h3>Task 3 — 알림 생성 서비스</h3>
+    <div class="task">
+      <div class="meta"><span class="chip m">Model: sonnet</span><span class="chip d">의존: Task 1, Task 2</span><span class="chip w">wave 2</span></div>
+      <ol class="steps">
+        <li><code>tests/test_notification_service.py</code> — 설정 꺼짐 → 생성 0건, 같은 이벤트 2회 → 1건. <b>실패 확인.</b></li>
+        <li><code>services/notification_service.py</code> — 설정 확인 → <b>대기</b> 로 DB 기록 → 큐 투입 (결정 3 순서 준수).</li>
+      </ol>
+
+      <p class="lbl">원본 — services/notification_service.py (신규 파일)</p>
+      <div class="codewrap orig"><pre class="code"><span class="lang">python</span><code><span class="cm"># (신규)</span></code></pre></div>
+
+      <p class="lbl">수정 후</p>
+      <div class="codewrap">
+        <span class="lang">python</span><button class="copy" type="button">copy</button>
+        <pre class="code"><code><span class="kw">def</span> create(self, user_id: int, event_type: str, event_id: str) -> list[Notification]:
+    <span class="rk"># ⚠️ RISK(side-effect): DB 기록 전에 큐로 보내면 큐 유실 시 흔적이 없음</span>
+    <span class="rk">#                       — 반드시 '대기' 저장 후 큐 투입 (NFR-3 / 결정 3)</span>
+    made = []
+    <span class="kw">for</span> channel <span class="kw">in</span> (<span class="st">"push"</span>, <span class="st">"email"</span>):
+        <span class="kw">if not</span> self.prefs.enabled(user_id, event_type, channel):
+            <span class="kw">continue</span>
+        key = <span class="st">f"{user_id}:{event_type}:{event_id}:{channel}"</span>
+        <span class="kw">try</span>:
+            n = self.repo.insert(user_id, event_type, channel, status=<span class="st">"대기"</span>, dedup_key=key)
+        <span class="kw">except</span> UniqueViolation:
+            <span class="kw">continue</span>  <span class="rk"># ⚠️ RISK(breaking): 중복은 조용히 skip — 재시도가 새 행을 만들면 안 됨</span>
+        self.queue.push(n.id)
+        made.append(n)
+    <span class="kw">return</span> made</code></pre>
+      </div>
+      <p class="verify"><b>검증:</b> <code>pytest tests/test_notification_service.py</code> 통과 (중복 테스트 포함).</p>
+    </div>
+
+    <h3>Task 4 — 발송 워커 + 재시도</h3>
+    <div class="task">
+      <div class="meta"><span class="chip m">Model: sonnet</span><span class="chip d">의존: Task 3</span><span class="chip w">wave 3</span></div>
+      <p class="note"><b>CH-003 반영됨</b> — 아래 2번은 실행 중 발견으로 갱신된 내용입니다. 하단 변경이력 참조.</p>
+      <ol class="steps">
+        <li><code>tests/test_notification_worker.py</code> — 워커 2대 동시 집기 → 한 대만, 3회 실패 → <b>실패</b> 보존. <b>실패 확인.</b></li>
+        <li><code>workers/notification_worker.py</code> — <b>같은 알림 행을 재사용</b>하며 <code>attempts</code> 증가 + <code>next_retry_at</code> 백오프.</li>
+      </ol>
+
+      <p class="lbl">수정 후 (발췌)</p>
+      <div class="codewrap">
+        <span class="lang">python</span><button class="copy" type="button">copy</button>
+        <pre class="code"><code><span class="kw">def</span> claim(self, notification_id: int) -> Notification | None:
+    <span class="rk"># ⚠️ RISK(race): 조건부 UPDATE 로만 집을 것. SELECT 후 UPDATE 로 나누면</span>
+    <span class="rk">#                워커 2대가 같은 건을 동시에 집어 중복 발송됨 (NFR-2)</span>
+    rows = self.repo.update_where(
+        id=notification_id, expect_status=<span class="st">"대기"</span>, set_status=<span class="st">"발송중"</span>,
+    )
+    <span class="kw">return</span> rows[0] <span class="kw">if</span> rows <span class="kw">else</span> None   <span class="cm"># 못 집으면 다른 워커가 이미 가져간 것</span>
+
+<span class="kw">def</span> retry(self, n: Notification) -> None:
+    <span class="rk"># ⚠️ RISK(breaking): 재시도는 '같은 행' 재사용. 새 행을 만들면 dedup_key unique 위반이자</span>
+    <span class="rk">#                    사용자에겐 중복 알림 — 의도("귀찮게 하지 않게") 위반</span>
+    n.attempts += 1
+    <span class="kw">if</span> n.attempts >= 3:
+        n.status = <span class="st">"실패"</span>          <span class="cm"># 조용히 버리지 않음 (FR-5)</span>
+    <span class="kw">else</span>:
+        n.status = <span class="st">"대기"</span>
+        n.next_retry_at = now() + backoff(n.attempts)
+    self.repo.save(n)</code></pre>
+      </div>
+      <p class="verify"><b>검증:</b> <code>pytest tests/test_notification_worker.py</code> — 동시성 · 재시도 · 실패 보존 통과.</p>
+    </div>
+
+    <h3>Task 5 — 조회 / 읽음 API</h3>
+    <div class="task">
+      <div class="meta"><span class="chip m">Model: haiku</span><span class="chip d">의존: Task 1 (Task 3 과 동시)</span><span class="chip w">wave 2</span></div>
+      <ol class="steps">
+        <li><code>tests/test_notifications_api.py</code> — 목록 · 읽음 · 설정 변경 상태코드. <b>실패 확인.</b></li>
+        <li><code>api/notifications.py</code> 구현.</li>
+      </ol>
+      <p class="verify"><b>검증:</b> <code>pytest tests/test_notifications_api.py</code> 통과.</p>
+    </div>
+  </section>
+
+  <section id="s2" class="reveal">
+    <h2>2. 위험 코드 지점</h2>
+    <div class="scroll">
+      <table>
+        <tr><th>위치</th><th>카테고리</th><th>내용</th></tr>
+        <tr><td><code>notification_service.py</code> <code>create()</code></td><td><span class="cat s">side-effect</span></td><td>DB 기록 전 큐 투입 시 유실 — 순서 고정</td></tr>
+        <tr><td><code>notification_service.py</code> <code>create()</code></td><td><span class="cat b">breaking</span></td><td>중복 삽입 예외를 삼키지 않으면 재시도마다 새 행</td></tr>
+        <tr><td><code>notification_worker.py</code> <code>claim()</code></td><td><span class="cat r">race</span></td><td>조건부 UPDATE 아니면 워커 2대 중복 발송</td></tr>
+        <tr><td><code>notification_worker.py</code> <code>retry()</code></td><td><span class="cat b">breaking</span></td><td>재시도가 새 행을 만들면 중복 알림 = 의도 위반</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="s3" class="reveal">
+    <h2>3. 롤백 전략</h2>
+    <ol class="rb">
+      <li>task 단위 commit → 문제 task 만 <code>git revert</code>.</li>
+      <li>마이그레이션 <code>downgrade()</code> — <code>notifications</code> · <code>notification_prefs</code> 제거.</li>
+      <li>워커는 별도 프로세스 — 중지해도 기존 API 영향 없음. 알림은 <b>대기</b> 로 남아 재기동 시 복구.</li>
+    </ol>
+  </section>
+
+  <section id="s4" class="reveal">
+    <h2>변경이력</h2>
+    <details class="log">
+      <summary>기록 5건 — CH-003 이 이 도구의 핵심입니다</summary>
+      <div class="tl">
+        <div class="ch">
+          <div class="m2">CH-001 · 2026-07-15 13:20 <span class="kind">구현계획-신규</span></div>
+          <p class="w2">최초 작성 (Task 1~5, DAG 3 wave, 위험 4건)</p>
+          <p class="y2"><b>사유:</b> ③ 계획 게이트 통과</p>
+        </div>
+        <div class="ch">
+          <div class="m2">CH-002 · 2026-07-15 14:05 <span class="kind">코드-수정</span></div>
+          <p class="w2">(batch: tasks 1..3) 엔티티 · 설정 · 생성 서비스 구현. RISK 2건 부착. 연관 commit <code>3f1a20b</code>..<code>9c4d81e</code></p>
+          <p class="y2"><b>사유:</b> ④ 실행 — wave 1~2 계획대로 완료</p>
+        </div>
+        <div class="ch key">
+          <div class="m2">CH-003 · 2026-07-15 14:31 <span class="kind">계획-수정</span></div>
+          <p class="w2">Task 4 의 "재시도 시 <b>새 알림 행 생성</b>" → "<b>같은 행 재사용 + attempts 증가</b>" 로 변경. 개발방향 위험표에도 동일 반영</p>
+          <p class="y2"><b>사유:</b> <b>실행 중 발견</b> — 계획대로 새 행을 만들면 <code>dedup_key</code> unique 에 걸림. <code>dedup_key</code> 에 시도 번호를 붙이면 제약은 피하지만 <b>사용자에게 중복 알림</b> = 의도("귀찮게 하지 않게") 배신. 코드에서 우회하지 않고 <code>change-propagation</code> 으로 <b>개발방향 → 계획 순으로 갱신 후 재개</b></p>
+        </div>
+        <div class="ch">
+          <div class="m2">CH-004 · 2026-07-15 15:02 <span class="kind">코드-수정</span></div>
+          <p class="w2">(batch: tasks 4..5) 워커 · 재시도 · API 구현. RISK(race) 1건 부착. 연관 commit <code>a70f3c2</code>..<code>e11b944</code></p>
+          <p class="y2"><b>사유:</b> ④ 실행 — CH-003 갱신본 기준으로 재개</p>
+        </div>
+        <div class="ch">
+          <div class="m2">CH-005 · 2026-07-15 15:15 <span class="kind">검증</span></div>
+          <p class="w2">동시성 · 멱등성 · 실패 보존 테스트 통과. 누락/초과 작업 없음</p>
+          <p class="y2"><b>사유:</b> 실행 후 자체 검증</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    데모용 가상 기능입니다 · 원본 <code>.md</code> 가 진실이고 이 <code>.html</code> 은 사람용 사본입니다<br>
+    <a href="https://github.com/deokjinlog/intent-locked-workflow">intent-locked-workflow</a>
+  </footer>
+</div>
+
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')), { threshold:.08 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', () => {
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard?.writeText(code).then(() => {
+      btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1400);
+    });
+  }));
+</script>
+</body>
+</html>
