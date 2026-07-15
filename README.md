@@ -1,13 +1,10 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/deokjinlog/intent-locked-workflow/main/assets/banner.svg" alt="intent-locked-workflow — 기획 의도를 고정하고, 그 위에서만 코드가 자란다" width="100%">
+</p>
+
 <div align="center">
 
-# intent-locked-workflow
-
 ### 기획 의도를 고정하고, 그 위에서만 코드가 자란다
-
-<sub><i>Lock the intent first — let design, plan, and code grow only in that direction.</i></sub>
-
-<br/>
-<br/>
 
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-7c3aed?style=flat-square&labelColor=0d1117">

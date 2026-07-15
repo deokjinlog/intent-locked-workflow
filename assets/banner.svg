@@ -1,0 +1,18 @@
+<svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="intent-locked-workflow — lock the intent first, then let design, plan and code grow only in that direction">
+  <rect width="1200" height="400" fill="#0b0d12"/>
+  <text x="60" y="150" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="66" font-weight="800" letter-spacing="-2.5">
+    <tspan fill="#f5f5f7">intent</tspan><tspan fill="#7c3aed">-locked</tspan><tspan fill="#f5f5f7">-workflow</tspan>
+  </text>
+  <text x="64" y="200" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="25" font-weight="500" fill="#c7ccd6">Lock the intent first — design, plan and code grow only that way.</text>
+  <text x="64" y="236" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14.5" font-weight="600" fill="#6b7280" letter-spacing="2.5">PLAN &#183; DESIGN &#183; TASKS &#183; CODE &#183; 4 GATES, OPENED ONLY BY A HUMAN</text>
+  <g>
+    <rect x="0" y="286" width="280" height="114" fill="#7c3aed"/>
+    <rect x="280" y="286" width="20" height="114" fill="#f5f5f7"/>
+    <rect x="300" y="286" width="280" height="114" fill="#8b5cf6"/>
+    <rect x="580" y="286" width="20" height="114" fill="#f5f5f7"/>
+    <rect x="600" y="286" width="280" height="114" fill="#06b6d4"/>
+    <rect x="880" y="286" width="20" height="114" fill="#f5f5f7"/>
+    <rect x="900" y="286" width="280" height="114" fill="#22c55e"/>
+    <rect x="1180" y="286" width="20" height="114" fill="#f5f5f7"/>
+  </g>
+</svg>
