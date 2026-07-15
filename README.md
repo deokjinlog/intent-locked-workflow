@@ -7,7 +7,7 @@
 ### 기획 의도를 고정하고, 그 위에서만 코드가 자란다
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-7c3aed?style=flat-square&labelColor=0d1117">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.6.0-7c3aed?style=flat-square&labelColor=0d1117">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-Plugin-a78bfa?style=flat-square&labelColor=0d1117">
   <img alt="Skills" src="https://img.shields.io/badge/skills-27-06b6d4?style=flat-square&labelColor=0d1117">
   <img alt="Upstream" src="https://img.shields.io/badge/superpowers-5.0.7%20계승-f97316?style=flat-square&labelColor=0d1117">
@@ -331,7 +331,9 @@ claude plugin update intent-locked-workflow@intent-locked-workflow
 | **API 테스트 (1)** | api-auto-testing |
 | **메타 (1)** | using-superpowers |
 
-명령어도 있어요 — `/audit-risk`(배포 전 보안 감사), `/fast-tasks`(잡일 묶어 처리), `/sync-html`, 빌더 3종(`/list-skills` · `/new-skill` · `/remove-skill`).
+명령어도 있어요 — `/ralph-handoff`(무인 루프에 넘길 워크트리 싸기), `/audit-risk`(배포 전 보안 감사), `/fast-tasks`(잡일 묶어 처리), `/sync-html`, `/api-test`, 빌더 3종(`/list-skills` · `/new-skill` · `/remove-skill`).
+
+**스킬이 아니라 명령인 것들**이 있죠 — 빌더 3종과 `/ralph-handoff` 는 **일부러** 명령입니다. 스킬은 설명문만 맞으면 저절로 발동하는데, *"랄프한테 넘길까"* 라고 말만 해도 워크트리가 생기고 파일이 지워지면 안 되니까요. **명시 호출만** 받습니다.
 
 </details>
 
