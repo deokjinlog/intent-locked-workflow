@@ -277,6 +277,7 @@ docs/features/2026-05-31-출금기능/
 - **`.html` 사본** — `.md` 와 내용이 1:1인 사본을 같이 남깁니다. AI는 `.md` 를, 사람은 `.html` 을 봐요. 기획자가 코드를 몰라도 게이트에서 검토하라고요. *(내려받아 더블클릭하면 열립니다 — 외부 의존 0)* → [실물 보기](docs/features/2026-05-24-v2.5-no-ask-flag/v2.5-no-ask-flag-requirements.html)
 - **`# RISK` 주석** — 위험한 코드 줄에 카테고리(`side-effect` · `breaking` · `race`)와 이유를 남깁니다.
 - **[`docs/features/`](docs/features/) 에 기능 24개** — 전부 이 워크플로로 만든 실제 기록입니다.
+- **[① 만 만들고 ②③④ 를 무인으로](docs/랄프에게-넘기기.md)** — 요구사항까지만 승인하고 나머지는 `ralph-loop` 플러그인에 넘겨, 자고 일어나면 돼 있게 하는 방법. `PROMPT.md` 템플릿 포함. **뭘 잃는지도 같이 적어놨습니다.**
 
 </details>
 
