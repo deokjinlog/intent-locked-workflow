@@ -37,14 +37,14 @@ grep -n '"version"' .claude-plugin/plugin.json .claude-plugin/marketplace.json p
 
 ```
 # 1) 마켓플레이스 메타데이터 새로 읽기
-/plugin marketplace update dj-superkit
+/plugin marketplace update intent-locked-workflow
 
 # 2) 플러그인 자체 업데이트 (옵션 A: 한 번에)
-/plugin update dj-superkit@dj-superkit
+/plugin update intent-locked-workflow@intent-locked-workflow
 
 # 또는 옵션 B: 깨끗하게 재설치 (manifest 변경이 클 때 권장)
-/plugin uninstall dj-superkit@dj-superkit
-/plugin install dj-superkit@dj-superkit
+/plugin uninstall intent-locked-workflow@intent-locked-workflow
+/plugin install intent-locked-workflow@intent-locked-workflow
 ```
 
 ---
@@ -113,7 +113,7 @@ git checkout HEAD~1 -- .claude-plugin/ package.json
 
 ```
 manifest 3파일 버전 동시 bump
-→ /plugin marketplace update dj-superkit
+→ /plugin marketplace update intent-locked-workflow
 → /plugin uninstall + install (또는 /plugin update)
 → 세션 재시작
 → 자동완성으로 검증
