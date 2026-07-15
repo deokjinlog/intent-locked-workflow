@@ -147,6 +147,23 @@ Claude Code 안에서:
 
 첫 게이트가 열립니다. 답하면 다음 단계로 넘어가요.
 
+<details>
+<summary><b>이미 설치했다면 — 업데이트</b></summary>
+
+<br/>
+
+**마켓플레이스를 먼저 당기고, 그 다음 플러그인을 올립니다. 둘 다 해야 해요.**
+마켓플레이스가 옛 버전에 묶여 있으면 플러그인도 안 올라갑니다.
+
+```bash
+claude plugin marketplace update intent-locked-workflow
+claude plugin update intent-locked-workflow@intent-locked-workflow
+```
+
+**적용은 세션을 재시작해야 됩니다.** 안 하면 옛 버전이 계속 로드돼서, 슬래시 메뉴에 예전 스킬 이름이 그대로 보여요. 지금 뭐가 깔려 있는지는 `claude plugin list` 로 확인합니다.
+
+</details>
+
 ---
 
 ## 스킬 27개
