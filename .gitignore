@@ -22,3 +22,10 @@ docs/learning/
 # 파이썬 캐시
 __pycache__/
 *.pyc
+
+# 기획서 / 발표자료 — 이 repo 는 공개 플러그인이라 회사·프로젝트 문서가 섞이면 안 된다.
+# 작업 중 실수로 여기 두더라도 커밋되지 않게 차단 (2회 발생: my-agent PDF, DartWeave PPTX).
+*.pptx
+*.pdf
+*.hwp
+*.xlsx
