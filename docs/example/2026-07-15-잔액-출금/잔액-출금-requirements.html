@@ -3,213 +3,287 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>요구사항: 사용자 잔액 출금 — intent-locked-workflow 예시</title>
+<title>요구사항: 사용자 잔액 출금 — intent-locked-workflow</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; }
-  :root {
-    --bg: #0b0d12; --panel: #141821; --line: #232a38;
-    --ink: #f5f5f7; --dim: #c7ccd6; --mute: #8b93a5;
-    --brand: #7c3aed; --brand-2: #a78bfa; --cyan: #06b6d4; --green: #22c55e;
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#08090e; --glass:rgba(255,255,255,.045); --line:rgba(255,255,255,.09);
+    --ink:#f2f3f7; --dim:#c3c9d6; --mute:#828a9c;
+    --violet:#8b5cf6; --violet-2:#a78bfa; --cyan:#22d3ee; --green:#34d399; --amber:#fbbf24;
   }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Malgun Gothic", sans-serif;
-    line-height: 1.75; -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px 100px; }
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Malgun Gothic",sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-  .ribbon {
-    background: linear-gradient(90deg, var(--brand), var(--cyan));
-    color: #fff; text-align: center; font-size: 13px; font-weight: 600;
-    padding: 9px 16px; letter-spacing: .2px;
-  }
-  .ribbon code { background: rgba(0,0,0,.25); padding: 1px 6px; border-radius: 5px; }
+  /* ── aurora / mesh background (CSS only) ── */
+  .aurora{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.32;animation:drift 24s ease-in-out infinite alternate}
+  .b1{width:620px;height:620px;background:#7c3aed;top:-220px;left:-140px}
+  .b2{width:520px;height:520px;background:#06b6d4;top:180px;right:-180px;animation-delay:-8s}
+  .b3{width:460px;height:460px;background:#db2777;bottom:-200px;left:28%;animation-delay:-15s;opacity:.2}
+  @keyframes drift{to{transform:translate3d(60px,-50px,0) scale(1.14)}}
+  @media (prefers-reduced-motion:reduce){.blob{animation:none}}
 
-  header { padding: 72px 0 40px; border-bottom: 1px solid var(--line); }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
-    letter-spacing: 2px; color: var(--brand-2); text-transform: uppercase; margin-bottom: 18px;
-  }
-  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--brand-2); }
-  h1 { margin: 0; font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -1.2px; line-height: 1.2; }
-  .sub { color: var(--mute); margin-top: 12px; font-size: 15px; }
+  .ribbon{position:relative;background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;
+    text-align:center;font-size:12.5px;font-weight:600;padding:9px 16px}
+  .ribbon code{background:rgba(0,0,0,.28);padding:1px 6px;border-radius:5px}
 
-  .intent {
-    margin: 40px 0; padding: 28px 30px; border-radius: 16px;
-    background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(6,182,212,.10));
-    border: 1px solid rgba(167,139,250,.35);
-  }
-  .intent .lbl { font-size: 12px; font-weight: 700; letter-spacing: 1.6px; color: var(--brand-2); text-transform: uppercase; }
-  .intent .quote { font-size: clamp(19px, 3vw, 25px); font-weight: 700; margin: 12px 0 10px; letter-spacing: -.5px; }
-  .intent .note { color: var(--dim); font-size: 14.5px; margin: 0; }
+  .shell{max-width:1180px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr;gap:44px}
+  @media(min-width:1024px){.shell{grid-template-columns:210px 1fr}}
 
-  h2 {
-    font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--mute);
-    text-transform: uppercase; margin: 56px 0 18px; padding-bottom: 10px;
-    border-bottom: 1px solid var(--line);
+  /* ── sticky TOC + scroll-spy ── */
+  nav.toc{display:none}
+  @media(min-width:1024px){
+    nav.toc{display:block;position:sticky;top:0;align-self:start;height:100vh;padding:88px 0 40px}
+    nav.toc a{display:block;color:var(--mute);text-decoration:none;font-size:13.5px;
+      padding:7px 0 7px 15px;border-left:2px solid var(--line);transition:.22s}
+    nav.toc a:hover{color:var(--dim);border-color:var(--violet-2)}
+    nav.toc a.on{color:var(--violet-2);border-color:var(--violet);font-weight:700;transform:translateX(3px)}
   }
-  p { color: var(--dim); }
+  main{min-width:0;padding-bottom:100px}
 
-  ul.story { list-style: none; padding: 0; margin: 0; }
-  ul.story li {
-    padding: 12px 0 12px 30px; position: relative; color: var(--dim); border-bottom: 1px solid var(--line);
-  }
-  ul.story li::before {
-    content: ""; position: absolute; left: 6px; top: 22px;
-    width: 7px; height: 7px; border-radius: 50%; background: var(--brand-2);
-  }
+  /* ── hero ── */
+  header{padding:76px 0 8px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:800;
+    letter-spacing:2.4px;color:var(--violet-2);text-transform:uppercase}
+  .eyebrow::before{content:"";width:26px;height:2px;background:linear-gradient(90deg,var(--violet),var(--cyan))}
+  h1{margin:16px 0 0;font-size:clamp(36px,6.4vw,68px);font-weight:850;letter-spacing:-2.4px;line-height:1.04}
+  h1 .grad{background:linear-gradient(100deg,var(--violet-2),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mute);margin-top:14px;font-size:14.5px}
 
-  .tbl { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-  .tbl th {
-    text-align: left; color: var(--mute); font-size: 11.5px; letter-spacing: 1.4px;
-    text-transform: uppercase; padding: 0 14px 10px 0; font-weight: 700;
-  }
-  .tbl td { padding: 13px 14px 13px 0; border-top: 1px solid var(--line); color: var(--dim); vertical-align: top; }
-  .tag {
-    display: inline-block; font-weight: 700; font-size: 12px; padding: 3px 9px;
-    border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;
-  }
-  .fr { background: rgba(124,58,237,.20); color: var(--brand-2); border: 1px solid rgba(124,58,237,.4); }
-  .nfr { background: rgba(6,182,212,.16); color: #67e8f9; border: 1px solid rgba(6,182,212,.35); }
+  /* ── glass intent card (the centerpiece) ── */
+  .intent{margin:34px 0 0;padding:32px 34px;border-radius:20px;position:relative;overflow:hidden;
+    background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+    border:1px solid rgba(167,139,250,.34);box-shadow:0 0 70px rgba(124,58,237,.2)}
+  .intent::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(139,92,246,.16),transparent 62%);pointer-events:none}
+  .intent .lbl{font-size:11.5px;font-weight:800;letter-spacing:1.8px;color:var(--violet-2);text-transform:uppercase}
+  .intent .q{font-size:clamp(21px,3.3vw,31px);font-weight:800;margin:14px 0 12px;letter-spacing:-.9px;line-height:1.4}
+  .intent .note{color:var(--dim);font-size:14px;margin:0}
 
-  .scroll { overflow-x: auto; }
+  /* ── headings ── */
+  h2{font-size:12px;font-weight:800;letter-spacing:2.2px;color:var(--mute);text-transform:uppercase;
+    margin:66px 0 20px;position:relative;padding-bottom:12px}
+  h2::after{content:"";position:absolute;left:0;bottom:0;width:46px;height:2px;
+    background:linear-gradient(90deg,var(--violet),var(--cyan));transition:width .4s}
+  section:hover h2::after{width:96px}
+  p{color:var(--dim)}
 
-  .out { display: flex; flex-wrap: wrap; gap: 9px; padding: 0; margin: 0; list-style: none; }
-  .out li {
-    padding: 8px 14px; border-radius: 999px; font-size: 13.5px; color: var(--mute);
-    border: 1px dashed var(--line); background: var(--panel); text-decoration: line-through;
-    text-decoration-color: rgba(139,147,165,.5);
-  }
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
 
-  .ac { list-style: none; padding: 0; margin: 0; }
-  .ac li {
-    display: flex; gap: 13px; align-items: flex-start; padding: 13px 16px; margin-bottom: 9px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
-    color: var(--dim); font-size: 14.5px;
-  }
-  .box {
-    flex: none; width: 17px; height: 17px; margin-top: 4px; border-radius: 5px;
-    border: 1.5px solid var(--green); position: relative;
-  }
-  .box::after {
-    content: ""; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px;
-    border: solid var(--green); border-width: 0 2px 2px 0; transform: rotate(45deg);
-  }
+  /* ── card grids ── */
+  .grid{display:grid;gap:13px;grid-template-columns:1fr}
+  @media(min-width:640px){.grid.two{grid-template-columns:1fr 1fr}}
+  .card{padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.26s;position:relative}
+  .card:hover{transform:translateY(-4px);border-color:rgba(167,139,250,.5);
+    box-shadow:0 14px 40px rgba(124,58,237,.2)}
+  .card:target{border-color:var(--violet);box-shadow:0 0 0 3px rgba(139,92,246,.3),0 0 44px rgba(139,92,246,.34)}
+  .badge{display:inline-block;font-weight:800;font-size:11.5px;padding:3px 9px;border-radius:6px;
+    letter-spacing:.4px;font-variant-numeric:tabular-nums;margin-bottom:9px}
+  .fr{background:rgba(139,92,246,.2);color:var(--violet-2);border:1px solid rgba(139,92,246,.45)}
+  .nfr{background:rgba(34,211,238,.14);color:#67e8f9;border:1px solid rgba(34,211,238,.4)}
+  .card p{margin:0;font-size:14.5px}
+  .card b{color:var(--ink)}
 
-  .tl { position: relative; padding-left: 26px; }
-  .tl::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
-  .ch { position: relative; padding: 0 0 26px; }
-  .ch::before {
-    content: ""; position: absolute; left: -25px; top: 7px; width: 12px; height: 12px;
-    border-radius: 50%; background: var(--bg); border: 2px solid var(--brand);
-  }
-  .ch .meta { font-size: 12px; color: var(--mute); font-variant-numeric: tabular-nums; }
-  .kind {
-    display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
-    background: rgba(124,58,237,.18); color: var(--brand-2); margin-left: 7px;
-  }
-  .ch .what { color: var(--ink); font-weight: 600; margin: 5px 0 3px; }
-  .ch .why { color: var(--mute); font-size: 13.5px; margin: 0; }
-  .ch .why b { color: var(--dim); font-weight: 600; }
+  /* ── user stories: timeline ── */
+  .story{list-style:none;padding:0;margin:0;position:relative}
+  .story::before{content:"";position:absolute;left:5px;top:14px;bottom:14px;width:2px;
+    background:linear-gradient(var(--violet),var(--cyan))}
+  .story li{position:relative;padding:11px 0 11px 28px;color:var(--dim);font-size:14.5px}
+  .story li::before{content:"";position:absolute;left:0;top:19px;width:12px;height:12px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--violet-2);transition:.25s}
+  .story li:hover::before{background:var(--violet-2);box-shadow:0 0 14px var(--violet-2)}
+  .story b{color:var(--ink)}
 
-  footer {
-    margin-top: 64px; padding-top: 26px; border-top: 1px solid var(--line);
-    color: var(--mute); font-size: 13px; text-align: center;
-  }
-  footer a { color: var(--brand-2); }
+  /* ── out of scope: faded + strike ── */
+  .out{display:flex;flex-wrap:wrap;gap:9px;padding:0;margin:0;list-style:none}
+  .out li{padding:8px 15px;border-radius:999px;font-size:13.5px;color:var(--mute);
+    border:1px dashed var(--line);background:rgba(255,255,255,.02);opacity:.62;transition:.22s}
+  .out li:hover{opacity:.95}
+  .out li::before{content:"✕ ";color:#f87171;font-weight:700}
+  .out li span{text-decoration:line-through;text-decoration-color:rgba(130,138,156,.55)}
 
-  @media (max-width: 560px) { .intent { padding: 22px 18px; } header { padding: 48px 0 32px; } }
+  /* ── AC: interactive checklist ── */
+  .ac{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+  .ac li{display:flex;gap:13px;align-items:flex-start;padding:14px 17px;border-radius:12px;
+    background:var(--glass);border:1px solid var(--line);color:var(--dim);font-size:14.5px;
+    cursor:pointer;transition:.24s;user-select:none}
+  .ac li:hover{border-color:rgba(52,211,153,.45);transform:translateX(4px)}
+  .ac .box{flex:none;width:19px;height:19px;margin-top:3px;border-radius:6px;
+    border:1.6px solid var(--green);position:relative;transition:.22s}
+  .ac .box::after{content:"";position:absolute;left:5.5px;top:1.5px;width:5px;height:10px;
+    border:solid var(--green);border-width:0 2.2px 2.2px 0;transform:rotate(45deg) scale(0);transition:transform .22s}
+  .ac li.done .box{background:rgba(52,211,153,.18)}
+  .ac li.done .box::after{transform:rotate(45deg) scale(1)}
+  .ac li.done{color:var(--mute)}
+  .ac b{color:var(--ink)}
+
+  /* ── changelog: secondary → details closed ── */
+  details.log{margin-top:14px;border:1px solid var(--line);border-radius:14px;
+    background:rgba(255,255,255,.025);overflow:hidden}
+  details.log summary{padding:15px 19px;cursor:pointer;font-size:13.5px;color:var(--dim);font-weight:600;
+    list-style:none;display:flex;align-items:center;gap:10px;transition:.2s}
+  details.log summary::-webkit-details-marker{display:none}
+  details.log summary::before{content:"▸";color:var(--violet-2);transition:transform .25s;font-size:12px}
+  details.log[open] summary::before{transform:rotate(90deg)}
+  details.log summary:hover{background:rgba(255,255,255,.03);color:var(--ink)}
+  .tl{padding:6px 22px 22px 40px;position:relative}
+  .tl::before{content:"";position:absolute;left:26px;top:6px;bottom:24px;width:2px;background:var(--line)}
+  .ch{position:relative;padding:12px 0}
+  .ch::before{content:"";position:absolute;left:-19px;top:19px;width:11px;height:11px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--violet)}
+  .ch .meta{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .kind{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;
+    background:rgba(139,92,246,.18);color:var(--violet-2);margin-left:6px}
+  .ch .what{color:var(--ink);font-weight:700;margin:5px 0 3px;font-size:14.5px}
+  .ch .why{color:var(--mute);font-size:13px;margin:0}
+  .ch .why b{color:var(--dim)}
+  a.ref{color:var(--violet-2);font-weight:700;text-decoration:none;border-bottom:1px dashed rgba(167,139,250,.5)}
+  a.ref:hover{background:rgba(139,92,246,.16)}
+
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);
+    color:var(--mute);font-size:12.5px;text-align:center}
+  footer a{color:var(--violet-2)}
+  footer code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px}
 </style>
 </head>
 <body>
+
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 
 <div class="ribbon">
   사람이 읽는 사본 — 원본은 <code>잔액-출금-requirements.md</code> 입니다. 코드를 몰라도 이 문서로 게이트에서 검토할 수 있어요.
 </div>
 
-<div class="wrap">
+<div class="shell">
 
-  <header>
-    <div class="eyebrow">① 기획 · 요구사항</div>
-    <h1>사용자 잔액 출금</h1>
-    <p class="sub">balance withdrawal · 2026-07-15 · intent-locked-workflow 예시 산출물</p>
-  </header>
+  <nav class="toc" aria-label="목차">
+    <a href="#purpose">배경 / 목적</a>
+    <a href="#story">사용자 스토리</a>
+    <a href="#fr">기능 요구사항</a>
+    <a href="#nfr">비기능 요구사항</a>
+    <a href="#out">범위 밖</a>
+    <a href="#ac">수용 기준</a>
+    <a href="#log">변경이력</a>
+  </nav>
 
-  <section class="intent">
-    <div class="lbl">🔒 여기서 잠그는 의도</div>
-    <p class="quote">“사용자가 스스로, 안전하게, 되돌릴 수 있게 뺀다.”</p>
-    <p class="note">이 한 문장이 설계 · 계획 · 코드까지 변형 없이 이어집니다. 이후 모든 게이트는 산출물이 이 문장과 어긋나지 않았는지를 봅니다.</p>
-  </section>
+  <main>
+    <header>
+      <div class="eyebrow">① 기획 · 요구사항</div>
+      <h1>사용자 <span class="grad">잔액 출금</span></h1>
+      <p class="sub">balance withdrawal · 2026-07-15 · intent-locked-workflow 예시 산출물</p>
 
-  <h2>1. 배경 / 목적</h2>
-  <p>적립만 가능하고 인출 경로가 없어 잔액이 계속 쌓이고 있습니다. 사용자가 스스로 잔액을 인출할 수 있어야 합니다.</p>
+      <div class="intent">
+        <div class="lbl">🔒 여기서 잠그는 의도</div>
+        <p class="q">“사용자가 스스로, 안전하게, 되돌릴 수 있게 뺀다.”</p>
+        <p class="note">이 한 문장이 설계 · 계획 · 코드까지 변형 없이 이어집니다. 이후 모든 게이트는 산출물이 이 문장과 어긋나지 않았는지를 봅니다.</p>
+      </div>
+    </header>
 
-  <h2>2. 사용자 스토리</h2>
-  <ul class="story">
-    <li>사용자로서, 잔액 중 일부를 등록된 계좌로 <b>출금 신청</b>하고 싶다.</li>
-    <li>사용자로서, 신청 후 <b>처리 상태</b>(대기 / 완료 / 실패)를 확인하고 싶다.</li>
-    <li>사용자로서, 아직 처리되기 전이라면 신청을 <b>취소</b>하고 싶다.</li>
-    <li>운영자로서, 비정상 출금 시도를 <b>사후에 추적</b>하고 싶다.</li>
-  </ul>
+    <section id="purpose" class="reveal">
+      <h2>1. 배경 / 목적</h2>
+      <p>적립만 가능하고 인출 경로가 없어 잔액이 계속 쌓이고 있습니다. 사용자가 스스로 잔액을 인출할 수 있어야 합니다.</p>
+    </section>
 
-  <h2>3. 기능 요구사항</h2>
-  <div class="scroll">
-    <table class="tbl">
-      <tr><th style="width:74px">ID</th><th>요구사항</th></tr>
-      <tr><td><span class="tag fr">FR-1</span></td><td>사용자는 잔액 이하의 금액을 출금 신청할 수 있다.</td></tr>
-      <tr><td><span class="tag fr">FR-2</span></td><td>신청 시점에 잔액을 즉시 차감하고 <b>대기</b> 상태의 출금 건을 만든다.</td></tr>
-      <tr><td><span class="tag fr">FR-3</span></td><td>사용자는 <b>대기</b> 상태의 신청을 취소할 수 있고, 취소하면 잔액이 복원된다.</td></tr>
-      <tr><td><span class="tag fr">FR-4</span></td><td>사용자는 자신의 출금 내역과 상태를 조회할 수 있다.</td></tr>
-      <tr><td><span class="tag fr">FR-5</span></td><td>모든 출금 상태 변화는 감사 로그로 남는다.</td></tr>
-    </table>
-  </div>
+    <section id="story" class="reveal">
+      <h2>2. 사용자 스토리</h2>
+      <ul class="story">
+        <li>사용자로서, 잔액 중 일부를 등록된 계좌로 <b>출금 신청</b>하고 싶다.</li>
+        <li>사용자로서, 신청 후 <b>처리 상태</b>(대기 / 완료 / 실패)를 확인하고 싶다.</li>
+        <li>사용자로서, 아직 처리되기 전이라면 신청을 <b>취소</b>하고 싶다.</li>
+        <li>운영자로서, 비정상 출금 시도를 <b>사후에 추적</b>하고 싶다.</li>
+      </ul>
+    </section>
 
-  <h2>4. 비기능 요구사항</h2>
-  <div class="scroll">
-    <table class="tbl">
-      <tr><th style="width:84px">ID</th><th>요구사항</th></tr>
-      <tr><td><span class="tag nfr">NFR-1</span></td><td>동시 요청에도 잔액이 음수가 되지 않는다.</td></tr>
-      <tr><td><span class="tag nfr">NFR-2</span></td><td>같은 신청이 중복 처리되지 않는다.</td></tr>
-      <tr><td><span class="tag nfr">NFR-3</span></td><td>출금 신청 응답은 1초 이내.</td></tr>
-    </table>
-  </div>
+    <section id="fr" class="reveal">
+      <h2>3. 기능 요구사항</h2>
+      <div class="grid two">
+        <div class="card" id="fr-1"><span class="badge fr">FR-1</span><p>사용자는 잔액 이하의 금액을 출금 신청할 수 있다.</p></div>
+        <div class="card" id="fr-2"><span class="badge fr">FR-2</span><p>신청 시점에 잔액을 즉시 차감하고 <b>대기</b> 상태의 출금 건을 만든다.</p></div>
+        <div class="card" id="fr-3"><span class="badge fr">FR-3</span><p>사용자는 <b>대기</b> 상태의 신청을 취소할 수 있고, 취소하면 잔액이 복원된다.</p></div>
+        <div class="card" id="fr-4"><span class="badge fr">FR-4</span><p>사용자는 자신의 출금 내역과 상태를 조회할 수 있다.</p></div>
+        <div class="card" id="fr-5"><span class="badge fr">FR-5</span><p>모든 출금 상태 변화는 감사 로그로 남는다.</p></div>
+      </div>
+    </section>
 
-  <h2>5. 범위 밖</h2>
-  <ul class="out">
-    <li>계좌 등록 · 본인 인증</li>
-    <li>실제 송금 연동</li>
-    <li>관리자 수동 승인 화면</li>
-    <li>출금 수수료 정책</li>
-  </ul>
+    <section id="nfr" class="reveal">
+      <h2>4. 비기능 요구사항</h2>
+      <div class="grid two">
+        <div class="card" id="nfr-1"><span class="badge nfr">NFR-1</span><p>동시 요청에도 잔액이 <b>음수가 되지 않는다.</b></p></div>
+        <div class="card" id="nfr-2"><span class="badge nfr">NFR-2</span><p>같은 신청이 <b>중복 처리되지 않는다.</b></p></div>
+        <div class="card" id="nfr-3"><span class="badge nfr">NFR-3</span><p>출금 신청 응답은 <b>1초 이내.</b></p></div>
+      </div>
+    </section>
 
-  <h2>6. 수용 기준</h2>
-  <ul class="ac">
-    <li><span class="box"></span><span>잔액 10,000원에서 3,000원 신청 → 잔액 7,000원 + <b>대기</b> 건 1개</span></li>
-    <li><span class="box"></span><span>잔액을 넘는 금액 신청 → 거부, 잔액 그대로</span></li>
-    <li><span class="box"></span><span><b>대기</b> 건 취소 → 잔액 복원, 상태 <b>취소</b></span></li>
-    <li><span class="box"></span><span>이미 완료된 건 취소 시도 → 거부</span></li>
-    <li><span class="box"></span><span>같은 잔액으로 동시에 2건 신청 → 하나만 성공, 잔액 음수 없음</span></li>
-  </ul>
+    <section id="out" class="reveal">
+      <h2>5. 범위 밖</h2>
+      <ul class="out">
+        <li><span>계좌 등록 · 본인 인증</span></li>
+        <li><span>실제 송금 연동</span></li>
+        <li><span>관리자 수동 승인 화면</span></li>
+        <li><span>출금 수수료 정책</span></li>
+      </ul>
+    </section>
 
-  <h2>변경이력</h2>
-  <div class="tl">
-    <div class="ch">
-      <div class="meta">CH-001 · 2026-07-15 10:20 <span class="kind">요구사항-신규</span></div>
-      <p class="what">최초 작성 (FR 1~5, NFR 1~3)</p>
-      <p class="why"><b>사유:</b> ① 기획 게이트 통과</p>
-    </div>
-    <div class="ch">
-      <div class="meta">CH-002 · 2026-07-15 10:41 <span class="kind">요구사항-수정</span></div>
-      <p class="what">FR-3 에 “취소하면 잔액 복원” 명시</p>
-      <p class="why"><b>사유:</b> 게이트에서 “취소하면 돈은 어떻게 되나?” 질문이 나옴 → 의도를 문서에 확정</p>
-    </div>
-  </div>
+    <section id="ac" class="reveal">
+      <h2>6. 수용 기준 <span style="font-size:11px;color:var(--mute);letter-spacing:0;text-transform:none">— 클릭해서 체크해보세요</span></h2>
+      <ul class="ac">
+        <li><span class="box"></span><span>잔액 10,000원에서 3,000원 신청 → 잔액 <b>7,000원</b> + <b>대기</b> 건 1개</span></li>
+        <li><span class="box"></span><span>잔액을 넘는 금액 신청 → <b>거부</b>, 잔액 그대로</span></li>
+        <li><span class="box"></span><span><b>대기</b> 건 취소 → 잔액 복원, 상태 <b>취소</b></span></li>
+        <li><span class="box"></span><span>이미 완료된 건 취소 시도 → <b>거부</b></span></li>
+        <li><span class="box"></span><span>같은 잔액으로 동시에 2건 신청 → <b>하나만</b> 성공, 잔액 음수 없음</span></li>
+      </ul>
+    </section>
 
-  <footer>
-    데모용 가상 기능입니다 · 원본 <code>.md</code> 가 진실이고 이 <code>.html</code> 은 사람용 사본입니다<br>
-    <a href="https://github.com/deokjinlog/intent-locked-workflow">intent-locked-workflow</a>
-  </footer>
+    <section id="log" class="reveal">
+      <h2>변경이력</h2>
+      <details class="log">
+        <summary>기록 2건 — 게이트에서 나온 질문이 의도를 어떻게 바꿨는지</summary>
+        <div class="tl">
+          <div class="ch">
+            <div class="meta">CH-001 · 2026-07-15 10:20 <span class="kind">요구사항-신규</span></div>
+            <p class="what">최초 작성 (FR 1~5, NFR 1~3)</p>
+            <p class="why"><b>사유:</b> ① 기획 게이트 통과</p>
+          </div>
+          <div class="ch">
+            <div class="meta">CH-002 · 2026-07-15 10:41 <span class="kind">요구사항-수정</span></div>
+            <p class="what"><a class="ref" href="#fr-3">FR-3</a> 에 “취소하면 잔액 복원” 명시</p>
+            <p class="why"><b>사유:</b> 게이트에서 “취소하면 돈은 어떻게 되나?” 질문이 나옴 → 의도를 문서에 확정</p>
+          </div>
+        </div>
+      </details>
+    </section>
 
+    <footer>
+      데모용 가상 기능입니다 · 원본 <code>.md</code> 가 진실이고 이 <code>.html</code> 은 사람용 사본입니다<br>
+      <a href="https://github.com/deokjinlog/intent-locked-workflow">intent-locked-workflow</a>
+    </footer>
+  </main>
 </div>
+
+<script>
+  // scroll-triggered reveal
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')),
+    { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // AC interactive check
+  document.querySelectorAll('.ac li').forEach(li =>
+    li.addEventListener('click', () => li.classList.toggle('done')));
+
+  // scroll-spy TOC
+  const links = [...document.querySelectorAll('nav.toc a')];
+  const spy = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+  }), { rootMargin: '-25% 0px -65% 0px' });
+  document.querySelectorAll('main section[id]').forEach(s => spy.observe(s));
+</script>
 </body>
 </html>
