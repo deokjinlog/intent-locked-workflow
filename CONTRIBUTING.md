@@ -88,14 +88,4 @@ https://github.com/deokjinlog/intent-locked-workflow/issues
 - 결합된 스킬을 함께 고쳤는가
 - 한 요청이 한 문제만 다루는가
 
-## 라이선스
-
-이 프로젝트는 **MIT 라이선스**입니다.
-
-이 저장소는 [superpowers](https://github.com/obra/superpowers) 5.0.7 (MIT, Jesse Vincent) 위에 프로덕션 안전성을 얹은 파생 프로젝트입니다. MIT 조건에 따라 원저작권자 표기를 유지하고, 그 위의 확장분에 대한 저작권을 함께 둡니다.
-
-MIT 라이선스이므로 자유롭게 사용, 복사, 수정, 배포, 재라이선스할 수 있습니다. 한 가지 조건은 **저작권 표기와 라이선스 전문을 함께 남기는 것**입니다. 자세한 내용은 [LICENSE](LICENSE) 를 봐 주세요.
-
-강제는 아니지만 부탁드립니다 — 인용하거나 활용하실 때 저장소 링크와 "intent-locked-workflow" 출처를 함께 남겨 주시면 고맙겠습니다.
-
 함께 다듬어 주시는 모든 개선이, 더 많은 분들이 의도를 잃지 않고 프로젝트를 완성하도록 돕습니다.
