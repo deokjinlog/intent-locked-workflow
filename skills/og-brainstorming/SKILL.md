@@ -1,14 +1,14 @@
 ---
 name: og-brainstorming
-description: "Upstream-original (superpowers 5.0.7) brainstorming, exposed under dj-superkit. Use when invoked via /og-brainstorm — free-form Socratic dialogue producing docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md, terminal state is og-writing-plans. Identical behavior to upstream brainstorming except for the og- naming and downstream pointer. Use this when the dj-superkit extended workflow (PRD + 변경이력 + 위험 주석) feels heavy and you want the original superpowers experience."
+description: "Upstream-original (superpowers 5.0.7) brainstorming, exposed under intent-locked-workflow. Use when invoked via /og-brainstorm — free-form Socratic dialogue producing docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md, terminal state is og-writing-plans. Identical behavior to upstream brainstorming except for the og- naming and downstream pointer. Use this when the intent-locked-workflow extended workflow (PRD + 변경이력 + 위험 주석) feels heavy and you want the original superpowers experience."
 ---
 
 # Brainstorming Ideas Into Designs (og — upstream original)
 
-This is the **upstream-original superpowers `brainstorming` skill**, preserved verbatim under the `og-` prefix so users of dj-superkit can opt back into the original behavior without uninstalling dj-superkit and reinstalling upstream. It is identical to upstream except:
+This is the **upstream-original superpowers `brainstorming` skill**, preserved verbatim under the `og-` prefix so users of intent-locked-workflow can opt back into the original behavior without uninstalling intent-locked-workflow and reinstalling upstream. It is identical to upstream except:
 
-1. `name` is `og-brainstorming` (avoids collision with dj-superkit's modified `brainstorming`)
-2. The terminal handoff invokes `og-writing-plans` (not the dj-superkit modified `writing-plans`)
+1. `name` is `og-brainstorming` (avoids collision with intent-locked-workflow's modified `brainstorming`)
+2. The terminal handoff invokes `og-writing-plans` (not the intent-locked-workflow modified `writing-plans`)
 3. Supporting files (`visual-companion.md`, `scripts/`) are NOT duplicated — this skill references the canonical location at `skills/brainstorming/...` (byte-identical to upstream, never modified since vendoring; duplicating would be premature). `spec-document-reviewer-prompt.md` lives there too but is only used by upstream's maintainer test infrastructure, not by this skill.
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.

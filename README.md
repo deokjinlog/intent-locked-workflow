@@ -157,7 +157,7 @@ Claude Code 안에서:
 | **upstream 원본 (3)** | og-brainstorming · og-writing-plans · og-executing-plans |
 | **문서 · 시각화 (3)** | generating-html · code-pretty · change-history |
 | **검증 · 거버넌스 (4)** | verifying-spec · verification-before-completion · change-propagation · risk-annotation |
-| **서브에이전트 (2)** | dj-superkit-sub-driven · subagent-driven-development |
+| **서브에이전트 (2)** | subagent-driven · subagent-driven-development |
 | **테스트 · 디버깅 (2)** | test-driven-development · systematic-debugging |
 | **리뷰 · 마무리 (3)** | requesting-code-review · receiving-code-review · finishing-a-development-branch |
 | **API 테스트 (1)** | api-auto-testing |

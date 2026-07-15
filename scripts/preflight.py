@@ -1,4 +1,4 @@
-"""Deterministic pre-flight checks for dj-superkit-sub-driven skills.
+"""Deterministic pre-flight checks for subagent-driven skills.
 
 Replaces LLM inference in skill pre-flight steps with bash-callable Python
 helpers. Each function returns a PreflightResult; callers parse exit code
@@ -119,7 +119,7 @@ def subagent_task_entry_check(plan_path: Path) -> PreflightResult:
     if policy != "per-task":
         return PreflightResult(
             False,
-            f"dj-superkit-sub-driven requires commit_policy: per-task (got {policy})",
-            f"dj-superkit-sub-driven 는 commit_policy: per-task 를 요구합니다 (현재: {policy})",
+            f"subagent-driven requires commit_policy: per-task (got {policy})",
+            f"subagent-driven 는 commit_policy: per-task 를 요구합니다 (현재: {policy})",
         )
     return PreflightResult(True, "ok", "정상")
