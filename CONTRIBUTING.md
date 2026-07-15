@@ -80,6 +80,10 @@ intent-locked-workflow 에 관심 가져주셔서 고맙습니다.
 버그 제보와 제안, 기여는 GitHub Issues 로 받습니다.
 https://github.com/deokjinlog/intent-locked-workflow/issues
 
+## 버전을 올릴 때
+
+스킬 · 명령 · 매니페스트를 고친 뒤 새 버전을 Claude Code 에 반영하는 절차는 [docs/plugin-update.md](docs/plugin-update.md) 에 정리돼 있습니다. 어떤 변경이 patch / minor / major 인지도 거기 표로 있어요.
+
 ## 검토 기준
 
 - 처음 보는 사람도 이해할 수 있는가
