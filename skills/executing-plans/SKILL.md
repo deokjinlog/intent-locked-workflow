@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan (<slug>-implementation-plan.md) to execute in a separate session with review checkpoints. intent-locked-workflow extension — picks git-fast mode (default, uses `git diff HEAD` against working tree pre-commit for before/after extraction so per-edit Read snapshot is skipped; commits code + plan log atomically per task) or memory-fallback mode (when no git or commits forbidden). Per-edit: risk-annotation 3-checklist + RISK comments. Per-task: ONE consolidated change-history [코드-수정] entry, drastically reducing 구현계획서.md Read/Edit cost.
+description: Use when you have a written implementation plan (<slug>-implementation-plan.md) to execute in a separate session with review checkpoints. intent-locked-workflow extension — picks git-fast mode (default, uses `git diff HEAD` against working tree pre-commit for before/after extraction so per-edit Read snapshot is skipped; commits code per task; the plan log is appended once at end-of-run, Phase 3) or memory-fallback mode (when no git or commits forbidden). Per-edit: risk-annotation 3-checklist + RISK comments. Per-task: ONE consolidated change-history [코드-수정] entry, drastically reducing 구현계획서.md Read/Edit cost.
 ---
 
 # Executing Plans
@@ -128,7 +128,7 @@ This Phase 3 ordering is the **single source of truth for inline mode**. Subagen
 5. Commit if possible (some plans skip).
 
 <HARD-GATE>
-NEVER skip Phase 2 logging. In git-fast mode, **strict ordering is mandatory**: extract diff (while plan.md untouched) → edit plan.md → commit code + plan together. Reversing this (e.g., commit before diff, or edit plan before diff) will pollute future `git diff HEAD` outputs with stale log appends. In memory-fallback mode, before-snapshots must be captured BEFORE each edit (otherwise originals are gone) and held in memory until Phase 2.
+NEVER skip Phase 2 logging. In git-fast mode (v1.1.7+), **strict ordering is mandatory**: extract diff (plan.md stays untouched **all run**) → **commit code only** → accumulate the footer entry in memory. The plan log is appended and committed **once** in Phase 3 (see line "single source of truth for inline mode"). Editing plan.md per task pollutes future `git diff HEAD` outputs with stale log appends. In memory-fallback mode, before-snapshots must be captured BEFORE each edit (otherwise originals are gone) and held in memory until Phase 2.
 </HARD-GATE>
 
 ## Trivial-Edit Exception (skip full discipline for tiny changes)
@@ -246,10 +246,10 @@ Ask the user rather than guessing.
 |---|---|
 | (memory-fallback) Edit first, capture before-snapshot later | Always Read → snapshot → Edit. Otherwise original is gone. |
 | (git-fast) Skip the per-task commit | Commit is REQUIRED — without it, the next task's `git diff HEAD` includes both tasks' changes and the log gets fabricated. |
-| (git-fast) Edit plan.md BEFORE running `git diff` | The diff would then include the plan log append, polluting "변경 전 코드" with non-code content. Order: diff → edit plan → commit. |
-| (git-fast) Commit code first, then edit plan as separate commit | Creates two commits per task; `git diff HEAD` next task is clean but commit history is noisy. The atomic single-commit approach (code + plan together at end) is correct. |
-| (git-fast) `git add -A` or `git add .` | Sweeps unrelated untracked files into the commit. Use explicit file list from Phase 1 tuples + plan.md. |
-| (git-fast) Include plan.md in the `git diff` extract | Extract scope = code files only. Plan changes are in the same commit but not in the "변경 전 코드" block. |
+| (git-fast) task 도중에 plan.md 를 편집 | v1.1.7+ 는 **실행 내내 plan.md 를 안 건드린다.** 건드리면 diff 에 로그 append 가 섞여 "변경 전 코드" 가 오염된다. 순서: diff → **코드만 커밋** → (Phase 3) 로그 1회 |
+| (git-fast) task 마다 plan.md 를 같이 커밋 | 정본은 **task 당 코드만 커밋**, 로그는 Phase 3 에서 **한 번만** ("single source of truth for inline mode"). task 마다 넣으면 로그 커밋이 N 개 생긴다 |
+| (git-fast) `git add -A` or `git add .` | Sweeps unrelated untracked files into the commit. Phase 1 tuples 의 **코드 파일 목록만** 명시 (plan.md 는 Phase 3 커밋에만). |
+| (git-fast) Include plan.md in the `git diff` extract | Extract scope = code files only. plan.md 는 Phase 3 의 **별도 로그 커밋**에 들어간다. |
 | Switch modes mid-run | Mode is decided at task-start mode-check. Stick to it. |
 | **(수동 편집 한정)** Batch change-history entries at session end | Per-task immediate logging. Context evaporates fast. **단 이 스킬(`/executing-plans`) 실행은 반대다 — end-of-run consolidator 로 batch 하는 게 정본** (`change-history` 안티패턴이 그렇게 범위를 갈라놨다) |
 | Skip RISK annotation because "looks safe" | Run the 3-checklist. 0/3 means no annotation, but the check happens. |
