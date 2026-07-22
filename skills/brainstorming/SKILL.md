@@ -141,12 +141,11 @@ digraph brainstorm_flow {
     "[Socratic] Present design sections\n(section-by-section approval)" [shape=box];
 
     "Self-review (mode-specific)" [shape=box];
-    "User reviews <slug>-requirements.md" [shape=diamond];
+    "User reviews <slug>-requirements.md\n(RAW .md 원본 그대로)" [shape=diamond];
     "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)" [shape=box];
     "Invoke change-history\n(first entry: 요구사항-수정/생성)" [shape=box];
     "Auto-invoke /tech-design (no gate, v1.1.9+)" [shape=box];
     "Auto-invoke tech-design skill" [shape=doublecircle];
-    "Exit: tell user to run /tech-design later" [shape=oval];
 
     "Step 0 Router (FR-3)\n명시적 small 신호?" -> "Auto-invoke og-brainstorming\n+ notice" [label="small"];
     "Step 0 Router (FR-3)\n명시적 small 신호?" -> "AskUserQuestion 게이트\n(og / intent-locked-workflow)" [label="그 외"];
