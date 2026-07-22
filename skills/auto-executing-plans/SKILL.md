@@ -1,6 +1,6 @@
 ---
 name: auto-executing-plans
-description: auto-flow 4단계 (마지막) — implementation-plan.md 읽기 + Entry Guard (preflight.subagent_task_entry_check) + DAG 자동 build + 무조건 wave-parallel subagent 강제 (Gate #14 override) + failure isolation 그대로 + End-of-run consolidator 자동 + finishing-a-development-branch 자동 호출. AskUserQuestion / generating-html 호출 X.
+description: "auto-flow 4단계 (마지막) — implementation-plan.md 읽기 + Entry Guard (preflight.subagent_task_entry_check) + DAG 자동 build + 무조건 wave-parallel subagent 강제 (Gate #14 override) + failure isolation 그대로 + End-of-run consolidator 자동 + finishing-a-development-branch 자동 호출. AskUserQuestion / generating-html 호출 X."
 ---
 
 # Auto Executing Plans → wave-parallel + finishing (auto)
@@ -58,9 +58,6 @@ description: auto-flow 4단계 (마지막) — implementation-plan.md 읽기 + E
 본 skill 흐름은 `AskUserQuestion` 호출이 본문에 명시 X (clarifying Q 자체가 prose default). `--no-ask` 플래그 진입 시 추가 분기 없음 — 본문 그대로 도구 호출 0 보장.
 
 단 내부 escalation (BLOCKED 자가복구 실패 / critical 7 재질문 / Other 모호 응답) 에서도 도구 호출 0 보장. 자세한 룰은 `skills/brainstorming/SKILL.md` 의 `### 예외 — \`--no-ask\` 플래그 (v2.5+)` 답습.
-```
-
-→ 사용자가 catch + 다음 액션 (push / merge / discard) 직접 결정.
 
 ## Anti-Patterns
 

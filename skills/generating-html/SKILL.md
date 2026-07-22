@@ -115,58 +115,11 @@ Failure handling (v2.2.1+ — fire-and-forget):
 - **B 실패** (Sonnet API 일시 장애 / verification 실패 등) → silent log "ERROR". `.html` 미생성. 사용자 다음에 `.html` 열려고 할 때 부재 인지 → `/sync-html` 수동.
 - **메인 cancel (디바운스)** → 이전 B 작업 폐기, silent log "CANCEL". 새 B dispatch.
 
-## Subagent Prompt Template
+## Subagent Prompt (B)
 
-The dispatched subagent receives this exact prompt (filled in with the target path):
+**B 의 프롬프트는 별도 파일이 정본입니다** — `skills/generating-html/html-companion-prompt.md`. Step 2 의 dispatch 가 그 파일을 로드해 `<ABSOLUTE_MD_PATH>` · `<ABSOLUTE_HTML_PATH>` · CH-id · timestamp 를 채웁니다.
 
-```
-You are performing a STRICT format-only pass on a Korean spec document.
-
-Target file: <ABSOLUTE_PATH>
-
-Your job: improve READABILITY ONLY. The user will trust this pass to never alter meaning.
-
-# Allowed changes (formatting only)
-
-- Normalize Markdown header levels so hierarchy is consistent (e.g., one H1, H2 for top sections, H3 for subsections)
-- Convert ad-hoc bullet styles to consistent `-` bullets; align nested list indentation to 2 spaces
-- Reformat tables: align column pipes, add header separators if missing
-- Tighten spacing: exactly one blank line between sections, no trailing whitespace, no triple-blank-line gaps
-- Fix code-block fences (` ``` ` open/close), add language hints where the content makes the language obvious
-- Add a blank line before/after lists, tables, code blocks where Markdown rendering benefits
-- Convert obvious raw URLs to `<url>` autolinks if they appear standalone
-- Standardize emphasis: bold for `**...**`, italic for `*...*` (no underscores for emphasis)
-
-# FORBIDDEN — never do any of these
-
-- Do NOT reword, paraphrase, summarize, expand, or "improve" any sentence
-- Do NOT translate Korean ↔ English
-- Do NOT reorder sections, list items, table rows, or paragraphs
-- Do NOT add new content, examples, or commentary
-- Do NOT remove content, even if it looks redundant or unclear
-- Do NOT touch the YAML frontmatter (between `---` delimiters at top) — preserve byte-for-byte
-- Do NOT touch the `## 변경이력` footer or anything under it — preserve byte-for-byte
-- Do NOT change identifier strings: file names, slugs, function names, FR-N / NFR-N / CH-N IDs, Korean section headers (요구사항, 개발방향, 구현계획서, 변경이력, 위험 코드 지점, 롤백 전략, etc.)
-- Do NOT change inline code spans (` `...` `) content — only fix fence consistency
-
-# How to apply
-
-1. Read the file in full
-2. Apply ONLY allowed transformations
-3. Write the result back to the SAME file path using the Write tool (overwrite)
-4. Report: "Format pass done on <path>. Sections: <N>. Frontmatter preserved: yes/no. 변경이력 footer preserved: yes/no."
-
-# Verification before writing
-
-Before you call Write:
-- Compare your output's section header list (text only, ignoring level) to the input — they MUST match exactly, in the same order
-- Confirm the YAML frontmatter block (if present) is byte-identical
-- Confirm the `## 변경이력` heading and everything beneath it is byte-identical
-
-If ANY of these fail, do NOT write. Report the failure and stop.
-
-You have one job: make it cleaner to read. Nothing else.
-```
+> **v2.2.0 의 A(`.md` format-only pass) 프롬프트가 이 자리에 남아 있어 삭제했습니다.** 그 프롬프트는 `.md` 를 Write 로 **덮어쓰는** 내용이라, *"A is REMOVED in v2.2.1"* · *"Revive A | NEVER"* 선언과 정면 충돌하고 실행되면 사용자 스펙을 훼손할 수 있었습니다.
 
 ## Process Flow
 
