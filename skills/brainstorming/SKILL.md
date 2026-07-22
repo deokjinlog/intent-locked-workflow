@@ -146,6 +146,7 @@ digraph brainstorm_flow {
     "Invoke change-history\n(first entry: 요구사항-수정/생성)" [shape=box];
     "Auto-invoke /tech-design (no gate, v1.1.9+)" [shape=box];
     "Auto-invoke tech-design skill" [shape=doublecircle];
+    "Exit: tell user to run /tech-design later" [shape=oval];
 
     "Step 0 Router (FR-3)\n명시적 small 신호?" -> "Auto-invoke og-brainstorming\n+ notice" [label="small"];
     "Step 0 Router (FR-3)\n명시적 small 신호?" -> "AskUserQuestion 게이트\n(og / intent-locked-workflow)" [label="그 외"];
@@ -178,6 +179,7 @@ digraph brainstorm_flow {
     "User reviews <slug>-requirements.md\n(RAW .md 원본 그대로)" -> "Invoke change-history\n(first entry: 요구사항-수정/생성)" [label="approve"];
     "Invoke change-history\n(first entry: 요구사항-수정/생성)" -> "Auto-invoke /tech-design (no gate, v1.1.9+)";
     "Auto-invoke /tech-design (no gate, v1.1.9+)" -> "Auto-invoke tech-design skill";
+    "Auto-invoke /tech-design (no gate, v1.1.9+)" -> "Exit: tell user to run /tech-design later" [label="user says stop / 멈춰 / 잠깐"];
 }
 ```
 
