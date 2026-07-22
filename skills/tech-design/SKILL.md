@@ -325,7 +325,7 @@ If not, the boundaries need work. Smaller, well-bounded units are also easier fo
 | Listing step-by-step tasks here | Tasks belong in <slug>-implementation-plan.md. 개발방향 stops at "how it is designed". |
 | Missing FR mapping | Every FR must appear in §2 or §4. |
 | One decision, no alternatives | Always present at least one alternative + comparison. |
-| "Be careful here" without a category | Force one of the four risk-annotation categories. |
+| "Be careful here" without a category | Force one of the three risk-annotation categories. |
 
 ## Red Flags
 

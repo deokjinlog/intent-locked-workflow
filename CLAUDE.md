@@ -269,14 +269,13 @@ v2.1.1+ 에서 6곳 (5 skill + 1 command) 에 "Other / 모호 응답 처리" boi
 - `skills/tech-design/SKILL.md`
 - `skills/writing-plans/SKILL.md`
 - `skills/auto-brainstorming/SKILL.md`
-- `skills/worktree-merge-back/SKILL.md`
 - `commands/fast-tasks.md`
 
 ### 회귀 패턴
 
 | 누락 | 증상 |
 |---|---|
-| 6곳 한 곳 boilerplate 누락 | 그 흐름에서 사용자 모호 응답 → 메인이 fall-through → 사용자 질문 씹힘 |
+| 5곳 중 한 곳 boilerplate 누락 | 그 흐름에서 사용자 모호 응답 → 메인이 fall-through → 사용자 질문 씹힘 |
 | "anchor 질문 강제 X" 룰 확대 해석 | yes/no 명확 답변 외 (Other 포함) 모두 추가 clarify 안 함 → 회귀 |
 
 ### 영향 범위
@@ -293,9 +292,8 @@ grep -c "Other / 모호 응답 처리 (v2.1.1+)" \
   skills/tech-design/SKILL.md \
   skills/writing-plans/SKILL.md \
   skills/auto-brainstorming/SKILL.md \
-  skills/worktree-merge-back/SKILL.md \
   commands/fast-tasks.md
-# expected: 각 1 (6곳 모두 박혀 있어야 함)
+# expected: 각 1 (5곳 모두 박혀 있어야 함)
 ```
 
 요약: 6 파일 + CLAUDE.md 결합 메모 변경은 묶어서 처리. 7+ 파일 atomic patch.
@@ -648,11 +646,9 @@ grep -c "--no-ask 플래그 (v2.5+)" \
 
 grep -l "--no-ask" \
   skills/og-brainstorming/SKILL.md \
-  skills/og-tech-design/SKILL.md \
   skills/og-writing-plans/SKILL.md \
   skills/og-executing-plans/SKILL.md \
-  commands/fast-tasks.md \
-  skills/worktree-merge-back/SKILL.md 2>/dev/null
+  commands/fast-tasks.md 2>/dev/null
 # expected: empty
 ```
 
