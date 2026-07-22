@@ -148,7 +148,7 @@ Wave i/N 시작: task <list> 병렬 실행…
 ### W-2. Pair-parallel dispatch
 
 For each task in this wave (in plan order), 두 dispatch 를 한 메시지에 묶어 **병렬** 실행 (Agent tool multiple calls in single message):
-- Implementer (`./implementer-prompt.md`, `model: <task.model>`, 디폴트 sonnet)
+- Implementer (`./implementer-prompt.md`, **`model: haiku` 고정** — v2.0.0+ 에서 plan 의 `**Model**:` 힌트는 Stage 1 에 적용되지 않는다)
 - Spec reviewer 는 implementer 가 `Status: DONE` + manifest 작성 후 dispatch (`./spec-reviewer-prompt.md`, `model: "sonnet"` 고정)
 
 페어 병렬 = wave 안 task **간** 병렬 (task A 와 task B 동시), task **안** 의 impl→review 는 직렬.
@@ -390,7 +390,7 @@ Wave 3/3 시작: task 5...
 ```
 
 **핵심 패턴**:
-1. dispatch 는 항상 **plan 의 Model 필드 주입 (없으면 sonnet)** — 부모 모델 상속 회피
+1. dispatch 는 **Stage 1 implementer = haiku 고정 · spec reviewer = sonnet** (v2.0.0+) — 부모 모델 상속 회피. plan 의 `**Model**:` 힌트는 Stage 1 에 적용되지 않는다
 2. wave 단위 pair-parallel — task **간** 병렬, task **안** impl→review 직렬
 3. wave finalization 단계에서 메인이 plan order 직렬 commit (implementer 는 commit X)
 4. post-hoc conflict 검출 → 충돌 시 plan order 늦은 task rollback + 다음 wave 재배치

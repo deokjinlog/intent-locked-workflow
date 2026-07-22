@@ -251,7 +251,7 @@ Ask the user rather than guessing.
 | (git-fast) `git add -A` or `git add .` | Sweeps unrelated untracked files into the commit. Use explicit file list from Phase 1 tuples + plan.md. |
 | (git-fast) Include plan.md in the `git diff` extract | Extract scope = code files only. Plan changes are in the same commit but not in the "변경 전 코드" block. |
 | Switch modes mid-run | Mode is decided at task-start mode-check. Stick to it. |
-| Batch change-history entries at session end | Per-task immediate logging. Context evaporates fast. |
+| **(수동 편집 한정)** Batch change-history entries at session end | Per-task immediate logging. Context evaporates fast. **단 이 스킬(`/executing-plans`) 실행은 반대다 — end-of-run consolidator 로 batch 하는 게 정본** (`change-history` 안티패턴이 그렇게 범위를 갈라놨다) |
 | Skip RISK annotation because "looks safe" | Run the 3-checklist. 0/3 means no annotation, but the check happens. |
 | Skip Phase 2 logging | HARD-GATE violation. Revert + redo. |
 | Marking a logic-changing edit as "trivial" to skip discipline | Triviality requires zero logic change AND 0/3 risk triggers AND ≤3 lines. Logic changes are NEVER trivial. |
