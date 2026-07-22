@@ -112,7 +112,7 @@ Per task: code-only commit (plan.md untouched). Footer entry is deferred to end-
 7. **Single footer append + log commit**: Read <slug>-implementation-plan.md once → Edit (append batch entry + 검증 entries) → `git add <slug>-implementation-plan.md` → `git commit -m "[log] all tasks: <one-line summary>"`.
 8. **Cleanup**: nothing for inline mode (no buffer dir). Subagent path cleans `.intent-locked/changelog-buffer/<slug>/` separately — see `subagent-driven` skill §2-4.
 
-This Phase 3 ordering is the **single source of truth for inline mode**. Subagent mode uses the same Phase 3 logic but reads manifests from the buffer directory instead of in-memory accumulator (per `subagent-driven` §2).
+This Phase 3 ordering is the **single source of truth for inline mode**. Subagent mode uses the same Phase 3 logic but reads manifests from the buffer directory instead of in-memory accumulator (per `subagent-driven` **§1** — 매니페스트 종합. §2 는 구현 요약 메시지다).
 
 ### memory-fallback mode
 

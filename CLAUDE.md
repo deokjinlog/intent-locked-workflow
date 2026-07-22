@@ -298,7 +298,7 @@ grep -c "Other / 모호 응답 처리 (v2.1.1+)" \
 
 요약: 5 파일 + CLAUDE.md 결합 메모 변경은 묶어서 처리. 7+ 파일 atomic patch.
 
-요약: 8 skill body + CLAUDE.md 결합 메모 변경은 묶어서 처리. 5+ 파일 atomic patch.
+> 위 "8 skill body + CLAUDE.md" 요약은 **v2.0.3 섹션 것**이다 (아래 섹션이 끼어들면서 소속이 흐려졌다).
 
 ## generating-html `.html` companion 결합 (v2.2.0 → v2.2.2+)
 
@@ -365,7 +365,7 @@ grep -c "/sync-html" skills/change-propagation/SKILL.md
 # expected: ≥ 1
 ```
 
-요약: 5 파일 (generating-html/SKILL.md + html-companion-prompt.md 보존 + change-propagation/SKILL.md + commands/sync-html.md + CLAUDE.md) + H17 patch + H18 신규 + 6 manifest 변경은 atomic patch.
+요약: 5 파일 (generating-html/SKILL.md + html-companion-prompt.md 보존 + change-propagation/SKILL.md + commands/sync-html.md + CLAUDE.md) + H17 patch + H18 신규 + 2 manifest 변경은 atomic patch.
 
 ## generating-html 디자인 톤 자유 + 인터랙션 허용 (v2.2.4+)
 
@@ -381,7 +381,7 @@ grep -c "Wow first\|variety = feature\|사무 / 회의록 / 보고서 톤" skill
 # expected: ≥ 3
 ```
 
-요약: html-companion-prompt.md 만 변경. atomic patch 1 파일 + CLAUDE.md 결합 메모 + 6 manifest bump.
+요약: html-companion-prompt.md 만 변경. atomic patch 1 파일 + CLAUDE.md 결합 메모 + 2 manifest bump.
 
 ## generating-html Visual heuristics 적극 시각화 (v2.2.3+)
 
@@ -395,14 +395,22 @@ grep -c "적극 시각화 v2.2.3" skills/generating-html/html-companion-prompt.m
 # expected: ≥ 1
 ```
 
-요약: html-companion-prompt.md 만 변경. atomic patch 1 파일 + CLAUDE.md 결합 메모 + 6 manifest bump.
+요약: html-companion-prompt.md 만 변경. atomic patch 1 파일 + CLAUDE.md 결합 메모 + 2 manifest bump.
 
 ## generating-html naming 일관성 결합 (v2.2.2+)
 
 v2.2.2+ 에서 `docs-pretty` → `generating-html` skill 명칭 + `/regen-html` → `/sync-html` slash command 명칭 일괄 교체. 다음 룰 atomic patch:
 
 - **5 항목 atomic** — skill 디렉토리 rename + slash command rename + 13 파일 단어 swap + CLAUDE.md 결합 메모 + manifest 항목
-- **단어 grep 0 검증** — `grep -rn "docs-pretty\|regen-html" skills/ commands/ CLAUDE.md README.md --exclude-dir=og-brainstorming --exclude-dir=og-writing-plans --exclude-dir=og-executing-plans --exclude-dir=H4-preflight-fail --exclude-dir=H5-docs-pretty-pre-review --exclude-dir=H6-task-name-friendly` → 0
+- **단어 grep 검증** — 픽스처(`tests/`)는 옛 단어를 **일부러 보존**하므로 통째로 제외한다. `--exclude-dir=og-*` 는 **디렉터리만** 걸러 `commands/og-*.md` 파일을 못 거르므로 이름을 하나씩 적는다:
+
+```bash
+grep -rn "docs-pretty\|regen-html" skills/ commands/ CLAUDE.md README.md \
+  --exclude-dir=og-brainstorming --exclude-dir=og-writing-plans \
+  --exclude-dir=og-executing-plans --exclude-dir=tests
+# expected: CLAUDE.md 3건만 (이 규칙 문단 자신 — 금지어를 이름으로 부르는 곳)
+# 그 외 파일이 한 줄이라도 나오면 회귀다
+```
 - **Acceptance 5번 자동→안내** — `change-propagation` 마지막 단계의 `/sync-html` 자동 호출 → 사용자 안내로 완화 (auto-fire X). 사용자가 명시 호출
 - **commands/regen-html.md 삭제** — old slash command 제거 (sync-html.md 신규 생성으로 대체)
 
@@ -482,7 +490,7 @@ grep -nE "이렇게.*할까요\?|어느.*쪽.*인가요\?" \
 # expected: 0 (Anti-Pattern catch 라인만 허용)
 ```
 
-요약: 3 파일 (executing-plans/SKILL.md + subagent-driven/SKILL.md + CLAUDE.md) atomic patch. 5+ 파일 동시 push (3 + 6 manifest + 백로그 mv).
+요약: 3 파일 (executing-plans/SKILL.md + subagent-driven/SKILL.md + CLAUDE.md) atomic patch. 5+ 파일 동시 push (3 + 2 manifest + 백로그 mv).
 
 ## 껍데기 워크플로우 명령 8개 제거 → 스킬 단일화 (v0.9.0+)
 
@@ -524,7 +532,7 @@ grep -rE "/(brainstorm|write-plan|execute-plan|auto-brainstorm|auto-write-plan|a
 ls commands/*.md | wc -l   # expected: 12 (20 → 12, 8 제거)
 ```
 
-요약: 8 명령 삭제 + 참조 치환 + SETUP-WSL 1곳 + CLAUDE.md 메모 + 6 manifest bump = atomic patch. og-* 미러 보존.
+요약: 8 명령 삭제 + 참조 치환 + SETUP-WSL 1곳 + CLAUDE.md 메모 + 2 manifest bump = atomic patch. og-* 미러 보존.
 
 ## 한국어 친화 안내 톤 (v2.4+)
 
@@ -652,7 +660,7 @@ grep -l "--no-ask" \
 # expected: empty
 ```
 
-요약: 8 skill body 분기 + 8 commands 안내 + CLAUDE.md 결합 메모 + 6 manifest bump = 23 파일 atomic patch.
+요약: 8 skill body 분기 + 8 commands 안내 + CLAUDE.md 결합 메모 + 2 manifest bump = 23 파일 atomic patch.
 
 ## TaskCreate Checklist ↔ 9 skill body 결합 (v2.5.2+)
 
@@ -728,11 +736,11 @@ grep -cF "og-* mirror 룰 예외" CLAUDE.md
 
 ### 영향 범위
 
-- 10 본문 (9 skill + CLAUDE.md) + 6 manifest. 다른 skill / commands / scripts 영향 0
+- 10 본문 (9 skill + CLAUDE.md) + 2 manifest. 다른 skill / commands / scripts 영향 0
 - `using-superpowers` 본문 변경 X (기존 "Has checklist?" 분기 답습)
 - TaskCreate 도구 schema 변경 X (호출 빈도만 ↑)
 - Notification 매처 / repeat-alert.sh — 변경 X
 - AskUserQuestion / `--no-ask` 플래그 / 8 skill body 결합 (v2.5+) — 영향 0
 
-요약: 10 본문 + 6 manifest = 16 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
+요약: 10 본문 + 2 manifest = 16 파일 atomic patch (Wave 0~2 + spec + [log] 묶음 commit).
 

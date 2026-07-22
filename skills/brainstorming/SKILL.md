@@ -174,9 +174,9 @@ digraph brainstorm_flow {
     "[Socratic] Present design sections\n(section-by-section approval)" -> "Self-review (mode-specific)";
 
     "Self-review (mode-specific)" -> "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)";
-    "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)" -> "User reviews <slug>-requirements.md\n(RAW .md — .html 은 배경 사이드카)";
-    "User reviews <slug>-requirements.md\n(RAW .md — .html 은 배경 사이드카)" -> "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)" [label="changes — revise → re-dispatch .html"];
-    "User reviews <slug>-requirements.md\n(RAW .md — .html 은 배경 사이드카)" -> "Invoke change-history\n(first entry: 요구사항-수정/생성)" [label="approve"];
+    "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)" -> "User reviews <slug>-requirements.md\n(RAW .md 원본 그대로)";
+    "User reviews <slug>-requirements.md\n(RAW .md 원본 그대로)" -> "Invoke generating-html\n(pre-review, Sonnet subagent, per-draft)" [label="changes — revise → 동봉본 재생성"];
+    "User reviews <slug>-requirements.md\n(RAW .md 원본 그대로)" -> "Invoke change-history\n(first entry: 요구사항-수정/생성)" [label="approve"];
     "Invoke change-history\n(first entry: 요구사항-수정/생성)" -> "Auto-invoke /tech-design (no gate, v1.1.9+)";
     "Auto-invoke /tech-design (no gate, v1.1.9+)" -> "Auto-invoke tech-design skill";
 }
